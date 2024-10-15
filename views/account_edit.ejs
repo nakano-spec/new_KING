@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ユーザー編集</title>
+    <!-- スタイルやスクリプトの追加が必要な場合はここに記述 -->
+</head>
+<body>
+    <h1>ユーザー情報編集</h1>
+    <form action="/your-post-route" method="post">
+        <div>
+            <label for="user-id">学籍番号:</label>
+            <input type="text" id="user-id" name="user_ID" value="<%= user_ID %>" required>
+        </div>
+        <div>
+            <label for="user-name">名前:</label>
+            <input type="text" id="user-name" name="user_name" value="<%= user_name %>" required>
+        </div>
+        <div>
+            <label for="password">パスワード:</label>
+            <input type="password" id="password" name="pass_word" value="<%= pass_word %>" required>
+        </div>
+        <div>
+            <label for="role-name">ロールタイプ:</label>
+            <select id="role-name" name="role_name">
+                <% if (role_name === '学生') { %>
+                    <option value="student" selected>学生</option>
+                    <option value="teacher">教員</option>
+                    <option value="view">表示</option>
+                    <!-- その他のロールオプションを追加する場合はここに -->
+                <% } else if (role_name === '先生') { %>
+                    <option value="student">学生</option>
+                    <option value="teacher" selected>教員</option>
+                    <option value="view">表示</option>
+                    <!-- その他のロールオプションを追加する場合はここに -->
+                 <% } else if (role_name === '表示') { %>
+                    <option value="student">学生</option>
+                    <option value="teacher">教員</option>
+                    <option value="view" selected>表示</option>
+                    <!-- その他のロールオプションを追加する場合はここに -->
+                <% } else { %>
+                    <!-- デフォルトの選択肢を設定 -->
+                    <option value="student">学生</option>
+                    <option value="teacher">教員</option>
+                    <option value="view">表示</option>
+                    <!-- その他のロールオプションを追加する場合はここに -->
+                <% } %>
+            </select>
+        </div>
+        <button type="submit">保存</button>
+    </form>
+</body>
+</html>

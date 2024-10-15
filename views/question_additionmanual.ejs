@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>問題作成ページ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        form {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px; /* 入力フィールドの間に余白を追加 */
+            box-sizing: border-box; /* パディングとボーダーを幅に含める */
+        }
+
+        #choice-fields {
+            display: none; /* JavaScriptによる表示切替のため初期状態は非表示 */
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+        .header {
+            background-color: #fd9221;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <div class="header">
+        <h1>問題手動追加ページ</h1>
+    </div>
+    <form id="question-form">
+        <p>問題の形式を選択してください。</p>
+        <div>
+            <label><input type="radio" name="questionType" value="choice" checked> 選択問題</label>
+            <label><input type="radio" name="questionType" value="input"> 入力問題</label>
+        </div>
+        <p>問題の試験名・ジャンル・試験年度・問題名・問題文を選択してください。</p>
+        <div class="common-field">
+            <label>試験名：<input type="text" name="examName" placeholder="例：応用情報技術者試験"></label>
+            <label>ジャンル：<input type="text" name="genre" placeholder="例：オープンソースソフトウェア"></label>
+            <label>試験年度：<input type="text" name="examYear" placeholder="例：25年度春"></label>
+            <label>問題名：<input type="text" name="questionName" placeholder="例：問45"></label>
+            <label>問題文：<input type="text" name="questionText" placeholder="例：この問題の試験年度は"></label>　
+        </div>
+
+        <div id="choice-fields">
+            選択肢をア〜エを一つづつ入力してください。<br><br>
+            <label>ア：<input type="text" name="choice1" placeholder="例：25年度春"></label>　
+            <label>イ：<input type="text" name="choice2" placeholder="例：26年度春"></label>　
+            <label>ウ：<input type="text" name="choice3" placeholder="例：25年度秋"></label>　
+            <label>エ：<input type="text" name="choice4" placeholder="例：26年度秋"></label>　
+        </div>
+
+        <div class="common-field">
+            正解を入力してください。写真が必要ならば写真名を入力してください。<br><br>
+            <label>正解：<input type="text" name="correctAnswer" placeholder="例：25年度春"></label>　
+            <label>写真名：<input type="text" name="pictureName" placeholder="例：（写真が必要ならば写真名、写真が必要ない場合は空白とする）image.png"></label>
+        </div>
+
+        <input type="submit" value="送信">
+    </form>
+
+    <script>
+        function updateFields() {
+            const questionType = document.querySelector('input[name="questionType"]:checked').value;
+            const choiceFields = document.getElementById('choice-fields');
+
+            if (questionType === 'choice') {
+                choiceFields.style.display = 'block';
+            } else {
+                choiceFields.style.display = 'none';
+            }
+        }
+
+        document.querySelectorAll('input[name="questionType"]').forEach((input) => {
+            input.addEventListener('change', updateFields);
+        });
+
+        // 初期表示時にフィールドを更新
+        updateFields();
+    </script>
+
+    </body>
+</html>

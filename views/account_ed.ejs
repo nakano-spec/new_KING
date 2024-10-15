@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>アカウント一覧表示</title>
+  <link type="text/css" rel="stylesheet" href="/stylesheets/account.css">
+</head>
+
+<body>
+  <div class="orange">
+    <h1>回答即時判断システム：アカウント管理</h1>
+    <hr>
+  </div>
+  <button onclick="location.href='account_additionMethod'">新規追加</button>
+  <button onclick="editSelectedUser()">選択したユーザーの編集</button>
+  <button>選択したユーザーの削除</button>
+  <p style="float:right">
+    <form method="get" action="http://www.google.co.jp/search" target="blank">
+      <input type="text" name="q" size="20" maxlength="255" value="ユーザーを検索">
+      <input type="submit" name="btng" value="検索">
+      <input type="hidden" name="h1" value="ja">
+      <input type="hidden" name="sitesearch" value="自分のサイトのURL">
+    </form><!--サイト内検索ボックスの追加-->
+  </p>
+
+  <div style="display: flex;">
+    <ul>
+      <table id="ac_table" class="example">
+        <thead>
+          <tr>
+            <th></th><th>ユーザー名</th><th>学籍番号</th><th>最終ログイン日時</th>
+          </tr>
+        </thead>
+        <% ac.forEach((list) => { %>
+          <tr>
+            <td><input type="checkbox" name="choice" value="<%= list.user_ID %>"/></td>
+            <td><%= list.user_name%></td>
+            <td><%= list.user_ID%></td>
+            <td><%= new Date(list.log_time).toLocaleString('ja-JP') %></td>
+          </tr>
+        <% }) %>
+      </table>
+    </ul>
+  </div>
+
+  <script>
+    function editSelectedUser() {
+      const checkboxes = document.getElementsByName('choice');
+      const selectedCheckboxes = Array.from(checkboxes).filter(checkbox => checkbox.checked);
+
+      if (selectedCheckboxes.length === 1) {
+        const userId = selectedCheckboxes[0].value;
+        location.href = 'account_additionChange?userId=' + userId;
+      } else if (selectedCheckboxes.length > 1) {
+        alert('エラー: 一度に複数のユーザーを選択できません。');
+      } else {
+        alert('エラー: ユーザーが選択されていません。');
+      }
+    }
+  </script>
+
+</body>
+</html>

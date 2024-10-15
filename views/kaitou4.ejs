@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang ="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>回答</title>
+        <link type="text/css" rel="stylesheet" href="/stylesheets/kaitou4.css">
+    </head>
+    <body>
+        <script src ="/socket.io/socket.io.js"></script>
+        <div id = myid2>
+            <p><%= name %></p>
+        </div>
+        <br>
+        <form name="myform1">
+            <h1><%=question_text %></h1>
+            <textarea name ="textarea1"></textarea>
+            <br>
+            <br>
+            <input type="submit" id="kaitou1" name="kaitou1" value ="回答を送る">
+        </form>
+        <script>
+            var socket = io();
+            var f = document.forms.myform1;
+            var myname = document.getElementById("myid2");
+            var m1 = myname.innerText;
+
+            f.kaitou1.addEventListener('click',function(e){
+                e.preventDefault();
+                let checkvalue = f.textarea1.value;
+                socket.emit('kiroku',m1,checkvalue);
+            })
+
+            socket.on('end',function(){
+                window.location.href ='/kaitou3?name=' + encodeURIComponent(myname.innerText);
+            })
+        </script>
+    </body>
+</html>
+

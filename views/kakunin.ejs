@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>問題確認</title>
+    </head>
+    <body>
+        <h1>問題確認</h1>
+        <p>試験名: <%= qualification %><%= Year %> <%= question_name %> <%= genre %></p>
+    
+        <% results.forEach(function(item) { %>
+            <div>
+                <!-- ここでitemのプロパティを表示 -->
+                <h1><%= item.question_text %></h1>
+                <p>ア:<%= item.select_1 %></p>
+                <p>イ:<%= item.select_2 %></p>
+                <p>ウ:<%= item.select_3 %></p>
+                <p>エ:<%= item.select_4 %></p>
+                <br>
+                <br>
+                <p>正解:<%= item.answer %></p>
+            </div>
+        <% }); %>
+        <input type="button" onclick="window.history.back();" value="直前のページに戻る">
+    </body>
+</html>

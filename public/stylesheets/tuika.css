@@ -1,0 +1,19 @@
+.sub{
+    text-align: center;
+}
+body{
+    background-color:#fffca9;
+    background-size: cover;
+  }
+.button1{
+    height: 100px;
+    width: 300px;
+    font-size: 30px;
+    background-color: rgb(212, 212, 212);
+}
+.button2{
+    height: 100px;
+    width: 300px;
+    font-size: 30px;
+    background-color: rgb(212, 212, 212);
+}

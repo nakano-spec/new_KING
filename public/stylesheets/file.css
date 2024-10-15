@@ -1,0 +1,22 @@
+.csv{
+    padding: 50px;
+}
+.csv > h1{
+    font-size: 20px;
+}
+
+.file1{
+    padding: 50px;
+}
+
+.file1 > h1{
+    font-size: 20px;
+}
+
+.file2{
+    padding: 50px;
+}
+
+.file2 > h1{
+    font-size: 20px;
+}

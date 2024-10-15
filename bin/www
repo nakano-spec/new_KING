@@ -1,0 +1,1449 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+ var { app,sessionMiddleware } = require('../app');
+ var debug = require('debug')('sotuken:server');
+ var http = require('http');
+ var express = require('express');
+ const path = require('path');
+ var ExcelJS = require('exceljs');
+ var validator = require('validator');
+ var fs = require('fs');
+ var poolCluster = app.get('pool');
+ var pool = poolCluster.of('MASTER');
+ var async = require('async');
+ var crypto = require('crypto');
+ const sha512 = crypto.createHash('sha512');
+ const encoding = 'hex';
+ const sanitizeHtml = require('sanitize-html');
+ 
+ 
+ 
+ /**
+  * Get port from environment and store in Express.
+  */
+ 
+ var port = normalizePort(process.env.PORT || '3000');
+ app.set('port', port);
+ 
+ /**
+  * Create HTTP server.
+  */
+ var server = http.createServer(app);
+ var { Server } =require("socket.io");
+ var io = new Server(server);
+ /**
+  * Listen on provided port, on all network interfaces.
+  */
+ 
+ server.listen(port,'0.0.0.0', () => {console.log('サーバ起動しました。\nlistening on "[このサーバ機のIPアドレス]:3000"');});
+ server.on('error', onError);
+ server.on('listening', onListening);
+ 
+ /**
+  * Normalize a port into a number, string, or false.
+  */
+ 
+ function normalizePort(val) {
+   var port = parseInt(val, 10);
+ 
+   if (isNaN(port)) {
+     // named pipe
+     return val;
+   }
+ 
+   if (port >= 0) {
+     // port number
+     return port;
+   }
+ 
+   return false;
+ }
+ 
+ /**
+  * Event listener for HTTP server "error" event.
+  */
+ 
+ function onError(error) {
+   if (error.syscall !== 'listen') {
+     throw error;
+   }
+ 
+   var bind = typeof port === 'string'
+     ? 'Pipe ' + port
+     : 'Port ' + port;
+ 
+   // handle specific listen errors with friendly messages
+   switch (error.code) {
+     case 'EACCES':
+       console.error(bind + ' requires elevated privileges');
+       process.exit(1);
+       break;
+     case 'EADDRINUSE':
+       console.error(bind + ' is already in use');
+       process.exit(1);
+       break;
+     default:
+       throw error;
+   }
+ }
+ 
+ /**
+  * Event listener for HTTP server "listening" event.
+  */
+ 
+ function onListening() {
+   var addr = server.address();
+   var bind = typeof addr === 'string'
+     ? 'pipe ' + addr
+     : 'port ' + addr.port;
+   debug('Listening on ' + bind);
+ }
+ 
+ const mysql = require('mysql2');
+ const store = require('store');
+ const { connect } = require('http2');
+ const { namespace } = require('store');
+ const { param } = require('jquery');
+
+
+  // Socket.ioにセッションミドルウェアを適用する
+  io.use((socket, next) => {
+      sessionMiddleware(socket.request, {}, next);
+  });
+
+ 
+ io.on('connection', (socket) => {//ページが繋がったとき
+   console.log(socket.request.session);
+   const mysql_setting = {
+     host: 'localhost',
+     user: 'root',
+     password: '20010426',
+     database: 'mydb2'
+   }
+   
+   //password: 'ha031008',
+   //password: '20021225',
+   //password: '20010426',
+   //password: 'matosui122083',
+   
+   const connection = mysql.createConnection(mysql_setting);
+   connection.connect();
+
+   socket.on('crypto1',(data) =>{
+    sha512.update(data);
+    var sha512Hash = sha512.digest(encoding);
+    io.emit('crypto',sha512Hash); 
+  })
+
+     socket.on('new_btnclick', (name,pass1,pass2) => {
+      if(pass1 == pass2) {
+        var new_select1 = "select username from users where username = ?;"
+        var new_select2 = "select password from users where password = ?;"
+        var new_insert1 = "insert into users values (?,?,?,'2022{01>01','2022{01>01');"
+        var kensaku = "SELECT MIN(user_ID + 1100) AS user_ID FROM users WHERE (user_ID + 1100) NOT IN (SELECT user_ID FROM users);"
+        connection.query(new_select1,name,(err, new_result1, fields) => {
+          connection.query(new_select2,pass1,(err, new_result2, fields) => {
+            if(new_result1.length < 1 && pass1.length >= 8 && pass1.length <= 16 && pass1.length != 0 && name.length >= 2 && name.length <= 10) {
+              connection.query(kensaku,(err,kensaku1,fields)=>{
+                if(err){
+                  console.log(err);
+                }
+                var user = kensaku1[0].user_ID;
+                connection.query(new_insert1,[user,name,pass1],(err, new_result3, fields) => {
+                  if(err){
+                    console.log(err);
+                  }
+                  var new_flug = 1;
+                  io.emit('new_flug',new_flug);
+              })
+              })
+            }
+          })
+        })
+      }
+    })
+
+     socket.on('filedata',(data) =>{
+      var q1 = "insert into mondai_LIST values(?,?,?,?,?,?,?,?,?,?,?);"
+      var q2 = "select MIN(mon_ID  + 1) AS mon_ID from mondai_LIST where (mon_ID + 1) NOT IN (SELECT mon_ID from mondai_LIST);"
+      var q3 = "select MIN(seikai_ID  + 1) AS seikai_ID from seikai_LIST where (seikai_ID + 1) NOT IN (SELECT seikai_ID from seikai_LIST);"
+      var q4 = "insert into seikai_LIST values(?,?,?);"
+      var da = "a";
+      var moni = 0;
+      var name = data[0];
+      var mondaibun = data[1];
+      var sen1 = data[2];
+      var sen2 = data[3];
+      var sen3 = data[4];
+      var sen4 = data[5];
+      var seikai = data[6];
+      var seiID = 0;
+      var kaiID = 0;
+      if(data[7] != "なし"){
+        var picture = data[7];
+      }else{
+        var picture = "";
+      }
+      connection.query(q2,(err,result,field)=>{
+        if(err){
+          console.log(err);
+        }
+        moni = result[0].mon_ID;
+        if(sen1 == "なし"){
+          sen1 = "";
+          sen2 = "";
+          sen3 = "";
+          sen4 = "";
+          kaiID = 1;
+        }
+        connection.query(q3,(err,result2,field)=>{
+            if(err){
+              console.log(err);
+            }
+            seiID = result2[0].seikai_ID;
+            connection.query(q4,[seiID,moni,seikai],(err,result3,field)=>{
+              if(err){
+                console.log(err);
+              }
+              connection.query(q1,[moni,name,mondaibun,sen1,sen2,sen3,sen4,seiID,0,picture,kaiID],(err,res1,fields)=>{
+                if(err){
+                  console.log(err);
+                }
+                connection.commit((err) =>{
+                  if(err){connection.rollback(() =>{throw console.log('error');});};
+                  io.emit('kanryou');
+            })
+            })
+          })
+      })
+    })  
+    })
+    
+   
+    socket.on('kekkasyusei',(set1)=>{
+      var userID = socket.request.session.user.username;
+      var sql = "update answer_table set result = ? where user_ID =?;"
+      async.waterfall([
+        function(callback) {
+          // 最初のステップとして、全ての更新操作を行う
+          async.eachSeries(set1, function(selection, cb) {
+            var userID = selection.user_ID; // オブジェクトのプロパティへのアクセス
+            var selectedValue = selection.selectedValue; //オブジェクトのプロパティへのアクセス   
+            connection.query(sql, [selectedValue, userID], (err, result) => {
+              if (err) {
+                console.log(err);
+                return cb(err); // エラーを次のステップへ渡す
+              }
+              console.log("Update successful for user_ID: ", userID);
+              cb(); // 次の要素へ
+            });
+          }, function(err) {
+            if (err) {
+              // 更新中にエラーが発生した場合
+              callback(err, null);
+            } else {
+              // すべての更新が成功した場合
+              callback(null, 'All updates completed successfully');
+            }
+          });
+        }
+      ], function(err, result) {
+        // 全ての処理が完了した後の最終的なコールバック
+        if (err) {
+          console.log('An error occurred: ', err);
+          // 必要に応じてエラーハンドリングをここに書く
+        } else {
+          // すべての更新操作が成功したことをクライアントに通知
+          io.emit('result_display2', {username:userID});
+        }
+      });
+    })
+
+    socket.on('kaitoutuika', (selections) => {
+      var userID = socket.request.session.user.username;
+      async.eachSeries(selections, function(selection, cbEachSeries) {
+        var correctID, questionID;
+        async.waterfall([
+          // Step 1: correct_IDを検索して取得する
+          function(callback) {
+            var sql = "SELECT MIN(correct_ID + 1) AS correct_ID FROM correct_table WHERE (correct_ID + 1) NOT IN (SELECT correct_ID FROM correct_table);";
+            connection.query(sql, (err, result) => {
+              if (err) return callback(err);
+              correctID = result[0].correct_ID;
+              callback(null);
+            });
+          },
+          // Step 2: question_genreからquestion_IDを持ってくる
+          function(callback) {
+            var sqlFindQuestionID = "SELECT question_ID FROM question_table WHERE question_name = ?";
+            connection.query(sqlFindQuestionID, [selection.questionGenre], (err, result) => {
+              if (err) return callback(err);
+              if (result.length === 0) return callback(new Error("Question ID not found for genre: " + selection.questionGenre));
+              questionID = result[0].question_ID;
+              callback(null);
+            });
+          },
+          // Step 3: correct_tableにINSERTする
+          function(callback) {
+            var sqlInsert = "INSERT INTO correct_table (correct_ID, question_ID, answer) VALUES (?, ?, ?)";
+            connection.query(sqlInsert, [correctID, questionID, selection.answer], (err, result) => {
+              if (err) return callback(err);
+              callback(null);
+            });
+          },
+          // Step 4: 追加した正解に対応した答えのresultを○に変更する
+          function(callback) {
+            var sqlUpdateResult = "UPDATE answer_table SET result = '○' WHERE question_ID = ? AND answer = ?";
+            connection.query(sqlUpdateResult, [questionID, selection.answer], (err, result) => {
+              if (err) return callback(err);
+              callback(null, "Update successful for question_ID: " + questionID + " with answer: " + selection.answer);
+            });
+          }
+        ], function(err, result) {
+          // selectionごとの処理完了後のコールバック
+          if (err) {
+            console.log(err);
+            return cbEachSeries(err);
+          }
+          console.log(result);
+          cbEachSeries(); // 次のselectionへ
+        });
+      }, function(err) {
+        // 全てのselectionsが処理された後のコールバック
+        if (err) {
+          console.log("An error occurred in the process.");
+        } else {
+          console.log("All selections processed successfully.");
+          io.emit('yomikomi', {username: userID}); // 処理完了をクライアントに通知
+        }
+      });
+    });
+
+    
+        
+      
+   
+      socket.on('kaitousakuzyo', (deletions) => {
+        var userID = socket.request.session.user.username;
+        var sqlDelete = "DELETE FROM correct_table WHERE answer = ?;";
+        var sqlUpdate = "UPDATE answer_table SET result = '✕' WHERE answer = ?;";
+        
+        async.eachSeries(deletions, function(deletion, callback) {
+            // 正解を削除
+            connection.query(sqlDelete, [deletion.answer], (err, result) => {
+                if (err) {
+                    console.log(err);
+                    return callback(err);
+                }
+                // 関連する回答の結果を更新
+                connection.query(sqlUpdate, [deletion.answer], (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        return callback(err);
+                    }
+                    callback(); // 次の削除処理に進む
+                });
+            });
+        }, function(err) {
+            if (err) {
+                // エラーが発生した場合の処理
+                console.error("エラーが発生しました: ", err);
+            } else {
+                // すべての処理が成功した場合の処理
+                io.emit('yomikomi',{username: userID}); // クライアントに完了を通知
+            }
+        });
+    });
+  
+     
+     socket.on('montuika',(array)=>{
+      var q1 = "insert into mondai_LIST values(?,?,?,?,?,?,?,?,?,?,?);"
+      var q2 = "select MIN(mon_ID  + 1) AS mon_ID from mondai_LIST where (mon_ID + 1) NOT IN (SELECT mon_ID from mondai_LIST);"
+      var q3 = "select MIN(seikai_ID  + 1) AS seikai_ID from seikai_LIST where (seikai_ID + 1) NOT IN (SELECT seikai_ID from seikai_LIST);"
+      var q4 = "insert into seikai_LIST values(?,?,?);"
+      var da = "a";
+      console.log(array);
+      var moni = 0;
+      var name = array[0];
+      var mondaibun = array[1];
+      var sen1 = array[2];
+      var sen2 = array[3];
+      var sen3 = array[4];
+      var sen4 = array[5];
+      var seikai = array[6];
+      var seiID = 0;
+      var kaiID = 0;
+      if(sen1 == "なし"){
+        sen1 = "";
+        sen2 = "";
+        sen3 = "";
+        sen4 = "";
+        kaiID = 1;
+      }
+      if(array[7] != "なし"){
+        var picture = array[7];
+      }else{
+        var picture = "";
+      }
+    })
+
+     /*socket.on('kiroku',(m1,kaitou1) =>{
+  
+      let monname = 'select m.mon_ID,s.seikai from mondai_LIST m ,seikai_LIST s where sentaku = 1 and m.mon_ID = s.mon_ID;'
+      let seikai = 'select kaitou from mondai_LIST where sentaku = 1;'
+      let tuika = 'insert into kaitou_LIST values(?,?,?,?);'
+      let userIDSELECT = 'select user_ID from users where username = ?;'
+      let update1 = "update kaitou_LIST set user_ID = ? where user_ID = '9999';"
+      var hantei = "✕";
+      connection.query(monname,(err,result,fields)=>{
+        if(err){
+          console.log(err);
+        }
+        var idi = result[0].mon_ID;
+        for(var i = 0;i<result.length;i++){
+          if(kaitou1 == result[i].seikai){
+            hantei = "○";
+          }
+        }
+          var addsqlparams = ['9999',idi,kaitou1,hantei];
+          connection.query(tuika,addsqlparams,(err,result,fields) =>{
+            if(err){
+            console.log(err);
+          }
+          connection.commit((err) =>{
+            if(err){connection.rollback(() =>{throw console.log('error');});}
+          })
+          connection.query(userIDSELECT,m1,(err,result_user,fields)=>{
+            if(err){
+              console.log(err);
+            }
+            var user_I = result_user[0].user_ID
+            connection.query(update1,user_I,(err,result_user2,fields)=>{
+              if(err){
+                console.log(err);
+              }
+              io.emit('owari');
+            })
+          })
+
+         /* })
+        })
+     })
+
+     socket.on('all_commit',()=>{
+      connection.commit((err) =>{
+        if(err){connection.rollback(() =>{throw console.log('error');});}
+        connection.release();
+      })
+     })
+  });*/
+
+        /*})
+      })
+    })*/
+    
+     socket.on('clear',()=>{
+        var userID = socket.request.session.user.username;
+        var sql1="select room_ID from room_table where user_ID =?;"
+        var sql2="select question_ID from question_log where room_ID =? and question_status = 1;"
+        var sql3="update question_log set question_status = 0 where question_status = 1 and room_ID = ? and question_ID =?;"
+        var sql4 ="select distinct user_ID from login_log where user_ID <> ? and room_ID =?;";
+        var sql5 ="DELETE FROM answer_table WHERE user_ID = ? and question_ID =?;"
+        var sql6 ="DELETE FROM judge_table where question_ID =?;"
+        console.log(userID);
+        async.waterfall([
+          function(callback){
+              connection.query(sql1,userID,(err,result,field)=>{
+                if(err){
+                  console.log(err);
+                }
+                console.log("成功");
+                console.log(result[0].room_ID);
+                callback(null,userID,result[0].room_ID);
+              })
+          },
+          function(userID,roomID,callback){
+            connection.query(sql2,roomID,(err,res2,field)=>{
+              if(err){
+                console.log(err);
+              }
+              console.log("成功");
+              console.log(res2[0].question_ID);
+              callback(null,userID,roomID,res2[0].question_ID);
+            })
+          },
+          function(userID,roomID,questionID,callback){
+            connection.query(sql3,[roomID,questionID],(err,result3,field)=>{
+              if(err){
+                console.log(err);
+              }
+            })
+            console.log("成功");
+            callback(null,userID,roomID,questionID);
+          },
+          function(userID,roomID,questionID,callback){
+            connection.query(sql4,[userID,roomID],(err,result4,field)=>{
+              if(err){
+                console.log(err);
+              }
+              console.log("成功");
+              console.log(result4);
+              callback(null,userID,roomID,questionID,result4);
+            })
+          },
+          function(userID,roomID,questionID,student,callback){
+            async.eachSeries(student, function(students, cb) {
+              connection.query(sql5, [students.user_ID, questionID], (err, result5, field) => {
+                  if (err) {
+                      console.log(err);
+                      return cb(err); // エラーをコールバックに渡す
+                  }
+                  console.log("成功");
+                  cb(); // 次のイテレーションへ進むためにコールバックを呼び出す
+              });
+          }, function(err) {
+              // すべてのクエリが完了した後、またはエラーが発生した場合に実行される
+              if (err) {
+                  // エラー処理
+                  return callback(err);
+              }
+              // すべて成功した場合の処理
+              callback(null, userID, roomID, questionID);
+          });
+          },
+          function(userID,roomID,questionID,callback){
+            connection.query(sql6,questionID,(err,result6,field)=>{
+              if(err){
+                console.log(err);
+              }
+              console.log("成功");
+              callback(null,userID,roomID,questionID)
+            })
+          },
+          function(userID,roomID,questionID,callback){
+            socket.emit('modoru');
+          }
+        ])
+     })
+   
+     socket.on('hyou',(c) =>{
+         io.emit('hyouji',c);
+      })
+   
+     socket.on('result_display',()=>{
+        const username = socket.request.session.user.username;
+        io.emit('result_display2',{username:username});
+     })
+     
+     // login
+     socket.on('login_btnclick', (data) => {
+      var username = sanitizeHtml(data.username);
+      var password = sanitizeHtml(data.password);
+      if(data.ExcelJSusername != '') {
+          var login_select = "SELECT * FROM user_table;";
+          //arton_hash
+          console.log(password);
+          const crypto = require('crypto'); // Node.js の crypto モジュールをインポート
+          // メッセージのハッシュ化を行う関数を更新
+          function digestMessage(message) {
+            return new Promise((resolve, reject) => {
+              try {
+                const hash = crypto.createHash('sha256'); // SHA-256 ハッシュ関数を使用
+                hash.update(message); // メッセージでハッシュを更新
+                const hashHex = hash.digest('hex'); // ハッシュを16進数の文字列として取得
+                resolve(hashHex); // ハッシュ値を返す
+              } catch (error) {
+                reject(error); // エラーが発生した場合は、rejectを使用してエラーを返す
+              }
+            });
+          }          
+          (async() => {　　//これがないとawaitを使えない
+          password = await digestMessage(password);    //passwordの値をハッシュ化して代入
+          console.log("hash_pass" + password);    //ハッシュ値確認用
+          })();
+          //end_hash
+          connection.query(login_select,(err, users, fields) => {
+              if(err){
+                  console.log(err);
+                  var new_flug = 0;
+                  //io.emit('new_flug', new_flug);
+                  io.emit('login_error');
+              } else {
+                  var user = users.find(user => user.user_ID === username && user.password === password);
+                  if(user) {
+                      var login_flug = 1;
+                      switch(user.user_type) {
+                          case 1:
+                              async.waterfall([
+                                function(callback) {
+                                    var sql2 = 'SELECT room_ID FROM room_table WHERE user_ID = ?;';
+                                    connection.query(sql2,username, function(err, result) {
+                                        if (err) {
+                                            return callback(err);
+                                        }
+                                        callback(null, result[0].room_ID);
+                                    });
+                                },
+                                function(roomID, callback) {
+                                    var sql3 = 'INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);';
+                                    connection.query(sql3, [roomID, username], function(err, result) {
+                                        if (err) {
+                                            return callback(err);
+                                        }
+                                        callback(null, 'done');
+                                    });
+                                },
+                                function(result,callback){
+                                    var sql4 = 'UPDATE user_table SET log_time = CURRENT_TIMESTAMP WHERE user_ID = ?;';
+                                    connection.query(sql4,username,(err,result,field)=>{
+                                      if(err){
+                                        console.log(err);
+                                      }
+                                      callback(null, 'done');
+                                    })
+                                },
+                                function(result,callback){
+                                  socket.request.session.user = {username:username};
+                                  socket.request.session.save();
+                                  console.log(socket.request.session);
+                                  callback(null,'done');
+                                }
+                            ], function (err, result) {
+                                if (err) {
+                                    console.log(err);
+                                    var new_flug = 0;
+                                    io.emit('new_flug', new_flug);
+                                } else {
+                                    // すべてのクエリが成功した場合の処理
+                                    io.to(socket.id).emit('login_flug', login_flug, data.username);
+                                }
+                            });
+                              break;
+                          case 2:
+                            async.waterfall([
+                              function(callback){
+                                socket.request.session.student = {username:username};
+                                socket.request.session.studentroom_ID = data.selectedOption;
+                                socket.request.session.save();
+                                var sql = 'INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);';
+                                connection.query(sql,[data.selectedOption,data.username], function(err, result) {
+                                    if (err) {
+                                        return callback(err);
+                                    }
+                                    callback(null, "sucess");
+                                });
+                              },
+                              function(result,callback) {
+                                  var sql2 = 'UPDATE user_table SET log_time = CURRENT_TIMESTAMP WHERE user_ID = ?;';
+                                  connection.query(sql2, [data.username], function(err, result) {
+                                      if (err) {
+                                          return callback(err);
+                                      }
+                                      callback(null, 'done');
+                                  });
+                              }
+                            ], function (err, result) {
+                              if (err) {
+                                  console.log(err);
+                                  io.emit('login_error');
+                              } else {
+                                  // すべてのクエリが成功した場合の処理
+                                  io.to(socket.id).emit('login_flug1', login_flug,user.user_name);
+                              }
+                          });
+                              break;
+                          case 3:
+                              async.waterfall([
+                                function(callback){
+                                  var sql = 'SELECT user_ID FROM user_table WHERE user_name = ?;';
+                                  connection.query(sql,data.selectedOption, function(err, result) {
+                                      if (err) {
+                                          return callback(err);
+                                      }
+                                      callback(null, result[0].user_ID,username);
+                                  });
+                                },
+                                function(user_ID,username,callback){
+                                  var sql = "select room_ID from room_table where user_ID = ?;";
+                                  connection.query(sql,user_ID,(err,result,fields)=>{
+                                    if(err){
+                                      console.log(err);
+                                    }
+                                    callback(null,result[0].room_ID,username);
+                                  })
+                                },
+                                function(roomID,username,callback){
+                                  var sql2 = "insert into login_log(room_ID,user_ID) values(?,?);"
+                                  connection.query(sql2,[roomID,username],(err,result2,fields)=>{
+                                    if(err){
+                                      console.log(err);
+                                    }
+                                    io.to(socket.id).emit('login_flug2', login_flug,username);
+                                  })
+                                },
+                              ])
+                              break;
+                          default:
+                              var new_flug = 0;
+                              io.to(socket.id).emit('new_flug', new_flug);
+                      }
+                  } else {
+                      io.to(socket.id).emit('login_error');
+                  }
+              }
+          });
+      }
+  });
+   
+        socket.on('account_delete',(user_ID)=>{
+          var user_ID1 = sanitizeHtml(user_ID);
+          var login_log_delete = "delete from login_log where user_ID = ?;";
+          var sql = "delete from user_table where user_ID = ?;";
+          connection.query(login_log_delete,user_ID,(err,result,field)=>{
+            if(err){
+              console.log(err);
+            }
+            connection.query(sql,user_ID1,(err,result3,field)=>{
+              if(err){
+                console.log(err);
+              }
+            })
+            io.emit('delete_complete');
+          })
+        })
+
+        socket.on('search_accounts', function(searchTerm) {
+          var searchTerm1 = sanitizeHtml(searchTerm);
+          const sql = 'SELECT user_ID, user_name, password,log_time FROM user_table WHERE user_ID LIKE ? OR user_name LIKE ? OR password LIKE ?';
+          connection.query(sql, [`%${searchTerm1}%`, `%${searchTerm1}%`, `%${searchTerm1}%`], function(err, results) {
+              if (err) {
+                  // エラー処理
+                  console.log(err);
+                  socket.emit('search_results', []);
+              } else {
+                  // 検索結果をクライアントに送信
+                  socket.emit('search_results', results);
+              }
+          });
+      });
+
+      socket.on('add_account', function(formData) {
+        if(formData.user_type == "学生"){
+          var user_typeID = 2
+        }else{
+          var user_typeID = 2
+        }
+        var sql = 'insert into user_table(user_ID,user_name,password,user_type) values(?,?,?,?)'
+        connection.query(sql,[formData.user_ID,formData.user_name,formData.pass_word,user_typeID],(err,result,field)=>{
+          if(err){
+            console.log(err);
+            socket.emit('account_added');
+          }
+        })
+      });
+    
+      socket.on('owa2',() =>{
+         io.emit('end');
+      })
+
+
+      socket.on('pageupdate',(page_update_No) =>{
+        switch(page_update_No){
+          case 1:
+            async.waterfall([
+              function(callback){
+                socket.request.session.Before_page = "main.ejs";
+                socket.request.session.page = "mondai2.ejs";
+                console.log(socket.request.session.page);
+                socket.request.session.save();
+                callback(null,"done");
+              },
+              function(result,callback){
+                io.emit('page_updatecomplete'); 
+              }
+            ])
+            break;
+          case 2:
+              socket.request.session.Before_page = "mondai2.ejs";
+              socket.request.session.page = "main.ejs";
+              socket.request.session.save();
+              io.emit('page_updatecomplete2'); 
+              break;
+            case 3:
+                socket.request.session.Before_page = 1;
+                socket.request.session.page = 2;
+                socket.request.session.save();
+                io.emit('page_updatecomplete3'); 
+                break;
+            case 4:
+                socket.request.session.Before_page = 1;
+                socket.request.session.page = 2;
+                socket.request.session.save();
+                io.emit('page_updatecomplete4'); 
+                break;
+            case 5:
+                socket.request.session.Before_page = "main.ejs";
+                socket.request.session.page = "account.ejs";
+                socket.request.session.save();
+                io.emit('page_update2complete'); 
+                break;
+            case 6:
+                  socket.request.session.Before_page = "main.ejs";
+                  socket.request.session.page = "Question_manager.ejs";
+                  socket.request.session.save();
+                  io.emit('page_update3complete'); 
+                  break;
+        }
+      })
+
+
+
+      socket.on('mondai_btnclick',(mondai,o,room_ID) => {
+         var mondai1 = sanitizeHtml(mondai);
+         var o = sanitizeHtml(o);
+         var room_ID = sanitizeHtml(room_ID);
+         console.log(room_ID)
+         if(mondai != ''){
+           var pool = poolCluster.of('MASTER');
+           var mondai_select = "select question_table.question_ID,question_text from question_table,question_log where question_log.question_ID=question_table.question_ID AND question_status = 1 AND room_ID = ?;" //選択した問題SQL
+           let mondai_sentaku = "insert into question_log(question_id,room_id,question_status) VALUES (?,?,1) ;"  //出題問題SQL
+           let sql3 = "insert into judge_table(judge_ID,question_ID) values(?,?);" 
+           let sql4 = "select judge_ID from judge_type where judge_type = ?;"  //判定形式SQL
+           let get_id_sql = "select question_ID from question_table where question_name=?;"
+           let get_status = "select count(*) as cnt from question_log where room_ID = ? AND question_status = 1;"
+           let question_reset = "update question_log set question_status = 0 WHERE room_id = ?;"
+           console.log(room_ID); 
+           pool.getConnection(function(err,connection){
+             if(err != null){
+               console.log("db" + err);
+               return;
+             }
+             connection.query(get_status,[room_ID],(err,status_count,fields) =>{
+              if(err){
+                console.log("wawawa" + err);
+                return;
+              }
+              console.log("count" + status_count[0].cnt);
+              if(status_count[0].cnt >= 1){
+                console.log("count" + status_count[0].cnt);
+                connection.query(question_reset,[room_ID],(err,fields) =>{
+                  if(err){
+                    console.log("reset " + err);
+                    return;
+                  }else{
+                    console.log("リセット");
+                    connection.query(get_id_sql,mondai1,(err,question_id,fields) =>{
+                  if(err){
+                    console.log(err);
+                  }
+                  var q_ID = question_id[0].question_ID;
+                  
+                  connection.query(mondai_sentaku,[q_ID,room_ID],(err,mondai_result,fields) =>{
+                    if(err){
+                      console.log("sentaku_err" + err);
+                    }
+                    connection.commit((err) =>{if(err){connection.rollback(() =>{throw console.log('error');});}})
+                    connection.query(mondai_select,[room_ID],(err,mondai_result2,fields)=>{
+                      if(err){
+                        var flag = 0;
+                        io.emit('mondai_kekka',flag);
+                      }
+                      connection.commit((err) =>{
+                        if(err){connection.rollback(() =>{throw console.log('error');});}
+                      })
+                      var ID = mondai_result2[0].question_ID;
+                      connection.query(sql4,o,(err,result,fields) =>{
+                        if(err){
+                          console.log("sql4 "+err);
+                        }
+                        var han1 = result[0].judge_ID;
+                        connection.query(sql3,[han1,ID],(err,result,fields)=>{
+                          if(err){
+                            console.log("sql3 "+err);
+                          }
+                        })
+                      })
+                        var flag = 1;
+                        io.emit('mondai_kekka',flag);
+                        })
+                      })
+                    })
+                  }
+                })
+              }else{
+                console.log("naiyo--");
+                connection.query(get_id_sql,mondai1,(err,question_id,fields) =>{
+                  if(err){
+                    console.log(err);
+                  }
+                  var q_ID = question_id[0].question_ID;
+                  connection.query(mondai_sentaku,[q_ID,room_ID],(err,mondai_result,fields) =>{
+                    if(err){
+                      console.log("sentaku_err" + err);
+                    }
+                      connection.commit((err) =>{
+                      if(err){connection.rollback(() =>{throw console.log('error');});}
+                    })
+                    connection.query(mondai_select,room_ID,(err,mondai_result2,fields)=>{
+                      if(err){
+                      var flag = 0;
+                      io.emit('mondai_kekka',flag);
+                    }
+                    connection.commit((err) =>{
+                      if(err){connection.rollback(() =>{throw console.log('error');});}
+                    })
+                    var ID = mondai_result2[0].question_ID;
+                    connection.query(sql4,o,(err,result,fields) =>{
+                      if(err){
+                        console.log("sql4 "+err);
+                      }
+                      var han1 = result[0].judge_ID;
+                      connection.query(sql3,[han1,ID],(err,result,fields)=>{
+                        if(err){
+                          console.log("sql3 "+err);
+                        }
+                      })
+                    })
+                    var flag = 1;
+                    io.emit('mondai_kekka',flag);
+                    })
+                  })
+                 })
+              }
+            })
+          })
+        }
+      })
+       
+      socket.on('question_release',()=>{
+        io.emit('questionPosted');
+      });
+      
+      
+      socket.on('room_IDserach',() =>{
+        var pool = poolCluster.of('MASTER');
+        var username = socket.request.session.user.username;
+        var room_IDserachsql = "select room_ID from room_table where user_ID =?;"
+        pool.getConnection(function(err,connection){
+          if(err){
+            console.log(err);
+          }
+          connection.query(room_IDserachsql,username,(err,room_IDresult,field)=>{
+            if(err){
+              console.log(err);
+            }
+            console.log(room_IDresult[0].room_ID);
+            io.emit('room_IDget',room_IDresult[0].room_ID);
+          })
+        })
+      })
+      
+      /*socket.on('mondai_btnclick',(mondai,o) => {
+         if(mondai != ''){
+           var pool = poolCluster.of('MASTER');
+           var mondai_select = "select q.question_ID,q.question_text from question_table q,question_log l where l.question_ID = q.question_ID AND l.question_status = 1 AND l.room_ID = 1;" //選択した問題SQL
+           let mondai_sentaku = "insert into question_log(question_id,room_id,question_status,limit_time) VALUES (?,1,1,?) ;"  //出題問題SQL
+           let sql3 = "insert into judge_table(judge_ID,question_ID) values(?,?);" 
+           let sql4 = "select judge_ID from judge_type where judge_type = ?;"  //判定形式SQL
+           let get_id_sql = "select question_ID from question_table where question_name = ?;"
+           let get_status = "select count(*) as cnt from question_log where room_ID = 1 AND question_status = 1;"
+           let question_reset = "update question_log set question_status = 0 WHERE room_id = 1;"
+
+           pool.getConnection(function(err,connection){
+             if(err != null){
+               console.log("db" + err);
+               return;
+             }
+             connection.query(get_status,(err,status_count,fields) =>{
+              if(err){
+                console.log("wawawa" + err);
+                return;
+              }
+              console.log("count" + status_count[0].cnt);
+              if(status_count[0].cnt >= 1){
+                console.log("count" + status_count[0].cnt);
+                connection.query(question_reset,(err,fields) =>{
+                  if(err){
+                    console.log("reset " + err);
+                    return;
+                  }else{
+                    console.log("リセット");
+                    connection.query(get_id_sql,[mondai.question_name,mondai.seconds],(err,question_id,fields) =>{
+                  if(err){
+                    console.log(err);
+                  }
+                  var q_ID = question_id[0].question_ID;
+                  connection.query(mondai_sentaku,[q_ID,mondai.seconds],(err,mondai_result,fields) =>{
+                    if(err){
+                      console.log("sentaku_err" + err);
+                    }
+                    connection.commit((err) =>{if(err){connection.rollback(() =>{throw console.log('error');});}})
+                    connection.query(mondai_select,(err,mondai_result2,fields)=>{
+                      if(err){
+                        var flag = 0;
+                        io.emit('mondai_kekka',flag);
+                      }
+                      connection.commit((err) =>{
+                        if(err){connection.rollback(() =>{throw console.log('error');});}
+                      })
+                      var ID = mondai_result2[0].question_ID;
+                      connection.query(sql4,[mondai.Scoring_method],(err,result,fields) =>{
+                        if(err){
+                          console.log("sql4 "+err);
+                        }
+                        var han1 = result[0].judge_ID;
+                        connection.query(sql3,[han1,ID],(err,result,fields)=>{
+                          if(err){
+                            console.log("sql3 "+err);
+                          }
+                        })
+                      })
+                        var flag = 1;
+                        io.emit('mondai_kekka',flag);
+                        })
+                      })
+                    })
+                  }
+                })
+              }else{
+                console.log("naiyo--");
+                connection.query(get_id_sql,[mondai.question_name,mondai.seconds],(err,question_id,fields) =>{
+                  if(err){
+                    console.log(err);
+                  }
+                  var q_ID = question_id[0].question_ID;
+                  connection.query(mondai_sentaku,[q_ID,mondai.seconds],(err,mondai_result,fields) =>{
+                    if(err){
+                      console.log("sentaku_err" + err);
+                    }
+                    connection.commit((err) =>{
+                      if(err){connection.rollback(() =>{throw console.log('error');});}
+                    })
+                    connection.query(mondai_select,(err,mondai_result2,fields)=>{
+                      if(err){
+                      var flag = 0;
+                      io.emit('mondai_kekka',flag);
+                    }
+                    connection.commit((err) =>{
+                      if(err){connection.rollback(() =>{throw console.log('error');});}
+                    })
+                    var ID = mondai_result2[0].question_ID;
+                    connection.query(sql4,mondai.Scoring_method,(err,result,fields) =>{
+                      if(err){
+                        console.log("sql4 "+err);
+                      }
+                      var han1 = result[0].judge_ID;
+                      connection.query(sql3,[han1,ID],(err,result,fields)=>{
+                        if(err){
+                          console.log("sql3 "+err);
+                        }
+                      })
+                    })
+                    var flag = 1;
+                    io.emit('mondai_kekka',flag);
+                    })
+                  })
+                 })
+              }
+            })
+          })
+        }
+      })*/
+
+      /*socket.on('mondai_btnclick',(question_data) => {
+        console.log(question_data.userName);
+       if(question_data != ''){
+         var pool = poolCluster.of('MASTER');
+         //
+         //データベースサーバーに接続
+         async.waterfall([
+           function(callback) {
+             pool.getConnection(function(err, connection) {
+                 if (err) {
+                     console.log(err);
+                     return callback(err);
+                 }
+                 callback(null, connection);
+             });
+           },
+           function(connection,callback) {
+             var mondai_select = "select q.question_ID,r.room_ID,j.judge_ID from question_table q,room_table r,judge_type j where q.question_name = ? and judge_type = ? and r.user_ID = ?;"
+             connection.query(mondai_select, [question_data.question_name,question_data.Scoring_method,question_data.userName], function(err, selectResult) {
+                 if (err) {
+                     connection.release();
+                     console.log(err);
+                     return callback(err);
+                 }
+                 callback(null, connection,selectResult);
+             });
+           },
+           function(connection,selectResult,callback) {
+             let judge_insert = "insert into judge_table values (?, ?);";
+             let questionID = selectResult[0].question_ID;
+             let roomID = selectResult[0].room_ID;
+             let judgeID = selectResult[0].judge_ID;
+             connection.query(judge_insert, [judgeID,questionID], function(err, result) {
+                 if (err) {
+                     connection.release();
+                     console.log(err);
+                     return callback(err);
+                 }
+                 callback(null, connection, questionID, roomID);
+             });
+           },
+           function(connection, questionID, roomID, callback) {
+             let sql3 = "insert into question_log(question_ID, room_ID, question_status, limit_time) values (?, ?, 1, ?);";
+             connection.query(sql3, [questionID, roomID,question_data.seconds], function(err, result) {
+                 if (err) {
+                     connection.release();
+                     console.log(err);
+                     return callback(err);
+                 }
+                 connection.release();
+                 callback(null, 'success');
+             });
+           }
+         ],function(err,result){
+           if (err) {
+             io.emit('mondai_kekka', 0);
+           } else {
+             io.emit('mondai_kekka', 1);
+           }
+         })
+      }
+    })*/
+
+      socket.on('kiroku',(m1,kaitou1) =>{
+        var kaitou = sanitizeHtml(kaitou1)
+        var pool = poolCluster.of('MASTER');
+        async.waterfall([
+          function(callback){
+            pool.getConnection(function(err, connection) {
+              if (err) {
+                  console.log(err);
+                  return callback(err);
+              }
+              callback(null, connection);
+            });
+          },
+          function(connection,callback){
+            var sql = 'select room_ID from login_log where user_ID = ?;';
+            connection.query(sql,m1,(err,result,fields)=>{
+              if(err){
+                console.log(err);
+              }
+              var room = result[0].room_ID;
+              callback(null,connection,room);
+            })
+          },
+          function(connection,room,callback){
+            var select = 'select question_ID from question_log where room_ID = ? and question_status = 1;';
+            connection.query(select,room,(err,result2,field)=>{
+              if(err){
+                console.log(err);
+              }
+              var question = result2[0].question_ID;
+              callback(null,connection,question);
+            })
+          },
+          function(connection, question, callback) {
+            var checkAnswerExists = 'SELECT * FROM answer_table WHERE user_ID = ? AND question_ID = ?;';
+            connection.query(checkAnswerExists, [m1, question], (err, result) => {
+                if (err) {
+                    console.log(err);
+                    connection.release();
+                    return callback(err);
+                }
+                if (result.length > 0) {
+                    // 既に回答が存在する場合
+                    connection.release();
+                    socket.emit('insert_error');
+                    return callback(new Error('Answer already exists'));
+                }
+                // 回答が存在しない場合、処理を続行
+                callback(null, connection, question);
+            });
+         },
+          function(connection,question,callback){
+            var correct = 'select answer from correct_table where question_ID = ?';
+            connection.query(correct,question,(err,result3,fields)=>{
+              if(err){
+                console.log(err);
+              }
+              var correct_data = result3[0].answer;
+              console.log(correct_data);
+              callback(null,correct_data,question);
+            })
+          },
+          function(correct_data,question,callback){
+            var judgement = "✕";
+            if(kaitou == correct_data){
+              judgement = "○";
+            }
+            callback(null,question,judgement);
+          },
+          function(question,judgement,callback){
+            var insert = "insert into answer_table(user_ID,question_ID,answer,ans_pics_flag,result) values(?,?,?,0,?);";
+            connection.query(insert,[m1,question,kaitou,judgement],(err,result4,fields)=>{
+              if(err){
+                console.log(err);
+              }
+              callback(null,"success");
+            })
+          }
+        ],function(err,result5){
+          if(err){
+
+          }else{
+            socket.emit('end');
+          }
+        })
+      })
+ 
+      socket.on('all_commit',()=>{
+       connection.commit((err) =>{
+         if(err){connection.rollback(() =>{throw console.log('error');});}
+         connection.release();
+       })
+      })
+
+      socket.on('requestQualificationData',function(qualificationName){
+        var sql = 'select g.question_genre,g.question_years,q.question_name from question_table q,genre_table g where g.qualification_name = ? and q.question_ID = g.question_ID;';
+        connection.query(sql,qualificationName,(err,result,fields)=>{
+          if(err){
+            console.log(err);
+          }
+          socket.emit('qualificationData', result);
+        });
+      })
+
+      socket.on('requestquestionname',function(qualificationName){
+        var sql = 'select g.question_genre,q.question_name from question_table q,genre_table g where g.question_years = ? and q.question_ID = g.question_ID;';
+        connection.query(sql,qualificationName,(err,result,fields)=>{
+          if(err){
+            console.log(err);
+          }
+          socket.emit('questionname', result);
+        });
+      })
+
+      socket.on('requestgenre',function(qualificationName){
+        var sql = 'select g.question_genre from question_table q,genre_table g where q.question_name = ? and q.question_ID = g.question_ID;';
+        connection.query(sql,qualificationName,(err,result,fields)=>{
+          if(err){
+            console.log(err);
+          }
+          socket.emit('questiongenre', result);
+        });
+      })
+
+
+      socket.on('logout',function(){
+        socket.request.session.destroy(function(err) {
+          if (err) {
+              console.error("セッション破棄中にエラーが発生しました。", err);
+              return res.status(500).send("セッションの破棄に失敗しました。");
+          }
+          socket.emit('logout_complete');
+        });
+      })
+
+      //ユーザー追加手動
+      socket.on('Add_user_manually',(data) =>{
+        var pool = poolCluster.of('MASTER');
+
+        pool.getConnection(function(err,connection){
+          if(err){
+            console.log(err);
+          }
+          //データベースへの接続
+           try {
+        // パスワードをSHA-256でハッシュ化
+        const hash = crypto.createHash('sha256');
+        hash.update(data.password);
+        const hashedPassword = hash.digest('hex');
+
+        // データベースへの接続
+        var insertuser = 'INSERT INTO user_table(user_ID, user_name, password, user_type) values (?, ?, ?, ?);';
+        connection.query(insertuser, [data.userID, data.username, hashedPassword, data.usertype], (err, result, field) => {
+          if (err) {
+            throw err; // エラーを投げる
+          }
+          if (data.room_name && data.userID) {
+            var insertRoom = 'INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?);';
+            connection.query(insertRoom, [data.room_name, data.userID], (err, result) => {
+              if (err) {
+                throw err; // エラーを投げる
+              }
+              // room_tableへの挿入が完了
+              console.log('Room data inserted successfully.');
+            });
+          }
+          io.emit('Add_user_manually_Complete'); // 処理が完了したらイベントを発火
+        });
+        } catch (error) {
+          console.error('Hashing error:', error); // ハッシュ化でエラーが発生した場合
+        } finally {
+          if (connection) connection.release(); // コネクションをプールに戻す
+        }
+          })
+      })
+
+      function hashPassword(password) {
+        const sha256 = crypto.createHash('sha256');
+        sha256.update(password);
+        return sha256.digest('hex');
+      }
+
+      // CSVパーサーの仮定（CSVをJSONに変換する関数など）
+          function parseCSV(csvData) {
+            const lines = csvData.split('\n'); // 改行で分割して各行に
+            const headers = lines[1].split(','); // 2行目をヘッダーとして使用
+            const result = [];
+        
+            for (let i = 2; i < lines.length; i++) { // 3行目からデータ行
+                const obj = {};
+                const currentLine = lines[i].split(',');
+                
+                if (!currentLine[currentLine.length - 1] || currentLine[currentLine.length - 1].trim() === '') {
+                  break;
+                }
+                for (let j = 0; j < headers.length; j++) {
+                  if (headers[j] === 'パスワード') {
+                    obj[headers[j]] = hashPassword(currentLine[j]);
+                } else if(headers[j] === 'USER_TYPE'){
+                   // USER_TYPE の値をINT型に変換して obj に追加
+                  obj[headers[j]] = parseInt(currentLine[j], 10);
+                }else{
+                  obj[headers[j]] = currentLine[j];
+                }
+                }
+                result.push(obj);
+            }
+            return result;
+        }
+
+        socket.on('file_upload', function(data) {
+          console.log('受信したファイル名:', data.fileName);
+          const normalizedData = data.data.replace(/\r\n/g, '\n');
+          const records = parseCSV(normalizedData); // CSVデータをパースしてレコードの配列に変換
+          console.log(records);
+          // レコードをバルクインサートするSQL文を構築
+          const insertQuery = 'INSERT INTO user_table(user_ID,user_name,password,user_type) VALUES ?';
+          const values = records.map(record => [record.学籍番号, record.名前, record.パスワード, record.アカウント区分]);
+          
+          connection.query(insertQuery, [values], function(err, result) {
+            if (err) throw err;
+            socket.emit('file_upload_Complete');
+          });
+        });
+
+
+      socket.on('searchQuery', function(data) {
+        var pool = poolCluster.of('MASTER');
+        const query = '%' + data.query + '%';
+        var sql = 'select user_ID,user_name,log_time from user_table where user_ID LIKE ? OR user_name LIKE ? OR password LIKE ? OR log_time LIKE ?;';
+        pool.getConnection(function(err,connection){
+          connection.query(sql,[query,query,query,query],(err,search_result,field)=>{
+            if(err){
+              console.log(result);
+            }
+            connection.release();
+            socket.emit('searchResult',search_result);
+          })
+        })
+      });
+
+      socket.on('search_question', function(data) {
+        var pool = poolCluster.of('MASTER');
+        var data = sanitizeHtml(data);
+        const query = '%' + data + '%';
+        //var sql = 'select user_ID,user_name,log_time from user_table where user_ID LIKE ? OR user_name LIKE ? OR password LIKE ? OR log_time LIKE ?;';
+        var sql2 = 'select g.qualification_name, g.question_genre, g.question_years, q.question_name, q.question_text, COALESCE(s.select_1, \'\') AS select_1, COALESCE(s.select_2, \'\') AS select_2, COALESCE(s.select_3, \'\') AS select_3, COALESCE(s.select_4, \'\') AS select_4, a.type_name, CASE WHEN q.picture_flag = 0 THEN \'\' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR a.type_name LIKE ?;';
+        pool.getConnection(function(err,connection){
+          connection.query(sql2,[query,query,query,query,query,query],(err,search_result,field)=>{
+            if(err){
+              console.log(err);
+            }
+            connection.release();
+            socket.emit('questionsearchResult',search_result);
+          })
+        })
+      });
+
+      socket.on('question_delete',(question_name) =>{
+        var pool = poolCluster.of('MASTER');
+        pool.getConnection(function(err,connection){
+          if(err){
+            console.log(err)
+          }
+          async.waterfall([
+            function(callback) {
+                // ① question_nameを使ってSQLでquestion_tableからquestion_IDを取得
+                const query1 = "SELECT question_ID FROM question_table WHERE question_name = ?";
+                connection.query(query1, [question_name], function(err, result) {
+                    if (err) return callback(err);
+                    if (result.length === 0) return callback(new Error("Question not found"));
+                    const question_ID = result[0].question_ID;
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ② question_IDを使用してpics_tableからデータ削除
+                const query2 = "DELETE FROM pics_table WHERE question_ID = ?";
+                connection.query(query2, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ③ question_IDを使用してjudge_tableからデータ削除
+                const query3 = "DELETE FROM judge_table WHERE question_ID = ?";
+                connection.query(query3, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ④ question_IDを使用してquestion_logからデータ削除
+                const query4 = "DELETE FROM question_log WHERE question_ID = ?";
+                connection.query(query4, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ⑤ question_IDを使用してgenre_tableからデータ削除
+                const query5 = "DELETE FROM genre_table WHERE question_ID = ?";
+                connection.query(query5, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ⑥ question_IDを使用してquestion_tableからデータ削除
+                const query6 = "DELETE FROM question_table WHERE question_ID = ?";
+                connection.query(query6, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            }
+        ], function(err, question_ID) {
+            if (err) {
+                // エラーがあった場合、クライアントにエラーメッセージを送信
+                connection.release();
+                socket.emit('error', err.message);
+            } else {
+                // 全ての操作が成功した場合、クライアントに完了メッセージを送信
+                connection.release();
+                socket.emit('question_Complete');
+            }
+        });
+        })
+     })
+   });
+

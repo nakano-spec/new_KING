@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>問題管理ページ</title>
+        <link href="/stylesheets/Question_manage.css" rel="stylesheet">
+    </head>
+<body>
+<script src="/socket.io/socket.io.js"></script>
+<div class="header">
+    <h1>問題管理ページ</h1>
+</div>
+    <div>
+        <button id="add-button" class="button">新規作成</button>
+        <button id="delete-button" type="submit" class="button">選択した問題の削除</button>
+        <button  id="edit-button" class="button">選択した問題の編集</button>
+        <input type="text" id="search-box" placeholder="検索..." class="search-box">
+        <button id="search-button" class="search-button">検索</button>
+        <button id="menu-button">メニュー</button>
+        <ul id="menu-dropdown" class="hidden">
+            <li><a href="#" id="main-link">メインメニュー</a></li>
+            <li><a href="#" id="question-link">アカウント一覧表示</a></li>
+            <li><a href="#" id="questionmanage-link">問題一覧表示</a></li>
+        </ul>
+    </div> 
+    <form id="select-form">   
+    <table>
+        <thead>
+            <tr>
+                <th>選択</th>
+                <th>資格名</th>
+                <th>ジャンル</th>
+                <th>年度</th>
+                <th>問題名</th>
+                <th>問題文</th>
+                <th>選択肢1</th>
+                <th>選択肢2</th>
+                <th>選択肢3</th>
+                <th>選択肢4</th>
+                <th>写真名</th>
+                <th>回答形式</th>
+            </tr>
+        </thead>
+        <% questions.forEach(function(question,index) { %>
+            <tr>
+                <td> <input type="radio" name="select" value="<%= question.question_name %>"></td>
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.qualification_name %></td>
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.question_genre %></td>
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.question_years %></td>
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.question_name %></td> 
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.question_text %></td> 
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.select_1 %></td> 
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.select_2 %></td> 
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.select_3 %></td> 
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.select_4 %></td> 
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.pics_name %></td>
+                <td class="ellipsis" onclick="toggleText(this)"><%= question.type_name %></td> 
+            </tr>
+        <% }); %>
+    </table>
+</form>
+
+<script>
+    var socket = io();
+    const menuButton = document.getElementById('menu-button');
+      const menuDropdown = document.getElementById('menu-dropdown');
+
+      // ボタンクリック時の処理
+      menuButton.addEventListener('click', () => {
+        menuDropdown.classList.toggle('active'); // メニューを表示・非表示切り替え
+      });
+
+      // ドキュメント全体をクリックしたらメニューが非表示になるようにする
+      document.addEventListener('click', (event) => {
+        if (!menuButton.contains(event.target)) {
+          menuDropdown.classList.remove('active');
+        }
+      });
+
+    document.getElementById('add-button').addEventListener('click', function() {
+        window.location.href='/question_select'
+    });
+
+    document.getElementById('edit-button').addEventListener('click', function() {
+        var selectedRadio = document.querySelector('input[name="select"]:checked');
+        if (selectedRadio) {
+            var selectedData = {
+                userID: selectedRadio.getAttribute('data-user-id'),
+                userName: selectedRadio.getAttribute('data-user-name'),
+                password: selectedRadio.getAttribute('data-password'),
+                logTime: selectedRadio.getAttribute('data-log-time')
+            };
+            var queryParams = 'userID=' + encodeURIComponent(selectedData.userID) +
+              '&userName=' + encodeURIComponent(selectedData.userName) +
+              '&password=' + encodeURIComponent(selectedData.password);
+            window.location.href='/account_edit?' + queryParams;
+        } else {
+            alert('問題を選択してください。');
+        }
+    });
+
+    // 削除ボタンのイベントリスナー
+    document.getElementById('delete-button').addEventListener('click', function() {
+        var selectedRadio = document.querySelector('input[name="select"]:checked');
+        if (selectedRadio) {
+            var　question_ID = selectedRadio.value
+            socket.emit('question_delete',question_ID);
+        } else {
+            alert('問題を選択してください。');
+        }
+    });
+
+    socket.on('question_Complete',function(){
+        window.location.href='/Question_manage';
+    })
+
+    document.getElementById('search-button').addEventListener('click', function() {
+        var searchTerm = document.getElementById('search-box').value;
+        socket.emit('search_question', searchTerm);
+    });
+
+    socket.on('questionsearchResult', function(results) {
+        updateTable(results);
+    });
+
+    function updateTable(data) {
+        var tbody = document.querySelector('#select-form tbody');
+        tbody.innerHTML = ''; // テーブルの現在の内容をクリア
+
+        // 新しい行をテーブルに追加
+        data.forEach(function(question, index) {
+            var tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td><input type="radio" name="select" value="${question.question_name}>"</td> 
+                <td class="ellipsis" onclick="toggleText(this)">${question.qualification_name}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.question_genre}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.question_years}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.question_name}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.question_text}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.select_1}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.select_2}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.select_3}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.select_4}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.pics_name}</td>
+                <td class="ellipsis" onclick="toggleText(this)">${question.type_name}</td>
+                `;
+
+            tbody.appendChild(tr);
+        });
+    }
+    
+    function toggleText(element) {
+        // 現在のクラスをチェック
+        if (element.classList.contains('ellipsis')) {
+            // ellipsisクラスを削除して全文を表示
+            element.classList.remove('ellipsis');
+        } else {
+            // ellipsisクラスを追加してテキストを省略
+            element.classList.add('ellipsis');
+        }
+    }
+
+    // 問題出題リンクの要素を取得
+    const questionLink = document.getElementById('question-link');
+      const mainLink = document.getElementById('main-link');
+      const questionmanagelink = document.getElementById('questionmanage-link');
+
+      // 問題出題リンクがクリックされた時の処理を設定
+      questionLink.addEventListener('click', function(event) {
+        // リンクのデフォルトの動作（ページ遷移）を防止
+        event.preventDefault();
+
+        // ここで特定の処理を実行
+        var page_update_No = 3;
+        socket.emit('pageupdate', page_update_No);
+
+        // その他のSocket.io処理やページ遷移などをここに追加
+      });
+
+      socket.on('page_updatecomplete',function(){
+              window.location.href = '/account'; // 問題出題画面のURL
+      });
+
+      // 問題出題リンクがクリックされた時の処理を設定
+      mainLink.addEventListener('click', function(event) {
+        // リンクのデフォルトの動作（ページ遷移）を防止
+        event.preventDefault();
+
+        // ここで特定の処理を実行
+        var page_update_No = 2;
+        socket.emit('pageupdate', page_update_No);
+      });
+
+      questionmanagelink.addEventListener('click', function(event) {
+        // リンクのデフォルトの動作（ページ遷移）を防止
+        event.preventDefault();
+
+        // ここで特定の処理を実行
+        var page_update_No = 4;
+        socket.emit('pageupdate', page_update_No);
+      });
+      
+      socket.on('page_updatecomplete2',function(){
+              window.location.href = '/main'; // main.ejs
+      });
+
+      socket.on('page_updatecomplete3',function(){
+              window.location.href = '/account'; // account.ejs
+      });
+
+      socket.on('page_updatecomplete4',function(){
+              window.location.href = '/Question_manage'; // account.ejs
+      });
+</script>
+</body>
+</html>

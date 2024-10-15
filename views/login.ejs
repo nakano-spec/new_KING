@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回答即時判断表示システム</title>
+    <link type="text/css" rel="stylesheet" href="/stylesheets/login.css">
+</head>
+<body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <p id="abc">回答即時判断表示システム</p><br>
+    <div align="center">
+         <table>
+            <form name = "myform" action="/login">
+                <div class="row">
+                    <form class="col s12">
+                      <div class="row">
+                        <div class="input-field-col-s6">
+                          <input id="first_name" name="name" type="text" class="validate" minlength="2" maxlength="10" placeholder="学籍番号"
+                          value=""  >
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="input-field-col-s12">
+                          <input id="password" type="password" name="password1" class="validate" minlength="8" maxlength="16" placeholder="パスワード"
+                            value="" >
+                        </div>
+                      </div>
+                      <!-- <div class="row">
+                        <div class="input-field col s12">
+                          <label for="password">　確　認　</label>
+                          <input id="password" type="password" name="password2" class="validate" minlength="8" maxlength="16" placeholder="もう一度入力"
+                          value="" size="20" style="font-size: 50px;">
+                        </div>
+                      </div> -->
+                      <div class="row">
+                      </div>
+                  </div> 
+                  <br>
+                  <select name = "select1" required style = "width: 30%;height: 50px;font-size: 20px;text-align: center;padding: 10px;position: relative;top: 10px;">
+                    <option value="1">PC3</option>
+                    <option value="2">PC2</option>
+                    <option value="3">DS</option>
+                    <option value="4">PC1</option>
+                    <option value="5">225</option>
+                    <option value="6">226</option>                    
+                  </select>
+                  <br>
+                  <br>
+                  <input type="submit" name="button" value="ログイン" class="s"></button>
+            </form>
+        </table>
+    </div>
+    <br>
+    <div class="container">
+    <ul id="mondai"></ul>
+    </div>
+    <script>
+      //socket.ioを読み込む。
+      var socket = io();
+      //
+      //データを読み込む
+      var f = document.forms.myform;
+      var flug = 0;
+      var token = 0;
+      var mondai = document.getElementById('mondai');
+      var item = document.createElement('h3');
+      //
+
+      //ログインボタンが押されたら行う処理
+      f.button.addEventListener('click',function(e){
+        //formの自動送信処理を阻止
+        e.preventDefault();
+        /*
+        if(!f.name.value){
+          alert("学籍番号が入力されていません。");
+        }else if(!f.password.value){
+          alert("パスワードが入力されていません。");
+        }*/
+        //ユーザーIDとパスワード、セレクトボックスの中身を取得しオブジェクトにする。
+        var name1 = sanitize(f.name.value);
+        var passwordInput = sanitize(f.password1.value);
+        var form = document.forms.myform;
+        var selectBox = form.select1;
+        var data = {
+            username: name1,
+            password: passwordInput,
+            selectedOption: selectBox.value
+        };
+        //
+        //wwwのlogin_btnclickにdataをSocket.ioに送信する。
+        socket.emit('login_btnclick',data);
+      })
+
+      //ログインしたユーザーが先生だった場合の処理
+      socket.on('login_flug',function(flug,name){
+        if(flug == 1) {
+          window.location.href = 'main?name=' + encodeURIComponent(name);
+        }else if(flug == 0){
+          console.log('パスワードが不一致、または登録されていないuserデータです。');
+        }
+      })
+      //
+
+      //ログインしたユーザーが学生だった場合
+      socket.on('login_flug1',function(flug,name){
+        if(flug == 1) {
+          window.location.href = '/kaitou?name=' + encodeURIComponent(name);
+        }else if(flug == 0){
+          item.textContent = 'パスワードが不一致、または登録されていないuserデータです。';
+          mondai.appendChild(item);
+        }
+      })
+      //
+
+      //ログインしたユーザーが表示用アカウントだった場合
+      socket.on('login_flug2',function(flug,name){
+        if(flug == 1) {
+          window.location.href = '/hyouji2?name=' + encodeURIComponent(name);
+        }else if(flug == 0){
+          item.textContent = 'パスワードが不一致、または登録されていないuserデータです。';
+          mondai.appendChild(item);
+        }
+      })
+
+      //ログインが失敗したときの処理
+      socket.on('new_flug',function(flug){
+        if(flug == 0) {
+          console.log('ユーザー名とパスワードが違います。');
+        }
+      }) 
+
+      socket.on('login_error',function(){
+        if(flug == 0) {
+          alert('入力内容に不備があります。\n再度入力し直してください。');
+        }
+      }) 
+
+
+      //サニタイズ処理
+      function sanitize(str) {
+          return String(str)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#x27;')
+              .replace(/\//g,'&#x2F;')
+              .replace(/:/g, '')  // コロンを取り除く
+              .replace(/;/g, '') // セミコロンを取り除く
+              .replace(/\*/g, ''); // アスタリスクを完全に除去
+      }
+    </script>
+</body>
+</html>

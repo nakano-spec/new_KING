@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>アカウント一覧</title>
+    <!-- ここに必要なCSSやJavaScriptを追加 -->
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse; /* これにより、隣接するセルのボーダーが1本になる */
+        }
+        th, td {
+            border: 1px solid #ddd; /* セルにボーダーを追加 */
+            padding: 8px; /* セルのパディング */
+        }
+        th {
+            background-color: #f4f4f4; /* ヘッダーの背景色 */
+            text-align: left; /* ヘッダーのテキストを左寄せ */
+        }
+    </style>
+</head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <h1>アカウント一覧</h1>
+    <button id="add-button">新規追加</button>
+    <button id="edit-button">選択したユーザーを編集</button>
+    <button id="delete-button">選択したユーザーを削除</button>
+     <!-- 検索ボックス -->
+     <input type="text" id="search-box" placeholder="ユーザー検索">
+     <button type="button" id="search-button">検索</button>
+    <form id="select-form">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>学籍番号</th>
+                    <th>名前</th>
+                    <th>パスワード</th>
+                    <th>最終ログイン日時</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% data.forEach(function(row,index) { %>
+                    <tr>
+                        <td>
+                            <input type="radio" name="select" value="<%= row.user_ID %>" 
+                            data-user-id="<%= row.user_ID %>" 
+                            data-user-name="<%= row.user_name %>"
+                            data-password="<%= row.password %>"
+                            data-log-time="<%= row.log_time %>">
+                        </td>
+                        <td><%= row.user_ID %></td>
+                        <td><%= row.user_name %></td>
+                        <td><%= row.password %></td>
+                        <td><%= new Date(row.log_time).toLocaleString('ja-JP') %></td> 
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        <br>
+        <button type="submit">選択</button>
+    </form>
+    <div id="selected-data">
+        <!-- 選択されたデータを表示する領域 -->
+    </div>
+
+    <script>
+        var socket = io();
+        document.getElementById('select-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // フォームのデフォルトの送信を防止
+            window.location.href='/main?name=teacher'
+        });
+
+        document.getElementById('add-button').addEventListener('click', function() {
+            window.location.href='/account_addition'
+        });
+
+        document.getElementById('edit-button').addEventListener('click', function() {
+            var selectedRadio = document.querySelector('input[name="select"]:checked');
+            if (selectedRadio) {
+                var selectedData = {
+                    userID: selectedRadio.getAttribute('data-user-id'),
+                    userName: selectedRadio.getAttribute('data-user-name'),
+                    password: selectedRadio.getAttribute('data-password'),
+                    logTime: selectedRadio.getAttribute('data-log-time')
+                };
+                var queryParams = 'userID=' + encodeURIComponent(selectedData.userID) +
+                  '&userName=' + encodeURIComponent(selectedData.userName) +
+                  '&password=' + encodeURIComponent(selectedData.password);
+                window.location.href='/account_edit?' + queryParams;
+            } else {
+                alert('ユーザーを選択してください。');
+            }
+        });
+
+        // 削除ボタンのイベントリスナー
+        document.getElementById('delete-button').addEventListener('click', function() {
+            var selectedRadio = document.querySelector('input[name="select"]:checked');
+            var user_ID = selectedRadio.getAttribute('data-user-id')
+            if (selectedRadio) {
+                socket.emit('account_delete',user_ID);
+            } else {
+                alert('ユーザーを選択してください。');
+            }
+        });
+
+        socket.on('delete_complete',function(){
+            window.location.href='/account';
+        })
+
+        document.getElementById('search-button').addEventListener('click', function() {
+            var searchTerm = document.getElementById('search-box').value;
+            socket.emit('search_accounts', searchTerm);
+        });
+
+        socket.on('search_results', function(results) {
+            updateTable(results);
+        });
+
+    function updateTable(data) {
+        var tbody = document.querySelector('#select-form tbody');
+        tbody.innerHTML = ''; // テーブルの現在の内容をクリア
+
+        // 新しい行をテーブルに追加
+        data.forEach(function(row, index) {
+            var tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td><input type="radio" name="select" value="${row.user_ID}" 
+                    data-user-id="${row.user_ID}" 
+                    data-user-name="${row.user_name}"
+                    data-password="${row.password}"
+                    data-log-time="${row.log_time}"></td>
+                <td>${row.user_ID}</td>
+                <td>${row.user_name}</td>
+                <td>${row.password}</td>
+                <td>${new Date(row.log_time).toLocaleString('ja-JP')}</td>`;
+
+            tbody.appendChild(tr);
+        });
+    }
+    </script>    
+</body>
+</html>

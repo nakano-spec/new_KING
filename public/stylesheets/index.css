@@ -1,0 +1,36 @@
+p{
+  font-size: 1px;
+}
+.R{
+  display: flex;
+  justify-content: center;
+  border: solid 3px;
+}
+.hun{
+  font-size: 50px;
+}
+.ti{
+  font-size: 50px;
+}
+.byou{
+  font-size: 50px;
+}
+h1{
+text-align: center;
+}
+#picture {
+  text-align: center; /* 画像を中央揃えに */
+}
+#picture img {
+  max-width: 100%; /* 画像がコンテナを超えないように */
+  height: auto; /* 画像のアスペクト比を維持 */
+}
+.example{
+text-align: center;
+width: 600px;
+height: 400px;
+}
+body{
+background-color: #fffca9;
+background-size: cover;
+}

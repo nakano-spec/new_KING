@@ -1,0 +1,95 @@
+table{
+    border-collapse: collapse;
+    text-align: center;
+    width: 417px;
+    table-layout: fixed;
+  }
+  .example{
+  width:1100px;
+  table-layout: fixed;
+  }
+  th, td {
+  padding: 5px;
+  border: 1px solid #333;
+  }
+  th {
+    background-color: #2c88d9;
+    color: #FFF;
+  }
+  
+
+  .orange{
+    background-color: #ff4500;
+  }
+
+  /* ボタンスタイル */
+#menu-button {
+  background-color: #333;
+  color: #fff;
+  padding: 26px 40px;
+  border: none;
+  cursor: pointer;
+}
+
+/* ドロップダウンメニューのスタイル */
+#menu-dropdown {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: none; /* 最初は非表示 */
+  right: 20px; /* 右端からのオフセットを調整（必要に応じて変更） */
+  top: 90px; /* ボタンからのオフセットを調整（必要に応じて変更） */
+}
+
+#menu-dropdown li {
+  padding: 10px 20px;
+}
+
+#menu-dropdown li a {
+  text-decoration: none;
+  color: #333;
+  display: block;
+}
+
+/* メニューが表示されるときのスタイル */
+#menu-dropdown.active {
+  display: block; /* メニューを表示 */
+}
+
+/* hidden クラスを追加することで非表示にする */
+.hidden {
+  display: none;
+}
+
+#menu-button {
+  position: absolute;
+  top: 20px; /* 検索ボタンと同じ高さ */
+  right: 0; /* 右端に配置 */
+}
+
+/* モーダルのスタイル */
+#modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* グレーのオーバーレイ */
+  z-index: 1001; /* モーダルよりも前面に表示 */
+  display: none;
+}
+
+#confirmation-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px;
+  text-align: center;
+  z-index: 1002; /* グレーのオーバーレイよりも前面に表示 */
+  display: none;
+}

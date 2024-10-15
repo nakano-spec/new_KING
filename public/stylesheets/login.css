@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Sacramento&display=swap');
+p{
+    text-align: center;
+}
+#abc{
+    font-size: 100px;
+}
+
+.row{
+    text-align: center;
+}
+body{
+    background-color:#2ba9b9;
+    background-size: cover;
+}
+
+input select textarea{
+  font-size: 100%;
+}
+#mondai{
+  position: fixed; top:30%;left:10%
+}
+.s{
+  width: 30%;
+  height: 60px;
+  background-color: orange;
+  font-size: 30px;
+  text-align: center;
+  padding: 10px;
+}
+.sinki{
+  width: 30%;
+  height: 60px;
+  background-color: orange;
+  font-size: 30px;
+  text-align: center;
+  padding: 10px;
+}
+.input-field-col-s6 > input{
+  font-size: 50px;
+}
+.input-field-col-s12 > input{
+  font-size: 50px;
+}
+
+
+@media only screen and (max-width : 767px){
+  p{
+    text-align: center;
+}
+#abc{
+    font-size: 20px;
+}
+
+.row{
+    text-align: center;
+}
+body{
+    background-color:#2ba9b9;
+    background-size: cover;
+}
+
+input select textarea{
+  font-size: 20%;
+}
+
+#mondai{
+  position: fixed; top:20%;left:10%
+}
+.s{
+  width: 40%;
+  height: 45px;
+  background-color: orange;
+  font-size: 20px;
+  text-align: center;
+  padding: 10px;
+}
+.sinki{
+  width: 40%;
+  height: 45px;
+  background-color: orange;
+  font-size: 20px;
+  text-align: center;
+  padding: 10px;
+}
+.input-field-col-s6 > input{
+  width: 250px;
+  height: 30px;
+}
+.input-field-col-s12 > input{
+  width: 250px;
+  height: 30px;
+}
+}
+
+body{
+  background-color: #fffca9;
+  background-size: cover;
+}

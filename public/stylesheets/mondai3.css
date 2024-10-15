@@ -1,0 +1,37 @@
+p{
+    font-size: 1px;
+}
+.example{
+    text-align: center;
+}
+input.s{
+    width: 400px;
+    height: 100px;
+    font-size: 50px;
+}
+input.a{
+    width: 400px;
+    height: 100px;
+    font-size: 30px;
+}
+.rem{
+    display: flex;
+    justify-content: center;
+    border: solid 3px;
+}
+.rem2{
+    font-size: 100px;
+}
+.rem2{
+    font-size: 100px;
+}
+.rem3{
+    font-size: 100px;
+}
+.rem4{
+    font-size: 100px;
+}
+body{
+    background-color: #fffca9;
+    background-size: cover;
+  }

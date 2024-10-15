@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>ユーザー新規追加画面：入力</title>
+  <link type="text/css" rel="stylesheet" href="/stylesheets/account_addition.css">
+</head>
+
+<body>
+  <h1>解答即時判断システム：ユーザーの新規追加</h1>
+  <hr>
+  <h2>ユーザーの新規追加</h2>
+  <h3>各項目を入力してください。</h3>
+  <div id="data"></div>
+  <div id="form">
+    <div id="text">
+      ユーザー名 : <input type="text" id="user_name">
+      <p></p>
+      <br>学籍番号　 : <input type="text" id="user_ID">
+      <p></p>
+      <br>パスワード : <input type="password" id="password">
+      <p></p>
+      <br>確認　　　 : <input type="password" id="confirmationText">
+      <p></p>
+      <br>教師権限 : <input type="checkbox" id="user_type">
+    </div>
+    <p></p>
+    <p></p>
+    <div id="button">
+      <input type="button" value="戻る" id="submit" onclick="location.href='account_additionMethod'">
+      <input type="button" value="追加" id="addUserButton">
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("addUserButton").addEventListener("click", function() {
+      // フォームから入力された値を取得
+      var user_ID = document.getElementById("user_ID").value;
+      var user_name = document.getElementById("user_name").value;
+      var password = document.getElementById("password").value;
+      var user_type = document.getElementById("user_type").checked ? 1 : 2; // チェックが入っていれば1、そうでなければ2
+
+      // データベースへの書き込み処理を行う関数を呼び出す
+      writeToDatabase(user_ID, user_name, password, user_type);
+    });
+
+    function writeToDatabase(user_ID, user_name, password, user_type) {
+      // サーバーサイドへのリクエスト
+      fetch("/addUser", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_ID: user_ID,
+          user_name: user_name,
+          password: password,
+          user_type: user_type,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log(data.message);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+    }
+  </script>
+</body>
+</html>

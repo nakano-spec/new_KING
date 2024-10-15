@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>回答一覧</title>
+        <link type="text/css" rel="stylesheet" href="/stylesheets/mondai4.css">
+    </head>
+    <body>
+        <script src ='/socket.io/socket.io.js'></script>
+        <h1>回答一覧</h1>
+        <div style ="display: flex;">
+            <ul>
+                <table  id ="table" class ="example">
+                  <thead>
+                    <tr><th>資格名</th><th>年度</th><th>問題名</th><th>ジャンル</th><th>学籍番号</th><th>名前</th><th>回答</th><th>正解</th><th>判定</th></tr>
+                  </thead>
+                  <tbody>
+                <% web.forEach((list,index) => { %>
+                        <tr>
+                          <td><%= list.qualification_name_%></td>
+                          <td><%= list.question_years%></td>
+                          <td><%= list.question_name%></td>
+                          <td><%= list.question_genre%></td>
+                          <td><%= list.user_ID%></td>
+                          <td><%= list.user_name %></td>
+                          <td><%= list.userAnswer %></td>
+                          <td><%= list.collectAnswer %></td>
+                          <td><input type="radio" value="○" name="radio<%= index %>">○</td>
+                          <td><input type="radio" value ="✕" name="radio<%= index %>">✕</td>
+                        </tr>
+                <% }) %>
+              </table>
+            </tbody>
+              </ul>
+              <div id = "div1"></div>
+            </div>
+            <div id = "div2"></div>
+            <div id = "div3"></div>
+            <form name ="my">
+              <input type="submit" name="kekka" value="結果発表">
+            </form>
+            <input type="submit" class="button" name="button1" value="問題選択に戻る" onclick="osareta()"><br>
+        <script>
+          var socket = io();
+          var f = document.forms.my;
+          var col = table.rows.length;
+          const div1 = document.getElementById("div1");
+          const newDiv = document.createElement("div");
+          var col = col;
+          var er = 0;
+          var value = 0;
+          let array = new Array(col-1);
+          for(let i = 1;i<col;i++)
+          {
+            const newBtn = document.createElement("button");
+            newBtn.innerHTML ="表示";
+            newBtn.value =i;
+            newBtn.style="width: 100px; height: 60px; display:flex; flex-flow: column; position: relative; top:55px;";
+            newBtn.onclick = () => {
+              var c = table.rows[i].cells[4].innerHTML;
+              socket.emit('hyou',c);
+            }
+            newDiv.appendChild(newBtn);
+            div1.appendChild(newDiv);
+          }
+          var a = 0
+
+          f.kekka.addEventListener('click',function(e){
+            e.preventDefault();
+            var hasError = false;
+            var selections = []; // 選択された情報を保持する配列
+
+            // テーブルの行ごとにループ
+            for (let i = 1; i < table.rows.length; i++) {
+                var row = table.rows[i];
+                var user_ID = row.cells[4].textContent; // 学籍番号（ユーザーID）
+                var selectedValue = ''; // 選択された値を保持する変数
+
+                // ラジオボタンの選択状態を確認
+                var radioButtons = row.querySelectorAll('input[type="radio"]');
+                var isSelected = Array.from(radioButtons).some(radio => radio.checked);
+
+                if (!isSelected) {
+                    // 選択されていない行があればエラーダイアログを表示
+                    window.confirm('選択されていない項目があります。全ての項目を選択してください。');
+                    hasError = true;
+                    break; // ループを中断
+                } else {
+                    // 選択された値を取得
+                    selectedValue = Array.from(radioButtons).find(radio => radio.checked).value;
+                    // 選択されたユーザーIDと値を配列に追加
+                    selections.push({ user_ID: user_ID, selectedValue: selectedValue });
+                }
+            }
+
+            // エラーがなければサーバーにデータを送信
+            if (!hasError) {
+                console.log(selections); // 選択結果をコンソールに表示（デバッグ用）
+                socket.emit('kekkasyusei', selections); // サーバーに選択結果を送信
+            }
+          })
+
+          function osareta(){
+            socket.emit('clear');
+          }
+
+          socket.on('modoru',function(){
+              window.location.href='/mondai';
+          })
+        </script>
+    </body>
+</html>

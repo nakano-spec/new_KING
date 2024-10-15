@@ -1,0 +1,17 @@
+.but{
+  text-align: center;
+}
+.box > .example{
+  color: #ffffff;
+}
+h1{
+  text-align: center;
+}
+body{
+background-color: #fffca9;
+background-size: cover;
+}
+.example {
+  border-collapse: separate;
+  border-spacing: 10px 5px; /* 垂直方向と水平方向の間隔 */
+}

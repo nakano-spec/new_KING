@@ -1,0 +1,14 @@
+var socket = io();
+var f = document.forms.myform1;
+var myname = document.getElementById("myid2");
+var m1 = myname.innerText;
+
+f.kaitou1.addEventListener('click',function(e){
+    e.preventDefault();
+    let checkvalue = f.elements['hoge'].value;
+    socket.emit('kiroku',m1,checkvalue);
+})
+
+socket.on('end',function(){
+    window.location.href ='/kaitou3?name=' + encodeURIComponent(myname.innerText);
+})

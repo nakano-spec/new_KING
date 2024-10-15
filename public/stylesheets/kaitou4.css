@@ -1,0 +1,31 @@
+.radiobutton {
+    display: none;
+ }
+label {
+     background-color: skyblue;
+        padding: 10px 20px;
+    }
+.radiobutton:checked + label {
+background-color: pink;
+}
+.s{
+    width: 100px;
+    height: 50px;
+}
+textarea{
+  width: 500px;
+  height: 200px;
+}
+body{
+  background-color: #fffca9;
+  background-size: cover;
+}
+@media only screen and (max-width :767px){
+    .form1 > .form2 > .text{
+    height: 30px;
+    width: 300px;
+  }
+  .form1 > .form2{
+    text-align: center;
+  }
+  }

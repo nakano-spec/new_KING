@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>表示</title>
+        <meta charset="utf-8">
+        <link type="text/css" rel="stylesheet" href="/stylesheets/hyouji2.css">
+    </head>
+    <body>
+        <script src="/socket.io/socket.io.js"></script>
+        <section class="main">
+            <div class="container">
+                <p id="username"><%= name %></p>
+                <form name ="s1">
+                <h1>受付中…</h1>
+                <input type ="submit" name="modoru" value = "戻る" class="s"> 
+                </form>
+            </div>
+        </section>
+        <script>
+            var socket = io();
+            var f = document.forms.s1;
+            var log = function(){
+                window.location.href ='/h';
+            }
+
+            setInterval(log,3000);
+                //ボタンが押されたらloginページに戻る。
+            f.modoru.addEventListener('click',function(e){
+                e.preventDefault();
+                window.location.href='/login?name=' +  encodeURIComponent(username);
+            }) 
+        </script>
+    </body>
+</html>

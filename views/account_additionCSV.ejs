@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>ユーザー新規追加画面：CSV</title>
+    <link type="text/css" rel="stylesheet" href="/stylesheets/account.css">
+</head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <div class="orange">
+        <h1>回答即時判断システム：ユーザーの新規追加</h1>
+        <hr>
+    </div>
+
+    <a>csvファイルでユーザーを追加</a>
+    <br><a href="account_additionCSVExplanation">詳しい追加方法はこちら</a>
+
+    <!-- ドラッグアンドドロップエリア -->
+    <div id="drop_area" style="border: 2px dashed #ccc; padding: 20px; width: 300px; text-align: center; margin: 20px; cursor: pointer;"
+        onclick="document.getElementById('file_input').click();">
+        ファイルをここにドラッグアンドドロップ<br>
+        <input type="file" id="file_input" style="display: none;" multiple>
+    </div>
+
+
+    <!-- CSVの画像とファイル名を表示するコンテナ -->
+    <div id="files_info"></div>
+
+    <button id="upload_button">追加</button>
+    <button onclick="history.back()">戻る</button>
+
+    <script>
+        var socket = io();
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropArea = document.getElementById('drop_area');
+            const fileInput = document.getElementById('file_input');
+            const filesInfo = document.getElementById('files_info');
+
+            dropArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropArea.style.backgroundColor = "#f0f0f0";
+            });
+
+            dropArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropArea.style.backgroundColor = "#fff";
+            });
+
+            dropArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropArea.style.backgroundColor = "#fff";
+                const files = e.dataTransfer.files;
+                fileInput.files = files;
+                displayFiles(files);
+            });
+
+            fileInput.addEventListener('change', function() {
+                displayFiles(this.files);
+            });
+
+            function displayFiles(files) {
+                filesInfo.innerHTML = ''; // コンテナをクリア
+                Array.from(files).forEach(file => {
+                // 画像とファイル名を表示するdivを作成
+                const fileDiv = document.createElement('div');
+                fileDiv.innerHTML = `
+                    <img src="csv/csvpicture.png" alt="CSV" style="width: 50px;"><br>
+                    ${file.name}
+                `;
+                filesInfo.appendChild(fileDiv);
+
+                
+                // FileReaderを使用してファイルの内容を読み込む
+                const reader = new FileReader();
+                
+                // ファイル読み込みエラーのハンドリング
+                reader.onerror = function() {
+                    console.error("ファイルの読み込みに失敗しました。");
+                };
+                
+                // ファイルをテキストとして読み込む
+                reader.readAsText(file);
+            });
+            }
+
+            document.getElementById('upload_button').addEventListener('click', function() {
+                const files = fileInput.files;
+                if (files.length === 0) {
+                    alert('ファイルが選択されていません。');
+                    return;
+                }if(files.length >= 2){
+                    alert('ファイルを複数選択しています。ファイルを一つだけ選択してください。')
+                }
+
+                // 選択された全ファイルに対して処理
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+
+                    reader.onload = function(event) {
+                        // Socket.ioを使用してサーバーにファイルの内容を送信
+                        socket.emit('file_upload', { fileName: file.name, data: event.target.result });
+                    };
+
+                    reader.onerror = function() {
+                        console.error("ファイルの読み込みに失敗しました。", file.name);
+                    };
+
+                    reader.readAsText(file); // ファイルをテキストとして読み込む
+                });
+            });
+        });
+
+        socket.on('file_upload_Complete',function(){
+            window.location.href ='/account';
+        })
+    </script>
+</body>
+</html>

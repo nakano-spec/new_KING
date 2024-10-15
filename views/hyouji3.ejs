@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>表示</title>
+        <link type="text/css" rel="stylesheet" href="/stylesheets/hyouji3.css">
+    </head>
+    <script src='/socket.io/socket.io.js'></script>
+    <body>
+        <h1><%= answer %></h1>
+        <p><%= user_ID %></p>
+        <p><%= user_name %></p>
+        <script>
+        var socket = io();
+        //キーボードであるボタンが押されたら色を変える。ここではaまたはAボタンを押したら赤に、bまたはBボタンを押したら青になる。
+        document.addEventListener('keydown', (event) => {
+            var keyName = event.key;
+ 
+         if (event.key === "a" || event.key === "A") {
+            document.bgColor = "red"
+            document.fgColor = "#ffffff"
+         }else if (event.key === "b" || event.key === "B"){
+            document.bgColor ="blue"
+            document.fgColor = "#ffffff"
+         }
+       });
+        
+       //サーバーから送られてきたデータをクエリパラメータにセットし、'/hyou3'にセットされたパスのファイルに送る。
+        socket.on('hyouji',function(de){
+              window.location.href ='/hyou3?data=' + encodeURIComponent(de);
+        })
+
+        //先生側からサーバーを経由して結果表示命令が来た場合'/hyou4'にセットされたパスのファイルに送る。
+        socket.on('result_display2',function(data){
+            window.location.href='/hyou4?username=' + encodeURIComponent(data.username);
+        })
+
+         //先生側からサーバーを経由して結果表示命令が来た場合'/hyou4'にセットされたパスのファイルに送る。
+        </script>
+    </body>
+</html>

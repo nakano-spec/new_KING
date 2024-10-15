@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang ="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>回答</title>
+        <link type="text/css" rel="stylesheet" href="/stylesheets/kaitou2.css">
+    </head>
+    <body>
+        <script src ="/socket.io/socket.io.js"></script>
+        <div id = myid2>
+            <p><%= name %></p>
+        </div>
+        <h1><%= question_text %></h1>
+        <br>
+        <form name="myform1">
+            <div class="radiobox">
+                <input id="radio1" class="radiobutton1" name="hoge" type="radio" value="ア" />
+                <label for="radio1">ア. <%= select_1 %></label>
+                <input id="radio2" class="radiobutton2" name="hoge" type="radio" value="イ" />
+                <label for="radio2">イ. <%= select_2 %></label>
+                <input id="radio3" class="radiobutton3" name="hoge" type="radio" value="ウ" />
+                <label for="radio3">ウ. <%= select_3 %></label>
+                <input id="radio4" class="radiobutton4" name="hoge" type="radio" value="エ" />
+                <label for="radio4">エ. <%= select_4 %></label>
+                <input type = "submit"class="s" name="kaitou1" value ="回答を送る" >
+            </div>
+        </form>
+        <script>
+            var socket = io();
+            var f = document.forms.myform1;
+            var myname = document.getElementById("myid2");
+            var m1 = myname.innerText;
+            f.kaitou1.addEventListener('click',function(e){
+                e.preventDefault();
+                let checkvalue = f.elements['hoge'].value;
+                socket.emit('kiroku',m1,checkvalue);
+            })
+
+            socket.on('insert_error',function(){
+                alert("もうすでに回答しています。");
+            });
+
+            socket.on('end',function(){
+                window.location.href ='/kaitou3?name=' + encodeURIComponent(myname.innerText);
+            })
+        </script>
+    </body>
+</html>

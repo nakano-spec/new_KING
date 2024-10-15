@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>問題一覧</title>
+    <!-- ここに必要なCSSやJavaScriptを追加 -->
+    <style>
+        table {
+            width: 80%;
+            border-collapse: collapse; /* これにより、隣接するセルのボーダーが1本になる */
+        }
+        th, td {
+            border: 1px solid #ddd; /* セルにボーダーを追加 */
+            padding: 8px; /* セルのパディング */
+        }
+        th {
+            background-color: #f4f4f4; /* ヘッダーの背景色 */
+            text-align: center; /* ヘッダーのテキストを左寄せ */
+        }
+        .ellipsis {
+            white-space: nowrap; /* 改行を防ぐ */
+            overflow: hidden; /* はみ出た内容を非表示 */
+            text-overflow: ellipsis; /* 省略符号を表示 */
+            max-width: 150px; /* 最大幅を設定（必要に応じて調整） */
+            cursor: pointer; /* クリック可能であることを示すカーソル */
+        }
+    </style>
+</head>
+<body>
+    <script src="/socket.io/socket.io.js"></script>
+    <h1>アカウント一覧</h1>
+    <button id="add-button">新規追加</button>
+    <button id="edit-button">選択した問題を編集</button>
+    <button id="delete-button">選択した問題を削除</button>
+     <!-- 検索ボックス -->
+     <input type="text" id="search-box" placeholder="ユーザー検索">
+     <button type="button" id="search-button">検索</button>
+     <br>
+    <form id="select-form">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>資格名</th>
+                    <th>ジャンル</th>
+                    <th>年度</th>
+                    <th>問題名</th>
+                    <th>問題文</th>
+                    <th>選択肢1</th>
+                    <th>選択肢2</th>
+                    <th>選択肢3</th>
+                    <th>選択肢4</th>
+                    <th>写真名</th>
+                    <th>回答形式</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% data.forEach(function(row,index) { %>
+                    <tr>
+                        <td>
+                            <input type="radio" name="select" value="<%= row.user_ID %>" 
+                            data-qualification_name="<%= row.qualification_name %>" 
+                            data-question_genre="<%= row.question_genre %>"
+                            data-question_years="<%= row.question_years %>"
+                            data-question_years="<%= row.question_name %>"
+                            data-question_text="<%= row.question_text %>"
+                            data-select_1="<%= row.select_1 %>"
+                            data-select_2="<%= row.select_2 %>"
+                            data-select_3="<%= row.select_3 %>"
+                            data-select_4="<%= row.select_4 %>"
+                            data-pics_name="<%= row.pics_name %>"
+                            data-type_name="<%= row.type_name %>">
+                        </td>
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.qualification_name %></td>
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.question_genre %></td>
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.question_years %></td>
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.question_name %></td> 
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.question_text %></td> 
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.select_1 %></td> 
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.select_2 %></td> 
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.select_3 %></td> 
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.select_4 %></td> 
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.pics_name %></td>
+                        <td class="ellipsis" onclick="toggleText(this)"><%= row.type_name %></td>  
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        <br>
+        <button type="submit">選択</button>
+    </form>
+    <div id="selected-data">
+        <!-- 選択されたデータを表示する領域 -->
+    </div>
+
+    <script>
+        var socket = io();
+        document.getElementById('select-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // フォームのデフォルトの送信を防止
+            window.location.href='/main?name=teacher'
+        });
+
+        document.getElementById('add-button').addEventListener('click', function() {
+            window.location.href='/account_addition'
+        });
+
+        document.getElementById('edit-button').addEventListener('click', function() {
+            var selectedRadio = document.querySelector('input[name="select"]:checked');
+            if (selectedRadio) {
+                var selectedData = {
+                    userID: selectedRadio.getAttribute('data-user-id'),
+                    userName: selectedRadio.getAttribute('data-user-name'),
+                    password: selectedRadio.getAttribute('data-password'),
+                    logTime: selectedRadio.getAttribute('data-log-time')
+                };
+                var queryParams = 'userID=' + encodeURIComponent(selectedData.userID) +
+                  '&userName=' + encodeURIComponent(selectedData.userName) +
+                  '&password=' + encodeURIComponent(selectedData.password);
+                window.location.href='/account_edit?' + queryParams;
+            } else {
+                alert('ユーザーを選択してください。');
+            }
+        });
+
+        // 削除ボタンのイベントリスナー
+        document.getElementById('delete-button').addEventListener('click', function() {
+            var selectedRadio = document.querySelector('input[name="select"]:checked');
+            var user_ID = selectedRadio.getAttribute('data-user-id')
+            if (selectedRadio) {
+                socket.emit('account_delete',user_ID);
+            } else {
+                alert('ユーザーを選択してください。');
+            }
+        });
+
+        socket.on('delete_complete',function(){
+            window.location.href='/account_list';
+        })
+
+        document.getElementById('search-button').addEventListener('click', function() {
+            var searchTerm = document.getElementById('search-box').value;
+            socket.emit('search_accounts', searchTerm);
+        });
+
+        socket.on('search_results', function(results) {
+            updateTable(results);
+        });
+
+        function updateTable(data) {
+            var tbody = document.querySelector('#select-form tbody');
+            tbody.innerHTML = ''; // テーブルの現在の内容をクリア
+
+            // 新しい行をテーブルに追加
+            data.forEach(function(row, index) {
+                var tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td><input type="radio" name="select" value="${row.user_ID}" 
+                        data-user-id="${row.user_ID}" 
+                        data-user-name="${row.user_name}"
+                        data-password="${row.password}"
+                        data-log-time="${row.log_time}"></td>
+                    <td>${row.user_ID}</td>
+                    <td>${row.user_name}</td>
+                    <td>${row.password}</td>
+                    <td>${new Date(row.log_time).toLocaleString('ja-JP')}</td>`;
+
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function toggleText(element) {
+            // 現在のクラスをチェック
+            if (element.classList.contains('ellipsis')) {
+                // ellipsisクラスを削除して全文を表示
+                element.classList.remove('ellipsis');
+            } else {
+                // ellipsisクラスを追加してテキストを省略
+                element.classList.add('ellipsis');
+            }
+        }
+    </script>    
+</body>
+</html>
