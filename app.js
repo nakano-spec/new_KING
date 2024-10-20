@@ -61,19 +61,19 @@ const router = require('./routes/index');
 //読み込んだexpressをapp変数に格納
 var app = express();
 
-const db_conf = {
+/*const db_conf = {
   host: process.env.DB_HOST,
   user: process.env.DB_HOST,
   password: process.env.DB_PASSPORT,
   database: process.env.DB_NAME,
-};
+};*/
 
-/*const db_conf2 ={
+const db_conf ={
   host :'localhost',
   user :'root',
   password :'20010426',
   database :'mydb2',
-}*/
+}
   //shimamura_password
   //password :'matosui122083',
 
