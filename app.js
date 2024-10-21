@@ -94,6 +94,7 @@ pool.add('MASTER',db_conf);
 //const pool2 = mysql.createPoolCluster();
 //pool2.add('MASTER',db_conf2);
 
+nothing to commit, working tree clean
 app.set('pool',pool);
 //app.set('pool2',pool2);
 
@@ -216,3 +217,4 @@ app.post('/',upload.array('uploadfile'),function(req,res){
 
 app.use(cors());
 module.exports = { app,sessionMiddleware };
+//コメント1
