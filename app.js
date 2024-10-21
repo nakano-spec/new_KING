@@ -94,7 +94,6 @@ pool.add('MASTER',db_conf);
 //const pool2 = mysql.createPoolCluster();
 //pool2.add('MASTER',db_conf2);
 
-nothing to commit, working tree clean
 app.set('pool',pool);
 //app.set('pool2',pool2);
 
