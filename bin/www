@@ -139,7 +139,7 @@
     io.emit('crypto',sha512Hash); 
   })
 
-     socket.on('new_btnclick', (name,pass1,pass2) => {
+     socket.on('new_btnclick', (name,pass1,pass2) => {g
       if(pass1 == pass2) {
         var new_select1 = "select username from users where username = ?;"
         var new_select2 = "select password from users where password = ?;"

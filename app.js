@@ -217,4 +217,3 @@ app.post('/',upload.array('uploadfile'),function(req,res){
 app.use(cors());
 module.exports = { app,sessionMiddleware };
 //コメント1
-//コメント2
