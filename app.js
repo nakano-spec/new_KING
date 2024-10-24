@@ -56,6 +56,7 @@ var mailaddressRouter = require('./routes/mailaddress');
 const emailRoutes = require('./routes/emailRoute');
 var question_additionMethodRouter = require('./routes/question_additionMethod');
 var question_additionmanualRouter = require('./routes/question_additionmanual');
+var testRouter = require('./routes/SQL_test');
 
 const router = require('./routes/index');
 //読み込んだexpressをapp変数に格納
@@ -69,25 +70,17 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'localhost',
-  user :'root',
-  password :'20010426',
-  database :'mydb2',
+  host :'172.18.96.186',
+  user :'connect',
+  password :'K1ng@Oyster',
+  database :'mydb',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 }
-  //shimamura_password
-  //password :'matosui122083',
+  
+//192.168.0.17
 
-  //ichi_password
-  //password :'Bonobo09040425',
-  
-  //nakano_password
-  //password :'20010426',
-  
-  //myoujin_password
-  //password :'20021225'
-  
-  //yoshida_password
-  //password :'ha031008',
 const pool = mysql.createPoolCluster();
 pool.add('MASTER',db_conf);
 
@@ -109,14 +102,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static('public'));
 app.use(express.static('images'));
 
-var options = {
-  host: 'localhost',
-  user: 'root',
-  password: '20010426',
-  database: 'mydb2'
-};
+const sessionpool = mysql.createPool({
+  host: '172.18.96.186',
+  user :'connect',
+  password :'K1ng@Oyster',
+  database :'mydb',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-var sessionStore = new MySQLStore(options);
+//192.168.0.17
+
+
+var sessionStore = new MySQLStore({
+  createDatabaseTable: true
+},sessionpool.promise());
 
 const sessionMiddleware = session({
   secret: 'team_king_oyster_mashroom',
@@ -179,6 +180,7 @@ app.use('/mailaddress',mailaddressRouter);
 app.use('/api', emailRoutes);
 app.use('/question_select', question_additionMethodRouter);
 app.use('/question_additionmanual', question_additionmanualRouter);
+app.use('/SQL_test', testRouter);
 
 const helmet = require('helmet');
 app.use(helmet());

@@ -90,7 +90,9 @@
         };
         //
         //wwwのlogin_btnclickにdataをSocket.ioに送信する。
-        socket.emit('login_btnclick',data);
+        //socket.emit('login_btnclick',data);
+        console.log(data);
+        socket.emit('login',data);
       })
 
       //ログインしたユーザーが先生だった場合の処理
@@ -136,6 +138,14 @@
           alert('入力内容に不備があります。\n再度入力し直してください。');
         }
       }) 
+
+      socket.on('login_sucess',function(result){
+            console.log(result);
+      })
+
+      socket.on('login_null',function(result){
+            console.log(result);
+      })
 
 
       //サニタイズ処理
