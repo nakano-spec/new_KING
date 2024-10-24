@@ -69,10 +69,10 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'localhost',
-  user :'root',
-  password :'20010426',
-  database :'mydb2',
+  host :'172.18.96.182:3306',
+  user :'connect',
+  password :'K1ng@Oyster',
+  database :'mydb',
 }
   //shimamura_password
   //password :'matosui122083',
