@@ -14,12 +14,12 @@ router.get("/", (req, res)=> {
 });
 
 const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '20010426',
-    database: 'mydb2'
+      host :'172.18.96.186',
+      user :'connect',
+      password :'K1ng@Oyster',
+      database :'mydb',
   });
-  //password
+  //192.168.0.17:
   //matosui122083
 
 //このページに来たら最初に行う処理
