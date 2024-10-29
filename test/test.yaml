@@ -1,0 +1,20 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 120  # テストの実行時間
+      arrivalRate: 10  # 1秒あたりのユーザー数
+  payload:
+    path: "users.csv"  # CSVファイルのパス
+    fields: ["username", "password"]  # CSVの列名
+scenarios:
+  - engine: "socketio"
+    options:
+      socketio:
+        transports: ['websocket']  # WebSocketのみを使用
+    flow:
+      - emit:
+          channel: "login"
+          data:
+            username: "{{ username }}"  # CSVファイルから取得
+            password: "{{ password }}"  # CSVファイルから取得
+        await: "login_sucess"  # 成功時に受け取るイベント

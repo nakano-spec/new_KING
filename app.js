@@ -75,8 +75,9 @@ const db_conf ={
   password :'K1ng@Oyster',
   database :'mydb',
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 100,
+  queueLimit: 500,
+  idleTimeout: 60000
 }
   
 //192.168.0.17
@@ -84,11 +85,8 @@ const db_conf ={
 const pool = mysql.createPoolCluster();
 pool.add('MASTER',db_conf);
 
-//const pool2 = mysql.createPoolCluster();
-//pool2.add('MASTER',db_conf2);
 
 app.set('pool',pool);
-//app.set('pool2',pool2);
 
 //ejsを使えるようにしている。
 app.set('views', path.join(__dirname, 'views'));
@@ -210,13 +208,5 @@ var storage = multer.diskStorage({
   }
 })
 
-var upload = multer({storage: storage});
-
-app.post('/',upload.array('uploadfile'),function(req,res){
-  console.log(req.file);
-})
-
 app.use(cors());
 module.exports = { app,sessionMiddleware };
-//コメント1
-//コメント2

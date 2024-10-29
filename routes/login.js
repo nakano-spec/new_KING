@@ -5,7 +5,7 @@ var store = require('store');
 const async = require('async');
 
 router.get('/', function(req, res, next) {
-        res.render('login');
+    res.render('login');
 });
   
 module.exports = router;

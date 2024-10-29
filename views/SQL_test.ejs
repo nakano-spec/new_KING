@@ -16,6 +16,10 @@
         <input type ="button" value="SQL(insert)テスト1" onclick="SQL_test2()"></input>
         <input type ="button" value="SQL(update)テスト1" onclick="SQL_test3()"></input>
         <input type ="button" value="SQL(delete)テスト1" onclick="SQL_test4()"></input>
+        <br>
+        <br>
+        <input type="text" class="router"><br>
+        <input type ="button" value="router遷移テスト1" onclick="SQL_test6()"></input>
     </body>
     <script>
         var socket = io();
@@ -49,6 +53,11 @@
                 value: data
             }
             socket.emit('SQL_test5',SQL_data);
+        }
+
+        function SQL_test6(){
+            let user_Id = document.getElementsByClassName("router");
+            window.location.href="./account_additionChange?userId=" + user_Id[0].value
         }
 
         socket.on('test_result',function(result){

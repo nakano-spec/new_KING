@@ -58,7 +58,10 @@
     </div>
     <script>
       //socket.ioを読み込む。
-      var socket = io();
+      const socket = io({
+        transports: ['websocket'], // WebSocketのみを使用する
+        upgrade: false // WebSocketへのアップグレードを無効にする（必要に応じて）
+      });
       //
       //データを読み込む
       var f = document.forms.myform;
