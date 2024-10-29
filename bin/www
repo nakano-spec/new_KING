@@ -889,6 +889,20 @@
                     console.log(err);
                   }
                   var q_ID = question_id[0].question_ID;
+                  Socket.on('serch_room',async function(){
+                    var data={
+                      sql:mondai_sentaku, 
+                      value:[q_id,room_ID]
+                    }
+                    try{
+                      var result=await SQL_exec(data);
+                      socket.emit('roomID_result',room_IDresult);
+                    }
+                    catch{
+                      console.error(error);
+                      socket.emit('roomID_result',error);
+                    }
+                   )}
                   connection.query(mondai_sentaku,[q_ID,room_ID],(err,mondai_result,fields) =>{
                     if(err){
                       console.log("sentaku_err" + err);
@@ -896,30 +910,21 @@
                       connection.commit((err) =>{
                       if(err){connection.rollback(() =>{throw console.log('error');});}
                     })
-                    connection.query(mondai_select,room_ID,(err,mondai_result2,fields)=>{
-                      if(err){
-                      var flag = 0;
-                      io.emit('mondai_kekka',flag);
-                    }
-                    connection.commit((err) =>{
-                      if(err){connection.rollback(() =>{throw console.log('error');});}
-                    })
-                    var ID = mondai_result2[0].question_ID;
-                    connection.query(sql4,o,(err,result,fields) =>{
-                      
-                      if(err){
-                        console.log("sql4 "+err);
+                    Socket.on('select_question',async function(){
+                      var data={
+                        sql:mondai_select, 
+                        value:[room_ID]
                       }
-                      var han1 = result[0].judge_ID;
-                      connection.query(sql3,[han1,ID],(err,result,fields)=>{
-                        if(err){
-                          console.log("sql3 "+err);
-                        }
-                      })
-                    })
-                    var flag = 1;
-                    io.emit('mondai_kekka',flag);
-                    })
+                      try{
+                        var result=await SQL_exec(data);
+                        socket.emit('select_question',result2);
+                      }
+                      catch{
+                        console.error(error);
+                        socket.emit('select_question',error);
+                      }
+                     }
+                    )
                   })
                  })
               }
@@ -965,6 +970,7 @@
           })*/
         })
       })
+    }
       
       socket.on('kiroku',(m1,kaitou1) =>{
         var kaitou = sanitizeHtml(kaitou1)
