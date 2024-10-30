@@ -70,14 +70,15 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'172.18.96.186',
+  host :'172.18.96.186',//192.168.0.16
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
   waitForConnections: true,
   connectionLimit: 100,
   queueLimit: 500,
-  idleTimeout: 60000
+  idleTimeout: 60000,
+  connectTimeout: 30000 
 }
   
 //192.168.0.17
@@ -101,7 +102,7 @@ app.use(express.static('public'));
 app.use(express.static('images'));
 
 const sessionpool = mysql.createPool({
-  host: '172.18.96.186',
+  host: '172.18.96.186',//192.168.0.16
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',

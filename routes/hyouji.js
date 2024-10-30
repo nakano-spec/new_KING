@@ -5,6 +5,11 @@ const { route } = require(".");
 const async = require('async');
 //mysqlに接続する際のデータを入れ、接続できるようにする。
 
+router.get("/",(req,res) =>{
+    var name1 = req.session.user.username;
+    
+})
+/*
 router.get("/", (req, res)=>{
     var app = req.app;
     var poolCluster = app.get('pool');
@@ -33,7 +38,7 @@ router.get("/", (req, res)=>{
                                 }
                                 res.render('index',{web:result});
                                 })
-                            }*/
+                            }
                             connection.query(sql,name1,(err,result,field)=>{
                             if(err){
                                 console.log(err);
@@ -120,12 +125,12 @@ router.get("/", (req, res)=>{
                     })
                     }
                     }
-                    res.render('hyouji2');*/
+                    res.render('hyouji2');
                 //})
                 //connection.release();
                 })
     }
-})
+})*/
 
 
 module.exports = router;

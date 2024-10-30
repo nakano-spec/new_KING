@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const mysql = require("mysql")
 const async = require('async');
+//SQLモジュール呼び出し
 const { SQL_exec } = require('../db/SQL_module');
 
 //このページに来たら最初に行う処理
@@ -27,6 +28,7 @@ router.get("/", async (req,res) =>{
     res.render('login.ejs');
   }
 })
+
 /*router.get("/", async (req, res)=> {
     if(!req.session.user){
             res.render('login.ejs');

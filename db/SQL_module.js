@@ -16,4 +16,18 @@ async function SQL_exec(data) {
   });
 }
 
-module.exports = { SQL_exec };
+async function SQL_exec2(data) {
+  return new Promise((resolve, reject) => {
+    console.log("SQL開始")
+    pool.query(data.sql,(err, result) => {
+      if (err) {
+        console.error('Database query failed:', err);
+        return reject(new Error('データベースクエリに失敗しました'));
+      }
+      console.log(result);
+      resolve(result);
+    });
+  });
+}
+
+module.exports = { SQL_exec,SQL_exec2 };

@@ -4,6 +4,15 @@ const mysql = require("mysql");
 const async = require('async');
 
 /* GET users listing. */
+
+router.get('/',async function(req,res){
+    var user_name = req.query.username;
+    var SQL_data ={
+        sql:'select room_ID from room_table where user_ID =?',
+        value:[user_name]
+    }
+})
+/*
 router.get('/', function(req, res, next) {
    var app = req.app;
    var poolCluster = app.get("pool");
@@ -59,5 +68,5 @@ router.get('/', function(req, res, next) {
         })
   }
 });
-
+*/
 module.exports = router;

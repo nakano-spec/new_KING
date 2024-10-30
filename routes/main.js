@@ -6,9 +6,6 @@ const async = require('async');
 
 /* GET home page. */
 router.get('/', function(req, res) {
-  var app = req.app;
-  var poolCluster = app.get('pool');
-  var pool = poolCluster.of('MASTER');
   if(!req.session.user){
         res.render('login.ejs');
   }else{
