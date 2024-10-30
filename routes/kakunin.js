@@ -3,18 +3,33 @@ var router = express.Router();
 const async = require('async');
 const { SQL_exec } = require('../db/SQL_module');
 
-//画面遷移してきたらrouter.get内の処理が読み込まれる。
-router.get('/', function(req, res, next) {
-    var qualificationdata = req.query.qualificationName; // パラメータ名を修正
-    var year = req.query.year;
-    var question = req.query.questionName; // パラメータ名を修正
-    var genre = req.query.genre;
-
-   //データベースから問題文,選択肢１〜４、答えを取得するSQL
-   var sql4 = "select q.question_text,s.select_1,s.select_2,s.select_3,s.select_4,c.answer from question_table q,correct_table c,select_table s where question_name = ? and q.question_ID = s.question_ID and q.question_ID = c.question_ID;"
+router.get('/', async function(req, res, next) {
+    try{
+        var qualificationdata = req.query.qualificationName;
+        var year = req.query.year;
+        var question = req.query.questionName;
+        var genre = req.query.genre;
+        var data = {
+            sql:"select q.question_text,o.question_optional,c.answer from question_table q,correct_table c,optional_table o where question_name = ? and q.question_ID = o.question_ID and q.question_ID = c.question_ID;",
+            value:[question]
+        }
+        var question_data = await SQL_exec(data);
+        var options = question_data.map(row => row.question_optional);
+        //データをまとめて１つのオブジェクト化
+        var dataset = {
+            qualification:qualificationdata,
+            Year:year,
+            question_name:question,
+            genre:genre,
+            results:result,
+            optional:options
+        }
+        res.render('kakunin.ejs',dataset);
+    }catch(error){
+        console.log(error)
+    }
     
-   //設定されたデータベース情報からデータベースサーバーに接続する。
-   pool.getConnection(function(err,connection){
+   /*pool.getConnection(function(err,connection){
    //
     
     //SQLを実行する。errorだった場合はerrに、SQL結果をresultに配列形式で入る。
@@ -40,7 +55,7 @@ router.get('/', function(req, res, next) {
         connection.release();
     })
    //
-   })
+   })*/
 });
 
 module.exports = router;

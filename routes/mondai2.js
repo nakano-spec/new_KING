@@ -10,9 +10,6 @@ router.get('/', function(req, res, next) {
   var app = req.app;
   var poolCluster = app.get("pool");
   var pool = poolCluster.of('MASTER');
-  if(!req.session.user){
-        res.render('login.ejs');
-  }else{
       const set_time = "UPDATE question_log SET limit_time  = ? WHERE question_status = 1 AND room_ID = 1;"
       var second1 = parseInt(by);
       var name1 = req.query.name;
@@ -38,12 +35,11 @@ router.get('/', function(req, res, next) {
       var data1={
         byou1:by
       }
-      var data1　={
+      var data1={
         second:second1,
         name:name1
       }
         res.render('mondai3.ejs',data1);
-  }
 }); 
 
 module.exports = router;
