@@ -8,13 +8,10 @@ config:
     fields: ["username", "password"]  # CSVの列名
 scenarios:
   - engine: "socketio"
-    options:
-      socketio:
-        transports: ['websocket']  # WebSocketのみを使用
     flow:
       - emit:
           channel: "login"
           data:
             username: "{{ username }}"  # CSVファイルから取得
             password: "{{ password }}"  # CSVファイルから取得
-        await: "login_sucess"  # 成功時に受け取るイベント
+        await: "login_success"  # 成功時に受け取るイベント

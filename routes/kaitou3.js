@@ -4,13 +4,6 @@ const async = require('async');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-  //app.jsの読み込み
-  var app = req.app;
-  //
-
-  //データベース情報を読み込み
-  var poolCluster = app.get("pool");
-  var pool = poolCluster.of('MASTER')
   //
   if(!req.session.student){
         res.render('login.ejs');

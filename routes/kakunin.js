@@ -1,29 +1,18 @@
 var express = require('express');
 var router = express.Router();
 const async = require('async');
-/* GET users listing. */
+const { SQL_exec } = require('../db/SQL_module');
 
 //画面遷移してきたらrouter.get内の処理が読み込まれる。
 router.get('/', function(req, res, next) {
-
     var qualificationdata = req.query.qualificationName; // パラメータ名を修正
     var year = req.query.year;
     var question = req.query.questionName; // パラメータ名を修正
     var genre = req.query.genre;
 
-　　//app.jsの読み込み
-   var app = req.app;
-   //
-
-   //データベース情報を読み込み
-   var poolCluster = app.get("pool");
-   var pool = poolCluster.of('MASTER')
-   //
-
    //データベースから問題文,選択肢１〜４、答えを取得するSQL
    var sql4 = "select q.question_text,s.select_1,s.select_2,s.select_3,s.select_4,c.answer from question_table q,correct_table c,select_table s where question_name = ? and q.question_ID = s.question_ID and q.question_ID = c.question_ID;"
-   //
-
+    
    //設定されたデータベース情報からデータベースサーバーに接続する。
    pool.getConnection(function(err,connection){
    //

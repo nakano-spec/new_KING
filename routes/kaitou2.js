@@ -13,16 +13,14 @@ router.get("/", (req, res)=>{
 
       var question_result = SQL_exec(SQL_data);
       var question_ID = question_result[0].question_ID;
-      SQL_data.sql = "select q.question_text,o.question_optional from question_table q,optional_table o where q.question_ID = o.question_ID and q.question_ID = ?";
+      SQL_data.sql = "SELECT q.question_text, o.question_optional FROM question_table q LEFT JOIN optional_table o ON q.question_ID = o.question_ID WHERE q.question_ID = ?"
       SQL_data.value = [question_ID];
       var result = SQL_exec(SQL_data);
+      var options = result.map(row => row.question_optional);
       var data ={
             name:name,
             question_text:result[0].question_text,
-            select_1:result[0].select_1,
-            select_2:result[0].select_2,
-            select_3:result[0].select_3,
-            select_4:result[0].select_4
+            optional:options
       }
       res.render('kaitou4.ejs',data);
       /*if(!req.session.student){
