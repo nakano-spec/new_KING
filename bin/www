@@ -1548,7 +1548,6 @@ const { SQL_exec } = require( '../db/SQL_module');
           async.waterfall([
             function(callback) { 
                 // ① question_nameを使ってSQLでquestion_tableからquestion_IDを取得
-<<<<<<< Updated upstream
                 Socket.on('id_select',async function(){
                   var data={
                     sql:"SELECT question_ID FROM question_table WHERE question_name = ?",
@@ -1567,47 +1566,6 @@ const { SQL_exec } = require( '../db/SQL_module');
                 if (result.length === 0) return callback(new Error("Question not found"));
                 const question_ID = result[0].question_ID;
                 callback(null, question_ID);
-=======
-                const query1 = "SELECT question_ID FROM question_table WHERE question_name = ?";
-                connection.query(query1, [question_name], function(err, result) {
-                    if (err) return callback(err);
-                    if (result.length === 0) return callback(new Error("Question not found"));
-                    const question_ID = result[0].question_ID;
-                    callback(null, question_ID);
-                 });
-            },
-            function(question_ID, callback) {
-                // ② question_IDを使用してpics_tableからデータ削除
-                const query2 = "DELETE FROM pics_table WHERE question_ID = ?";
-                connection.query(query2, [question_ID], function(err) {
-                    if (err) return callback(err);
-                    callback(null, question_ID);
-                });
-            },
-            function(question_ID, callback) {
-                // ③ question_IDを使用してjudge_tableからデータ削除
-                const query3 = "DELETE FROM judge_table WHERE question_ID = ?";
-                connection.query(query3, [question_ID], function(err) {
-                    if (err) return callback(err);
-                    callback(null, question_ID);
-                });
-            },
-            function(question_ID, callback) {
-                // ④ question_IDを使用してquestion_logからデータ削除
-                const query4 = "DELETE FROM question_log WHERE question_ID = ?";
-                connection.query(query4, [question_ID], function(err) {
-                    if (err) return callback(err);
-                    callback(null, question_ID);
-                });
-            },
-            function(question_ID, callback) {
-                // ⑤ question_IDを使用してgenre_tableからデータ削除
-                const query5 = "DELETE FROM genre_table WHERE question_ID = ?";
-                connection.query(query5, [question_ID], function(err) {
-                    if (err) return callback(err);
-                    callback(null, question_ID);
-                });
->>>>>>> Stashed changes
             },
             
             function(question_ID, callback) {
