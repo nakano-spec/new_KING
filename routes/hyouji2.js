@@ -2,16 +2,34 @@ const express = require("express");
 var router = express.Router();
 const mysql = require("mysql");
 const async = require('async');
-
+const { SQL_exec } = require('../db/SQL_module');
 /* GET users listing. */
 
 router.get('/',async function(req,res){
-    var user_name = req.query.username;
-    var SQL_data ={
-        sql:'select room_ID from room_table where user_ID =?',
-        value:[user_name]
+    try{
+        var user_name = req.query.username;
+        var SQL_data ={
+            sql:'select room_ID from room_table where user_ID =?',
+            value:[user_name]
+        }
+        var room_Result = await SQL_exec(SQL_data);
+        var room_ID = room_Result[0].room_ID;   
+        if (!room_ID) throw new Error("room_ID not found"); //なかったらエラーをはく
+        SQL_data.sql = "select question_ID from question_log where room_ID = ? and question_status = 1";
+        SQL_data.value = [room_ID];
+        var question_Result = await SQL_exec(SQL_data);
+        var question_ID = question_Result[0].question_ID;
+        if (!question_ID) throw new Error("question_ID not found");
+        SQL_data.sql = "select distinct a.user_ID,u.user_name,a.answer,a.result from answer_table a,user_table u where a.user_ID = u.user_ID and question_ID = ?"
+        SQL_data.value = [question_ID];
+        var result = await SQL_exec(SQL_data);
+        res.render('hyouji4',{han1:result});
+    }catch(err){
+        console.log(err);
+        res.render('hyouji2');
     }
 })
+
 /*
 router.get('/', function(req, res, next) {
    var app = req.app;

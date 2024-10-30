@@ -8,7 +8,8 @@ const { SQL_exec } = require( '../db/SQL_module');
 
  var { app,sessionMiddleware } = require('../app');
  var debug = require('debug')('sotuken:server');
- var http = require('http').globalAgent.maxSockets = 100;
+ var http = require('http')
+ http.globalAgent.maxSockets = 100;
  var express = require('express');
  const path = require('path');
  var ExcelJS = require('exceljs');
@@ -1647,4 +1648,3 @@ const { SQL_exec } = require( '../db/SQL_module');
       }
      })
    })
-  });
