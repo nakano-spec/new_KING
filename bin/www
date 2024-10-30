@@ -112,7 +112,7 @@ const { SQL_exec } = require( '../db/SQL_module');
  const store = require('store');
  const { connect } = require('http2');
  const { namespace } = require('store');
- const { param } = require('jquery');
+ const { param, data } = require('jquery');
 
 
   // Socket.ioにセッションミドルウェアを適用する
@@ -187,7 +187,30 @@ const { SQL_exec } = require( '../db/SQL_module');
      //新規登録処理　今は使われていない
      /*socket.on('new_btnclick', (name,pass1,pass2) => {g
       if(pass1 == pass2) {
-        var new_select1 = "select username from users where username = ?;"
+
+        socket.on('new_select1',async function () {
+          var new_select1 = { spl:'select username from users where username = ?',value:[1]
+          }
+          try{ const result = await new_select1(data);
+            socket.emit('select1_result'.result);
+          }
+          catch(error){
+            console.error(error)
+        socket.emit('select1_result,error');
+          }  
+        })
+        //var new_select1 = "select username from users where username = ?;"
+        socket.on('new_select2',async function () {
+          var new_select2 = { spl:'select password from users where password = ?;',value:[1]
+          }
+          try{ const result = await new_select2(data);
+            socket.emit('select2_result'.result);
+          }
+          catch(error){
+            console.error(error)
+        socket.emit('select2_result,error');
+          }  
+        })
         var new_select2 = "select password from users where password = ?;"
         var new_insert1 = "insert into users values (?,?,?,'2022{01>01','2022{01>01');"
         var kensaku = "SELECT MIN(user_ID + 1100) AS user_ID FROM users WHERE (user_ID + 1100) NOT IN (SELECT user_ID FROM users);"
@@ -1525,6 +1548,7 @@ const { SQL_exec } = require( '../db/SQL_module');
           async.waterfall([
             function(callback) { 
                 // ① question_nameを使ってSQLでquestion_tableからquestion_IDを取得
+<<<<<<< Updated upstream
                 Socket.on('id_select',async function(){
                   var data={
                     sql:"SELECT question_ID FROM question_table WHERE question_name = ?",
@@ -1543,6 +1567,47 @@ const { SQL_exec } = require( '../db/SQL_module');
                 if (result.length === 0) return callback(new Error("Question not found"));
                 const question_ID = result[0].question_ID;
                 callback(null, question_ID);
+=======
+                const query1 = "SELECT question_ID FROM question_table WHERE question_name = ?";
+                connection.query(query1, [question_name], function(err, result) {
+                    if (err) return callback(err);
+                    if (result.length === 0) return callback(new Error("Question not found"));
+                    const question_ID = result[0].question_ID;
+                    callback(null, question_ID);
+                 });
+            },
+            function(question_ID, callback) {
+                // ② question_IDを使用してpics_tableからデータ削除
+                const query2 = "DELETE FROM pics_table WHERE question_ID = ?";
+                connection.query(query2, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ③ question_IDを使用してjudge_tableからデータ削除
+                const query3 = "DELETE FROM judge_table WHERE question_ID = ?";
+                connection.query(query3, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ④ question_IDを使用してquestion_logからデータ削除
+                const query4 = "DELETE FROM question_log WHERE question_ID = ?";
+                connection.query(query4, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+            },
+            function(question_ID, callback) {
+                // ⑤ question_IDを使用してgenre_tableからデータ削除
+                const query5 = "DELETE FROM genre_table WHERE question_ID = ?";
+                connection.query(query5, [question_ID], function(err) {
+                    if (err) return callback(err);
+                    callback(null, question_ID);
+                });
+>>>>>>> Stashed changes
             },
             
             function(question_ID, callback) {
