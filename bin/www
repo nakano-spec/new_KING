@@ -1345,34 +1345,37 @@
         var pool = poolCluster.of('MASTER');
         var data = sanitizeHtml(data);
         const query = '%' + data + '%';
-        //var sql = 'select user_ID,user_name,log_time from user_table where user_ID LIKE ? OR user_name LIKE ? OR password LIKE ? OR log_time LIKE ?;';
-        var sql2 = 'select g.qualification_name, g.question_genre, g.question_years, q.question_name, q.question_text, COALESCE(s.select_1, \'\') AS select_1, COALESCE(s.select_2, \'\') AS select_2, COALESCE(s.select_3, \'\') AS select_3, COALESCE(s.select_4, \'\') AS select_4, a.type_name, CASE WHEN q.picture_flag = 0 THEN \'\' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR a.type_name LIKE ?;';
+        var data={
+          //SQL書き直し必要あり
+          sql:"select g.qualification_name, g.question_genre, g.question_years, q.question_name, q.question_text, COALESCE(s.select_1, \'\') AS select_1, COALESCE(s.select_2, \'\') AS select_2, COALESCE(s.select_3, \'\') AS select_3, COALESCE(s.select_4, \'\') AS select_4, a.type_name, CASE WHEN q.picture_flag = 0 THEN \'\' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR a.type_name LIKE ?",
+          value:[query,query,query,query,query,query]
+        }
+        try{
+          var result=await SQL_exec(data);
+          socket.emit('question',result);
+        }
+        catch{
+          console.error(error);
+          socket.emit('question',error);
+        }
+        
+        pool.getConnection(async function(err,connection){
           var data={
-            //SQL書き直し必要あり
             sql:"select g.qualification_name, g.question_genre, g.question_years, q.question_name, q.question_text, COALESCE(s.select_1, \'\') AS select_1, COALESCE(s.select_2, \'\') AS select_2, COALESCE(s.select_3, \'\') AS select_3, COALESCE(s.select_4, \'\') AS select_4, a.type_name, CASE WHEN q.picture_flag = 0 THEN \'\' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR a.type_name LIKE ?",
             value:[query,query,query,query,query,query]
           }
           try{
-            var result=await SQL_exec(data);
-            socket.emit('question',result);
+            var resut=await SQL_exec(data);
+            socket.emit('select_qualo',result);
           }
           catch{
-            console.error(error);
-            socket.emit('question',error);
+            console.log(error);
+            socket.emit('select_quali',error);
           }
-        
-        pool.getConnection(function(err,connection){
-          connection.query(sql2,[query,query,query,query,query,query],(err,search_result,field)=>{
-            if(err){
-              console.log(err);
-            }
-            connection.release();
-            socket.emit('questionsearchResult',search_result);
-          })
         })
       });
 
-      socket.on('question_delete',async function(question_name) {
+      socket.on('question_delete',async function(question_name){
         var pool = poolCluster.of('MASTER');
         pool.getConnection(function(err,connection){
           if(err){
