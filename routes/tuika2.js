@@ -1,7 +1,12 @@
 var express = require('express');
 var router = express.Router();
 
+router.get('/',function(req,res){
+  res.render('tuika2.ejs');
+})
+
 /* GET home page. */
+/*
 router.get('/', function(req, res, next) {
   if(!req.session.user || req.session.page !== 2 || req.session.Before_page !== 1){
     var select1 = "select u.user_name from room_table r, user_table u where r.user_ID = u.user_ID;"
@@ -23,6 +28,6 @@ router.get('/', function(req, res, next) {
   }else{
     res.render('tuika2.ejs');
   }
-});
+});*/
 
 module.exports = router;

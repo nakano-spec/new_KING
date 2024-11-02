@@ -2,7 +2,45 @@ const express = require("express");
 var router = express.Router();
 const mysql = require("mysql");
 var async = require("async");
+const { SQL_exec } = require('../db/SQL_module');
 
+router.get('/',async function(res,req){
+    try{
+        var name = req.session.user.username;
+        var selectSQL ={
+            sql:'select room_ID from login_log where user_ID = ?',
+            value:[name]
+        }
+        var selectSQL = {
+            sql: 'select room_ID from login_log where user_ID = ?',
+            value: [name]
+        };
+        var roomResult = await SQL_exec(selectSQL);
+        var room_ID = roomResult[0].room_ID;
+
+        selectSQL.sql = 'select question_ID from question_log where room_ID = ? and question_status = 1';
+        selectSQL.value = [room_ID];
+        var questionResult = await SQL_exec(selectSQL);
+        var question_ID = questionResult[0].question_ID;
+
+
+        selectSQL.sql = 'select distinct q.question_name, a.user_ID, a.answer as userAnswer, a.result, c.answer as collectAnswer, g.qualification_name, g.question_genre, question_years from question_table q, answer_table a, correct_table c, genre_table g where a.question_ID = c.question_ID and a.question_ID = g.question_ID and a.question_ID = q.question_ID and a.question_ID = ?';
+        selectSQL.value = [question_ID];
+        var questionData = await SQL_exec(selectSQL);
+
+
+        selectSQL.sql = 'select user_name from user_table where user_ID = ?';
+        for (let array of questionData) {
+            selectSQL.value = [array.user_ID];
+            let userResult = await SQL_exec(selectSQL);
+            array.user_name = userResult[0].user_name;
+        }
+        res.render('mondai6', { web: questionData });
+    }catch(error){
+        console.log(error)
+    }
+})
+/*
 router.get("/",(req,res)=>{
     var app = req.app;
     var poolCluster = app.get("pool");
@@ -125,5 +163,5 @@ router.get("/",(req,res)=>{
         })
       }
 })
-
+*/
 module.exports = router;

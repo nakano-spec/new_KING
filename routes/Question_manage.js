@@ -1,7 +1,20 @@
 const express = require('express');
 const router = express.Router();
+const { SQL_exec2 } = require('../db/SQL_module');
 
-router.get('/', (req, res) => {
+router.get('/',async function(req,res){
+    try{
+         var SQL_data ={
+            sql:"SELECT g.qualification_name,g.question_genre,g.question_years,q.question_name,q.question_text,COALESCE(s.select_1, '') AS select_1,COALESCE(s.select_2, '') AS select_2,COALESCE(s.select_3, '') AS select_3,COALESCE(s.select_4, '') AS select_4,a.type_name,CASE  WHEN q.picture_flag = 0 THEN '' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID;"
+        }
+        var results = await SQL_exec2(SQL_data)
+        res.render('Question_manage', { questions: results });
+    }catch(error){
+        console.log(error);
+    }
+})
+
+/*router.get('/', (req, res) => {
     var app = req.app;
     var QuestionSql = "SELECT g.qualification_name,g.question_genre,g.question_years,q.question_name,q.question_text,COALESCE(s.select_1, '') AS select_1,COALESCE(s.select_2, '') AS select_2,COALESCE(s.select_3, '') AS select_3,COALESCE(s.select_4, '') AS select_4,a.type_name,CASE  WHEN q.picture_flag = 0 THEN '' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID;";
     var poolCluster = app.get('pool');
@@ -32,15 +45,6 @@ router.get('/', (req, res) => {
                 connection.release();
             });
             
-            //削除
-        /* connection.query(QuestionDelete,(err3, results2) => {
-                if (err3) {
-                    console.error("Query error:", err3);
-                    res.status(500).send("Database query error");
-                    return;
-                }
-                
-            });*/
 
             router.post('/delete', (req, res) => {
                 var app = req.app;
@@ -62,7 +66,7 @@ router.get('/', (req, res) => {
                         return res.status(500).send('Database delete query error');
                     }
                     res.redirect('/Question_manage'); // 削除後に元のページにリダイレクト
-                });*/
+                });
                 var deleteRelatedSql = 'DELETE FROM correct_table WHERE question_ID IN (SELECT question_ID FROM question_table WHERE question_name IN (?));';
                 pool.query(deleteRelatedSql, [selectedQuestions], (err) => {
                     if (err) {
@@ -79,7 +83,7 @@ router.get('/', (req, res) => {
             connection.release(); // コネクションをリリース
         });
         }
-});
+});*/
 
 
 module.exports = router;
