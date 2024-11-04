@@ -117,12 +117,16 @@
                 if(error == 1){
                     document.getElementById("err").innerHTML = "<p> 入力していない項目があります。";
                 }else{
-                    socket.emit('montuika',array);
+                    socket.emit('question_add',array);
                 }
             })
 
-            socket.on('kanryou',() =>{
+            socket.on('complete',() =>{
                 window.location.href='/kanryou';
+            })
+
+            socket.on('error',() =>{
+                alert("問題追加に失敗しました。");
             })
         </script>
     </body>

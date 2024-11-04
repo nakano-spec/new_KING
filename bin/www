@@ -269,39 +269,6 @@ const { SQL_exec } = require( '../db/SQL_module');
         console.log(err);
       }
     })  
-      /* 
-      connection.query(q2,(err,result,field)=>{
-        if(err){
-          console.log(err);
-        }
-        moni = result[0].mon_ID;
-        if(sen1 == "なし"){
-          sen1 = "";
-          sen2 = "";
-          sen3 = "";
-          sen4 = "";
-          kaiID = 1;
-        }
-        connection.query(q3,(err,result2,field)=>{
-            if(err){
-              console.log(err);
-            }
-            seiID = result2[0].seikai_ID;
-            connection.query(q4,[seiID,moni,seikai],(err,result3,field)=>{
-              if(err){
-                console.log(err);
-              }
-              connection.query(q1,[moni,name,mondaibun,sen1,sen2,sen3,sen4,seiID,0,picture,kaiID],(err,res1,fields)=>{
-                if(err){
-                  console.log(err);
-                }
-                connection.commit((err) =>{
-                  if(err){connection.rollback(() =>{throw console.log('error');});};
-                  io.emit('kanryou');
-            })
-            })
-          })
-      })*/
     
     //採点結果の修正処理
     socket.on('kekkasyusei',async (set1)=>{
@@ -312,8 +279,8 @@ const { SQL_exec } = require( '../db/SQL_module');
       }
       async.eachSeries(set1, async function(selection, cb) {
         try{
-          var userID = selection.user_ID; // オブジェクトのプロパティへのアクセス
-          var selectedValue = selection.selectedValue; //オブジェクトのプロパティへのアクセス 
+          var userID = selection.user_ID; 
+          var selectedValue = selection.selectedValue; 
           update_result.value = [userID,selectedValue]
           var result = await SQL_exec(update_result)
           cb();
@@ -330,42 +297,7 @@ const { SQL_exec } = require( '../db/SQL_module');
         }
       });
     })
-      /*
-      async.waterfall([
-        function(callback) {
-          // 最初のステップとして、全ての更新操作を行う
-          async.eachSeries(set1, function(selection, cb) {
-            var userID = selection.user_ID; // オブジェクトのプロパティへのアクセス
-            var selectedValue = selection.selectedValue; //オブジェクトのプロパティへのアクセス   
-            connection.query(sql, [selectedValue, userID], (err, result) => {
-              if (err) {
-                console.log(err);
-                return cb(err); // エラーを次のステップへ渡す
-              }
-              console.log("Update successful for user_ID: ", userID);
-              cb(); // 次の要素へ
-            });
-          }, function(err) {
-            if (err) {
-              // 更新中にエラーが発生した場合
-              callback(err, null);
-            } else {
-              // すべての更新が成功した場合
-              callback(null, 'All updates completed successfully');
-            }
-          });
-        }
-      ], function(err, result) {
-        // 全ての処理が完了した後の最終的なコールバック
-        if (err) {
-          console.log('An error occurred: ', err);
-          // 必要に応じてエラーハンドリングをここに書く
-        } else {
-          // すべての更新操作が成功したことをクライアントに通知
-          io.emit('result_display2', {username:userID});
-        }
-      });*/
-
+    
     //問題の回答を追加する処理
     socket.on('kaitoutuika', async (selections) => {
       var userID = socket.request.session.user.username;
@@ -398,67 +330,10 @@ const { SQL_exec } = require( '../db/SQL_module');
           console.log(err);
         } else {
           // すべての更新が成功した場合
-          io.emit('yomikomi', {username: userID}); // 処理完了をクライアントに通知
+          io.emit('yomikomi', {username: userID}); 
         }
       })
     });
-      /*
-      async.eachSeries(selections, function(selection, cbEachSeries) {
-        var correctID, questionID;
-        async.waterfall([
-          // Step 1: correct_IDを検索して取得する
-          function(callback) {
-            var sql = "SELECT MIN(correct_ID + 1) AS correct_ID FROM correct_table WHERE (correct_ID + 1) NOT IN (SELECT correct_ID FROM correct_table);";
-            connection.query(sql, (err, result) => {
-              if (err) return callback(err);
-              correctID = result[0].correct_ID;
-              callback(null);
-            });
-          },
-          // Step 2: question_genreからquestion_IDを持ってくる
-          function(callback) {
-            var sqlFindQuestionID = "SELECT question_ID FROM question_table WHERE question_name = ?";
-            connection.query(sqlFindQuestionID, [selection.questionGenre], (err, result) => {
-              if (err) return callback(err);
-              if (result.length === 0) return callback(new Error("Question ID not found for genre: " + selection.questionGenre));
-              questionID = result[0].question_ID;
-              callback(null);
-            });
-          },
-          // Step 3: correct_tableにINSERTする
-          function(callback) {
-            var sqlInsert = "INSERT INTO correct_table (correct_ID, question_ID, answer) VALUES (?, ?, ?)";
-            connection.query(sqlInsert, [correctID, questionID, selection.answer], (err, result) => {
-              if (err) return callback(err);
-              callback(null);
-            });
-          },
-          // Step 4: 追加した正解に対応した答えのresultを○に変更する
-          function(callback) {
-            var sqlUpdateResult = "UPDATE answer_table SET result = '○' WHERE question_ID = ? AND answer = ?";
-            connection.query(sqlUpdateResult, [questionID, selection.answer], (err, result) => {
-              if (err) return callback(err);
-              callback(null, "Update successful for question_ID: " + questionID + " with answer: " + selection.answer);
-            });
-          }
-        ], function(err, result) {
-          // selectionごとの処理完了後のコールバック
-          if (err) {
-            console.log(err);
-            return cbEachSeries(err);
-          }
-          console.log(result);
-          cbEachSeries(); // 次のselectionへ
-        });
-      }, function(err) {
-        // 全てのselectionsが処理された後のコールバック
-        if (err) {
-          console.log("An error occurred in the process.");
-        } else {
-          console.log("All selections processed successfully.");
-          io.emit('yomikomi', {username: userID}); // 処理完了をクライアントに通知
-        }
-      });*/
 
       //問題の解答を削除する機能
       socket.on('kaitousakuzyo', (deletions) => {
@@ -467,155 +342,102 @@ const { SQL_exec } = require( '../db/SQL_module');
           sql:"DELETE FROM correct_table WHERE answer = ?",
           value:[]
         }
-        var sqlUpdate = "UPDATE answer_table SET result = '✕' WHERE answer = ?;";
-        
         async.eachSeries(deletions, async function(deletion, callback) {
             // 正解を削除
             SQL_data.value = [deletion.answer];
             var delete_result = await SQL_exec(SQL_data)
-            /*
-            connection.query(sqlDelete, [deletion.answer], (err, result) => {
-                if (err) {
-                    console.log(err);
-                    return callback(err);
-                }
-                // 関連する回答の結果を更新
-                connection.query(sqlUpdate, [deletion.answer], (err, result) => {
-                    if (err) {
-                        console.log(err);
-                        return callback(err);
-                    }
-                    callback(); // 次の削除処理に進む
-                });
-            });*/
         }, function(err) {
             if (err) {
-                // エラーが発生した場合の処理
                 console.error("エラーが発生しました: ", err);
             } else {
-                // すべての処理が成功した場合の処理
-                io.emit('yomikomi',{username: userID}); // クライアントに完了を通知
+                io.emit('yomikomi',{username: userID}); 
             }
         });
       });
   
      //問題情報を手入力で追加する処理    
-     socket.on('montuika',(array)=>{
-      var q1 = "insert into mondai_LIST values(?,?,?,?,?,?,?,?,?,?,?);"
-      var q2 = "select MIN(mon_ID  + 1) AS mon_ID from mondai_LIST where (mon_ID + 1) NOT IN (SELECT mon_ID from mondai_LIST);"
-      var q3 = "select MIN(seikai_ID  + 1) AS seikai_ID from seikai_LIST where (seikai_ID + 1) NOT IN (SELECT seikai_ID from seikai_LIST);"
-      var q4 = "insert into seikai_LIST values(?,?,?);"
-      var da = "a";
-      console.log(array);
-      var moni = 0;
-      var name = array[0];
-      var mondaibun = array[1];
-      var sen1 = array[2];
-      var sen2 = array[3];
-      var sen3 = array[4];
-      var sen4 = array[5];
-      var seikai = array[6];
-      var seiID = 0;
-      var kaiID = 0;
-      if(sen1 == "なし"){
-        sen1 = "";
-        sen2 = "";
-        sen3 = "";
-        sen4 = "";
-        kaiID = 1;
-      }
-      if(array[7] != "なし"){
-        var picture = array[7];
-      }else{
-        var picture = "";
-      }
-    })
-
-    
-    //問題を再出題できるよう初期化する処理
-     socket.on('clear',()=>{
-        var userID = socket.request.session.user.username;
-        var sql1="select room_ID from room_table where user_ID =?;"
-        var sql2="select question_ID from question_log where room_ID =? and question_status = 1;"
-        var sql3="update question_log set question_status = 0 where question_status = 1 and room_ID = ? and question_ID =?;"
-        var sql4 ="select distinct user_ID from login_log where user_ID <> ? and room_ID =?;";
-        var sql5 ="DELETE FROM answer_table WHERE user_ID = ? and question_ID =?;"
-        var sql6 ="DELETE FROM judge_table where question_ID =?;"
-        console.log(userID);
-        async.waterfall([
-          function(callback){
-              connection.query(sql1,userID,(err,result,field)=>{
-                if(err){
-                  console.log(err);
-                }
-                console.log("成功");
-                console.log(result[0].room_ID);
-                callback(null,userID,result[0].room_ID);
-              })
-          },
-          function(userID,roomID,callback){
-            connection.query(sql2,roomID,(err,res2,field)=>{
-              if(err){
-                console.log(err);
-              }
-              console.log("成功");
-              console.log(res2[0].question_ID);
-              callback(null,userID,roomID,res2[0].question_ID);
-            })
-          },
-          function(userID,roomID,questionID,callback){
-            connection.query(sql3,[roomID,questionID],(err,result3,field)=>{
-              if(err){
-                console.log(err);
-              }
-            })
-            console.log("成功");
-            callback(null,userID,roomID,questionID);
-          },
-          function(userID,roomID,questionID,callback){
-            connection.query(sql4,[userID,roomID],(err,result4,field)=>{
-              if(err){
-                console.log(err);
-              }
-              console.log("成功");
-              console.log(result4);
-              callback(null,userID,roomID,questionID,result4);
-            })
-          },
-          function(userID,roomID,questionID,student,callback){
-            async.eachSeries(student, function(students, cb) {
-              connection.query(sql5, [students.user_ID, questionID], (err, result5, field) => {
-                  if (err) {
-                      console.log(err);
-                      return cb(err); // エラーをコールバックに渡す
-                  }
-                  console.log("成功");
-                  cb(); // 次のイテレーションへ進むためにコールバックを呼び出す
-              });
-          }, function(err) {
-              // すべてのクエリが完了した後、またはエラーが発生した場合に実行される
-              if (err) {
-                  // エラー処理
-                  return callback(err);
-              }
-              // すべて成功した場合の処理
-              callback(null, userID, roomID, questionID);
-          });
-          },
-          function(userID,roomID,questionID,callback){
-            connection.query(sql6,questionID,(err,result6,field)=>{
-              if(err){
-                console.log(err);
-              }
-              console.log("成功");
-              callback(null,userID,roomID,questionID)
-            })
-          },
-          function(userID,roomID,questionID,callback){
-            socket.emit('modoru');
+     socket.on('question_add', async (array) => {   
+      try {
+          const name = array[0];
+          const mondaibun = array[1];
+          let sen1 = array[2];
+          let sen2 = array[3];
+          let sen3 = array[4];
+          let sen4 = array[5];
+          const seikai = array[6];
+          let picture = array[7] !== "なし" ? array[7] : "";
+          let kaiID = 0;
+          
+          if (sen1 === "なし") {
+              sen1 = "";
+              sen2 = "";
+              sen3 = "";
+              sen4 = "";
+              kaiID = 1;
           }
-        ])
-     })
+  
+          const getMonIDQuery = { 
+              sql: "SELECT MIN(mon_ID + 1) AS mon_ID FROM mondai_LIST WHERE (mon_ID + 1) NOT IN (SELECT mon_ID FROM mondai_LIST);",
+          };
+          const getSeikaiIDQuery = {
+              sql: "SELECT MIN(seikai_ID + 1) AS seikai_ID FROM seikai_LIST WHERE (seikai_ID + 1) NOT IN (SELECT seikai_ID FROM seikai_LIST);",
+          };
+
+          const monIDResult = await SQL_exec2(getMonIDQuery);
+          const monID = monIDResult[0].mon_ID;
+  
+          const seikaiIDResult = await SQL_exec2(getSeikaiIDQuery);
+          const seikaiID = seikaiIDResult[0].seikai_ID;
+  
+          const insertMondaiQuery = {
+              sql: "INSERT INTO mondai_LIST VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+              value: [monID, name, mondaibun, sen1, sen2, sen3, sen4, picture, kaiID, seikai, da]
+          };
+          await SQL_exec(insertMondaiQuery);
+          console.log('Inserted into mondai_LIST successfully.');
+  
+          const insertSeikaiQuery = {
+              sql: "INSERT INTO seikai_LIST VALUES (?, ?, ?);",
+              value: [seikaiID, monID, seikai]
+          };
+          await SQL_exec(insertSeikaiQuery);
+          console.log('Inserted into seikai_LIST successfully.');
+  
+          socket.emit('complete');
+      } catch (error) {
+          console.error('Error during montuika process:', error);
+          socket.emit('error');
+      }
+    });
+  
+
+    socket.on('clear', async () => {
+      try {
+          const userID = socket.request.session.user.username;
+          
+          let SQL_data = { sql: "select room_ID from room_table where user_ID = ?", value: [userID] };
+          const roomID = await SQL_exec(SQL_data);
+          
+          SQL_data = { sql: "select question_ID from question_log where room_ID = ? and question_status = 1", value: [roomID] };
+          const questionID = await SQL_exec(SQL_data);
+  
+          SQL_data = { sql: "update question_log set question_status = 0 where question_status = 1 and room_ID = ? and question_ID = ?", value: [roomID, questionID] };
+          await SQL_exec(SQL_data);
+
+          SQL_data = { sql: "select distinct user_ID from login_log where user_ID <> ? and room_ID = ?", value: [userID, roomID] };
+          const students = await SQL_exec(SQL_data);
+  
+          const deleteAnswerSQL = { sql: "DELETE FROM answer_table WHERE user_ID = ? and question_ID = ?", value: [] };
+          for (const student of students) {
+              deleteAnswerSQL.value = [student.user_ID, questionID];
+              await SQL_exec(deleteAnswerSQL);
+          }
+          // Emit modoru event to signal completion
+          socket.emit('modoru');
+      } catch (err) {
+          console.error("Error in clear process:", err);
+      }
+    });
      
      //学生解答送信処理　
      //学生解答を表示するhyouji3.ejs,及び画面遷移するためindex.ejsに送信する 
@@ -645,220 +467,96 @@ const { SQL_exec } = require( '../db/SQL_module');
       });
     }
 
-    //ログイン処理
-    socket.on('login_btnclick', (data) => {
-      var username = sanitizeHtml(data.username);
-      var password = sanitizeHtml(data.password);
-      if(data.ExcelJSusername != '') {
-          var login_select = "SELECT * FROM user_table;";
-          //arton_hash
-          console.log(password);
-          const crypto = require('crypto'); // Node.js の crypto モジュールをインポート
-          // メッセージのハッシュ化を行う関数を更新
-          function digestMessage(message) {
-            return new Promise((resolve, reject) => {
-              try {
-                const hash = crypto.createHash('sha256'); // SHA-256 ハッシュ関数を使用
-                hash.update(message); // メッセージでハッシュを更新
-                const hashHex = hash.digest('hex'); // ハッシュを16進数の文字列として取得
-                resolve(hashHex); // ハッシュ値を返す
-              } catch (error) {
-                reject(error); // エラーが発生した場合は、rejectを使用してエラーを返す
-              }
-            });
-          }          
-          (async() => {　　//これがないとawaitを使えない
-          password = await digestMessage(password);    //passwordの値をハッシュ化して代入
-          console.log("hash_pass" + password);    //ハッシュ値確認用
-          })();
-          //end_hash
-          connection.query(login_select,(err, users, fields) => {
-              if(err){
-                  console.log(err);
-                  var new_flug = 0;
-                  //io.emit('new_flug', new_flug);
-                  io.emit('login_error');
-              } else {
-                  var user = users.find(user => user.user_ID === username && user.password === password);
-                  if(user) {
-                      var login_flug = 1;
-                      switch(user.user_type) {
-                          case 1:
-                              async.waterfall([
-                                function(callback) {
-                                    var sql2 = 'SELECT room_ID FROM room_table WHERE user_ID = ?;';
-                                    connection.query(sql2,username, function(err, result) {
-                                        if (err) {
-                                            return callback(err);
-                                        }
-                                        callback(null, result[0].room_ID);
-                                    });
-                                },
-                                function(roomID, callback) {
-                                    var sql3 = 'INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);';
-                                    connection.query(sql3, [roomID, username], function(err, result) {
-                                        if (err) {
-                                            return callback(err);
-                                        }
-                                        callback(null, 'done');
-                                    });
-                                },
-                                function(result,callback){
-                                    var sql4 = 'UPDATE user_table SET log_time = CURRENT_TIMESTAMP WHERE user_ID = ?;';
-                                    connection.query(sql4,username,(err,result,field)=>{
-                                      if(err){
-                                        console.log(err);
-                                      }
-                                      callback(null, 'done');
-                                    })
-                                },
-                                function(result,callback){
-                                  socket.request.session.user = {username:username};
-                                  socket.request.session.save();
-                                  console.log(socket.request.session);
-                                  callback(null,'done');
-                                }
-                            ], function (err, result) {
-                                if (err) {
-                                    console.log(err);
-                                    var new_flug = 0;
-                                    io.emit('new_flug', new_flug);
-                                } else {
-                                    // すべてのクエリが成功した場合の処理
-                                    io.to(socket.id).emit('login_flug', login_flug, data.username);
-                                }
-                            });
-                              break;
-                          case 2:
-                            async.waterfall([
-                              function(callback){
-                                socket.request.session.student = {username:username};
-                                socket.request.session.studentroom_ID = data.selectedOption;
-                                socket.request.session.save();
-                                var sql = 'INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);';
-                                connection.query(sql,[data.selectedOption,data.username], function(err, result) {
-                                    if (err) {
-                                        return callback(err);
-                                    }
-                                    callback(null, "sucess");
-                                });
-                              },
-                              function(result,callback) {
-                                  var sql2 = 'UPDATE user_table SET log_time = CURRENT_TIMESTAMP WHERE user_ID = ?;';
-                                  connection.query(sql2, [data.username], function(err, result) {
-                                      if (err) {
-                                          return callback(err);
-                                      }
-                                      callback(null, 'done');
-                                  });
-                              }
-                            ], function (err, result) {
-                              if (err) {
-                                  console.log(err);
-                                  io.emit('login_error');
-                              } else {
-                                  // すべてのクエリが成功した場合の処理
-                                  io.to(socket.id).emit('login_flug1', login_flug,user.user_name);
-                              }
-                          });
-                              break;
-                          case 3:
-                              async.waterfall([
-                                function(callback){
-                                  var sql = 'SELECT user_ID FROM user_table WHERE user_name = ?;';
-                                  connection.query(sql,data.selectedOption, function(err, result) {
-                                      if (err) {
-                                          return callback(err);
-                                      }
-                                      callback(null, result[0].user_ID,username);
-                                  });
-                                },
-                                function(user_ID,username,callback){
-                                  var sql = "select room_ID from room_table where user_ID = ?;";
-                                  connection.query(sql,user_ID,(err,result,fields)=>{
-                                    if(err){
-                                      console.log(err);
-                                    }
-                                    callback(null,result[0].room_ID,username);
-                                  })
-                                },
-                                function(roomID,username,callback){
-                                  var sql2 = "insert into login_log(room_ID,user_ID) values(?,?);"
-                                  connection.query(sql2,[roomID,username],(err,result2,fields)=>{
-                                    if(err){
-                                      console.log(err);
-                                    }
-                                    io.to(socket.id).emit('login_flug2', login_flug,username);
-                                  })
-                                },
-                              ])
-                              break;
-                          default:
-                              var new_flug = 0;
-                              io.to(socket.id).emit('new_flug', new_flug);
-                      }
-                  } else {
-                      io.to(socket.id).emit('login_error');
+        socket.on('login', async (data) => {
+          try {
+              const username = sanitizeHtml(data.username);
+              let password = sanitizeHtml(data.password);
+          
+              password = await hashPassword(password); // ハッシュ化されたパスワード
+
+              // Fetch user data from user_table
+              const loginSelect = { sql: "select EXISTS(select 1 from user_table where user_ID =? and password=?) as login_result"};
+              const users = await SQL_exec2(loginSelect);
+              if(login_SQL[0].login_result == 1){
+                const loginFlag = 1;
+                var user_data = {
+                    sql: "select user_type from user_table where user_ID=?",
+                    value: [username]
+                }
+                var user_SQL = await SQL_exec(user_data);
+                switch (user_SQL[0].user_type) {
+                    case 1: // User type 1
+                        try {
+                            const roomIDData = { sql: "SELECT room_ID FROM room_table WHERE user_ID = ?", value: [username] };
+                            const roomIDResult = await SQL_exec(roomIDData);
+                            const roomID = roomIDResult[0].room_ID;
+        
+                            const insertLog = { sql: "INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);", value: [roomID, username] };
+                            await SQL_exec(insertLog);
+        
+                            const updateLogTime = { sql: "UPDATE user_table SET log_time = CURRENT_TIMESTAMP WHERE user_ID = ?", value: [username] };
+                            await SQL_exec(updateLogTime);
+        
+                            socket.request.session.user = { username: username };
+                            socket.request.session.save();
+        
+                            io.to(socket.id).emit('login_flug', loginFlag, username);
+                        } catch (error) {
+                            console.log(error);
+                            io.emit('new_flug', 0);
+                        }
+                        break;
+                    case 2: // User type 2
+                        try {
+                            socket.request.session.student = { username: username };
+                            socket.request.session.studentroom_ID = data.selectedOption;
+                            socket.request.session.save();
+        
+                            const insertStudentLog = { sql: "INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);", value: [data.selectedOption, username] };
+                            await SQL_exec(insertStudentLog);
+        
+                            const updateStudentLogTime = { sql: "UPDATE user_table SET log_time = CURRENT_TIMESTAMP WHERE user_ID = ?", value: [username] };
+                            await SQL_exec(updateStudentLogTime);
+        
+                            io.to(socket.id).emit('login_flug1', loginFlag, user.user_name);
+                        } catch (error) {
+                            console.log(error);
+                            io.emit('login_error');
+                        }
+                        break;
+        
+                    case 3: // User type 3
+                        try {
+                            const getUserIDData = { sql: "SELECT user_ID FROM user_table WHERE user_name = ?", value: [data.selectedOption] };
+                            const userIDResult = await SQL_exec(getUserIDData);
+                            const userID = userIDResult[0].user_ID;
+        
+                            const getRoomIDData = { sql: "SELECT room_ID FROM room_table WHERE user_ID = ?", value: [userID] };
+                            const roomIDResult = await SQL_exec(getRoomIDData);
+                            const roomID = roomIDResult[0].room_ID;
+        
+                            const insertAdminLog = { sql: "INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);", value: [roomID, username] };
+                            await SQL_exec(insertAdminLog);
+        
+                            io.to(socket.id).emit('login_flug2', loginFlag, username);
+                        } catch (error) {
+                            console.log(error);
+                            io.emit('login_error');
+                        }
+                        break;
+                    default:
+                      io.to(socket.id).emit('new_flug', 0);
+                      break;
                   }
+              }else{
+                io.to(socket.id).emit('new_flug', 0);
               }
-          });
-      }
-  });
-
-    //login_btnclick置き換え途中
-     socket.on('login', async (data)=>{
-      try{
-          console.log("login処理開始")
-          var username = sanitizeHtml(data.username);
-          var password = sanitizeHtml(data.password);
-          password = await digestMessage(password);
-          console.log(password);
-          var login_data = {
-            sql: "select EXISTS(select 1 from user_table where user_ID =? and password=?) as login_result",
-            value: [username,password]
+          } catch (error) {
+              console.log("Error in login process:", error);
+              io.to(socket.id).emit('login_error');
           }
-          var login_SQL = await SQL_exec2(login_data);
-          console.log(login_SQL);
-          if(login_SQL[0].login_result == 1){
-            /*var user_data = {
-              sql: "select user_type from user_table where user_ID=?",
-              value: [username]
-            }
-            var user_SQL = await SQL_exec(user_data);
-            console.log(user_SQL);
-            if(user_SQL.length == 0){
-              io.to(socket.id).emit('login_null', "error");
-            }else{
-              io.to(socket.id).emit('login_sucess', "success");
-            }*/
-              io.to(socket.id).emit('login_sucess', "success");
-          }else{
-            io.to(socket.id).emit('login_null', "error");
-          }
-      }
-      catch(error){
-        console.log(err);
-        io.to(socket.id).emit('login_error', "error");
-      }
-     })
+        });
    
-        socket.on('account_delete',(user_ID)=>{
-          var user_ID1 = sanitizeHtml(user_ID);
-          var login_log_delete = "delete from login_log where user_ID = ?;";
-          var sql = "delete from user_table where user_ID = ?;";
-          connection.query(login_log_delete,user_ID,(err,result,field)=>{
-            if(err){
-              console.log(err);
-            }
-            connection.query(sql,user_ID1,(err,result3,field)=>{
-              if(err){
-                console.log(err);
-              }
-            })
-            io.emit('delete_complete');
-          })
-        })
-
         socket.on('search_accounts', function(searchTerm) {
           var searchTerm1 = sanitizeHtml(searchTerm);
           const sql = 'SELECT user_ID, user_name, password,log_time FROM user_table WHERE user_ID LIKE ? OR user_name LIKE ? OR password LIKE ?';
@@ -872,7 +570,7 @@ const { SQL_exec } = require( '../db/SQL_module');
                   socket.emit('search_results', results);
               }
           });
-      });
+        });
 
       socket.on('account_delete',async function(user_ID){
         var user_ID1 = sanitizeHtml(user_ID);
@@ -884,7 +582,7 @@ const { SQL_exec } = require( '../db/SQL_module');
           var result=await SQL_exec(get_id_data);
           socket.emit('delete_result',question_id);
          }
-         catch{
+         catch(error){
           console.error(error);
           socket.emit('account_delete',error);
          }
@@ -946,9 +644,97 @@ const { SQL_exec } = require( '../db/SQL_module');
         }
       })
 
-
-
-      socket.on('mondai_btnclick',async function(mondai,o,room_ID) {
+      socket.on('mondai_btnclick', async function(mondai, o, room_ID) {
+        // 入力値のサニタイズ
+        const mondai1 = sanitizeHtml(mondai);
+        const oSanitized = sanitizeHtml(o);
+        const room_IDSanitized = sanitizeHtml(room_ID);
+        
+        console.log(room_IDSanitized);
+    
+        if (mondai1 !== '') {
+            const pool = poolCluster.of('MASTER');
+    
+            // SQLクエリの定義
+            const get_status = "SELECT COUNT(*) AS cnt FROM question_log WHERE room_ID = ? AND question_status = 1;";
+            const question_reset = "UPDATE question_log SET question_status = 0 WHERE room_id = ?;";
+            const get_id_sql = "SELECT question_ID FROM question_table WHERE question_name = ?;";
+            const mondai_sentaku = "INSERT INTO question_log (question_id, room_id, question_status) VALUES (?, ?, 1);";
+            const mondai_select = "SELECT question_table.question_ID, question_text FROM question_table, question_log WHERE question_log.question_ID = question_table.question_ID AND question_status = 1 AND room_ID = ?;";
+    
+            try {
+                const connection = await pool.getConnection();
+    
+                // 現在の出題状況を確認
+                const status_data = { sql: get_status, value: [room_IDSanitized] };
+                const statusResult = await SQL_exec(status_data);
+                const status_count = statusResult[0].cnt;
+                console.log("count:", status_count);
+    
+                // 出題中の問題があればリセット
+                if (status_count >= 1) {
+                    const reset_data = { sql: question_reset, value: [room_IDSanitized] };
+                    await SQL_exec(reset_data);
+                    console.log("Question status reset.");
+                }
+    
+                // question_IDの取得
+                const get_id_data = { sql: get_id_sql, value: [mondai1] };
+                const questionIDResult = await SQL_exec(get_id_data);
+                const q_ID = questionIDResult[0].question_ID;
+    
+                // question_logへの挿入
+                const sentaku_data = { sql: mondai_sentaku, value: [q_ID, room_IDSanitized] };
+                await SQL_exec(sentaku_data);
+                console.log("Inserted into question_log.");
+    
+                // 選択した問題のデータを取得
+                const mondai_data = { sql: mondai_select, value: [room_IDSanitized] };
+                const mondaiResult2 = await SQL_exec(mondai_data);
+                socket.emit('mondai_select', mondaiResult2);
+    
+                // 完了フラグを送信
+                const flag = 1;
+                io.emit('mondai_kekka', flag);
+    
+                connection.release(); // コネクションを解放
+            } catch (error) {
+                console.error('Error during mondai_btnclick process:', error);
+                socket.emit('error', { message: 'Error in mondai_btnclick process', error });
+            }
+        } else {
+            console.log("内容がありません");
+            try {
+                // question_IDの取得
+                const get_id_data = { sql: get_id_sql, value: [mondai1] };
+                const questionIDResult = await SQL_exec(get_id_data);
+                const q_ID = questionIDResult[0].question_ID;
+    
+                // question_logへの挿入
+                const sentaku_data = { sql: mondai_sentaku, value: [q_ID, room_IDSanitized] };
+                await SQL_exec(sentaku_data);
+                console.log("Inserted into question_log.");
+    
+                // 選択した問題のデータを取得
+                const mondai_data = { sql: mondai_select, value: [room_IDSanitized] };
+                const mondaiResult2 = await SQL_exec(mondai_data);
+    
+                // 成功した場合はフラグを1で返す
+                const flag = 1;
+                io.emit('mondai_kekka', flag);
+                socket.emit('mondai_select', mondaiResult2);
+            } catch (error) {
+                console.error('Error during alternative mondai_btnclick process:', error);
+                socket.emit('error', { message: 'Error in mondai_btnclick process', error });
+    
+                // 失敗した場合はフラグを0で返す
+                const flag = 0;
+                io.emit('mondai_kekka', flag);
+            }
+        }
+    });
+    
+      /*socket.on('mondai_btnclick',async function(mondai,o,room_ID) {
         var mondai1 = sanitizeHtml(mondai);
         var o = sanitizeHtml(o);
         var room_ID = sanitizeHtml(room_ID);
@@ -1084,7 +870,7 @@ const { SQL_exec } = require( '../db/SQL_module');
          })
       	}
       })
-    })
+    })*/
 
        
       socket.on('question_release',()=>{
@@ -1092,35 +878,134 @@ const { SQL_exec } = require( '../db/SQL_module');
       });
       
       
-      socket.on('room_IDserach',() =>{
-        var pool = poolCluster.of('MASTER');
-        var username = socket.request.session.user.username;
-        var room_IDserachsql = "select room_ID from room_table where user_ID =?;"
-        
-        pool.getConnection(function(err,connection){
-          if(err){
-            console.log(err);
-          }
-          Socket.on('search_room',async function(){
-            var data={
-              sql:"select room_ID from room_table where user_ID =?", 
-              value:[userename]
-            }
-            try{
-              var result=await SQL_exec(data);
-              socket.emit('roomID_result',room_IDresult);
-            }
-            catch{
-              console.error(error);
-              socket.emit('roomID_result',error);
-            }
-            console.log(room_IDresult[0].room_ID);
-            io.emit('room_IDget',room_IDresult[0].room_ID);
-        })
+      socket.on('search_room',async function(){
+        var data={
+          sql:"select room_ID from room_table where user_ID =?", 
+          value:[userename]
+        }
+        try{
+          var result=await SQL_exec(data);
+          io.emit('room_ID_resutlt',result[0].room_ID);
+        }
+        catch{
+          console.error(error);
+          socket.emit('room_ID_result',error);
+        }
       })
-    }
       
-      socket.on('kiroku',(m1,kaitou1) =>{
+      socket.on('kiroku', async (m1, kaitou1) => {
+        const kaitou = sanitizeHtml(kaitou1);
+        const pool = poolCluster.of('MASTER');
+    
+        async.waterfall([
+            // コネクションを取得
+            function(callback) {
+                pool.getConnection((err, connection) => {
+                    if (err) {
+                        console.log(err);
+                        return callback(err);
+                    }
+                    callback(null, connection);
+                });
+            },
+            // room_ID を取得
+            async function(connection, callback) {
+                try {
+                    const roomResult = await SQL_exec({
+                        sql: "SELECT room_ID FROM login_log WHERE user_ID = ?;",
+                        value: [m1]
+                    });
+                    const room = roomResult[0].room_ID;
+                    callback(null, connection, room);
+                } catch (error) {
+                    console.error("Error getting room_ID:", error);
+                    connection.release();
+                    callback(error);
+                }
+            },
+            // question_ID を取得
+            async function(connection, room, callback) {
+                try {
+                    const questionResult = await SQL_exec({
+                        sql: "SELECT question_ID FROM question_log WHERE room_ID = ? AND question_status = 1;",
+                        value: [room]
+                    });
+                    const question = questionResult[0].question_ID;
+                    callback(null, connection, question);
+                } catch (error) {
+                    console.error("Error getting question_ID:", error);
+                    connection.release();
+                    callback(error);
+                }
+            },
+            // 回答が既に存在するか確認
+            async function(connection, question, callback) {
+                try {
+                    const answerExistsResult = await SQL_exec({
+                        sql: "SELECT * FROM answer_table WHERE user_ID = ? AND question_ID = ?;",
+                        value: [m1, question]
+                    });
+    
+                    if (answerExistsResult.length > 0) {
+                        connection.release();
+                        socket.emit('insert_error');
+                        return callback(new Error('Answer already exists'));
+                    }
+                    callback(null, connection, question);
+                } catch (error) {
+                    console.error("Error checking answer existence:", error);
+                    connection.release();
+                    callback(error);
+                }
+            },
+            // 正解データを取得
+            async function(connection, question, callback) {
+                try {
+                    const correctAnswerResult = await SQL_exec({
+                        sql: "SELECT answer FROM correct_table WHERE question_ID = ?;",
+                        value: [question]
+                    });
+                    const correct_data = correctAnswerResult[0].answer;
+                    callback(null, connection, question, correct_data);
+                } catch (error) {
+                    console.error("Error getting correct answer:", error);
+                    connection.release();
+                    callback(error);
+                }
+            },
+            // 回答を判定
+            function(connection, question, correct_data, callback) {
+                const judgement = kaitou === correct_data ? "○" : "✕";
+                callback(null, connection, question, judgement);
+            },
+            // 回答を answer_table に挿入
+            async function(connection, question, judgement, callback) {
+                try {
+                    const insertResult = await SQL_exec({
+                        sql: "INSERT INTO answer_table(user_ID, question_ID, answer, ans_pics_flag, result) VALUES (?, ?, ?, 0, ?);",
+                        value: [m1, question, kaitou, judgement]
+                    });
+                    socket.emit('data_result', insertResult);
+                    callback(null, insertResult);
+                } catch (error) {
+                    console.error("Error inserting answer:", error);
+                    socket.emit('data_result', error);
+                    connection.release();
+                    callback(error);
+                } finally {
+                    connection.release();
+                }
+            }
+        ], function(err, result) {
+            if (err) {
+                console.error("Error in kiroku process:", err);
+            } else {
+                socket.emit('end');
+            }
+        });
+      });
+    
+      /*socket.on('kiroku',(m1,kaitou1) =>{
         var kaitou = sanitizeHtml(kaitou1)
         var pool = poolCluster.of('MASTER');
         async.waterfall([
@@ -1153,7 +1038,7 @@ const { SQL_exec } = require( '../db/SQL_module');
                 console.log(err);
               }
               var room = result[0].room_ID;
-              callback(null,connection,room);*/
+              callback(null,connection,room);
             })
           },
           function(connection,room,callback){
@@ -1177,7 +1062,7 @@ const { SQL_exec } = require( '../db/SQL_module');
                 console.log(err);
               }
               var question = result2[0].question_ID;
-              callback(null,connection,question);*/
+              callback(null,connection,question);
             })
           },
           function(connection, question, callback) {
@@ -1201,7 +1086,7 @@ const { SQL_exec } = require( '../db/SQL_module');
                     console.log(err);
                     connection.release();
                     return callback(err);
-                }*/
+                }
                 if (result.length > 0) {
                     // 既に回答が存在する場合
                     connection.release();
@@ -1234,7 +1119,7 @@ const { SQL_exec } = require( '../db/SQL_module');
               var correct_data = result3[0].answer;
               console.log(correct_data);
               callback(null,correct_data,question);
-            })*/
+            })
           },
           function(correct_data,question,callback){
             var judgement = "✕";
@@ -1245,112 +1130,75 @@ const { SQL_exec } = require( '../db/SQL_module');
           },
           function(question,judgement,callback){
             var insert = "insert into answer_table(user_ID,question_ID,answer,ans_pics_flag,result) values(?,?,?,0,?);";
-            Socket.on('request_data',async function(){
+            socket.on('request_data',async function(){
               var data={
                 sql:"insert into answer_table(user_ID,question_ID,answer,ans_pics_flag,result) values(?,?,?,0,?)",
                 value:[m1,question,kaitou,judgement]
-          }
-          try{
+              }
+              try{
                 var result=await SQL_exec(data);
                 socket.emit('data_result',result);
-          }
-          catch{
+              }
+              catch(error){
                 console.error(error);
                 socket.emit('data_result',error);
-          }
+              }
+          })
         }
       ],function(err,result5){
         if(err){
-
+          console.log(err);
         }else{
           socket.emit('end');
         }
       })
-    });
- 
-      socket.on('all_commit',()=>{
-       connection.commit((err) =>{
-         if(err){connection.rollback(() =>{throw console.log('error');});}
-         connection.release();
-       })
-      });
+    });*/
 
-      socket.on('requestQualificationData',function(qualificationName){
-        var sql = 'select g.question_genre,g.question_years,q.question_name from question_table q,genre_table g where g.qualification_name = ? and q.question_ID = g.question_ID;';
-        Socket.on('request_data',async function(){
-          var data={
-            sql:"select g.question_genre,g.question_years,q.question_name from question_table q,genre_table g where g.qualification_name = ? and q.question_ID = g.question_ID",
-            value:[qualificationName]
-          }
-          try{
-            var result=await SQL_exec(data);
-            socket.emit('data_result',result);
-          }
-          catch{
-            console.error(error);
-            socket.emit('data_result',error);
-          }
-        })
-        /*
-        connection.query(sql,qualificationName,(err,result,fields)=>{
-          if(err){
-            console.log(err);
-          }
-          socket.emit('qualificationData', result);
-        });*/
-      });
+      socket.on('request_data',async function(){
+        var data={
+          sql:"select g.question_genre,g.question_years,q.question_name from question_table q,genre_table g where g.qualification_name = ? and q.question_ID = g.question_ID",
+          value:[qualificationName]
+        }
+        try{
+          var result=await SQL_exec(data);
+          socket.emit('data_result',result);
+        }
+        catch{
+          console.error(error);
+          socket.emit('data_result',error);
+        }
+      })
 
-      socket.on('requestquestionname',function(qualificationName){
-        var sql = 'select g.question_genre,q.question_name from question_table q,genre_table g where g.question_years = ? and q.question_ID = g.question_ID;';
-        Socket.on('request_name',async function(){
-          var data={
-            sql:"select g.question_genre,q.question_name from question_table q,genre_table g where g.question_years = ? and q.question_ID = g.question_ID",
-            value:[qualificationName]
-          }
-          try{
-            var result=await SQL_exec(data);
-            socket.emit('name_result',result);
-          }
-          catch{
-            console.error(error);
-            socket.emit('name_result',error);
-          }
-        })
-        /*
-        connection.query(sql,qualificationName,(err,result,fields)=>{
-          if(err){
-            console.log(err);
-          }
-          socket.emit('questionname', result);
-        });*/
-      });
+      socket.on('request_name',async function(){
+        var data={
+          sql:"select g.question_genre,q.question_name from question_table q,genre_table g where g.question_years = ? and q.question_ID = g.question_ID",
+          value:[qualificationName]
+        }
+        try{
+          var result=await SQL_exec(data);
+          socket.emit('name_result',result);
+        }
+        catch{
+          console.error(error);
+          socket.emit('name_result',error);
+        }
+      })
 
-      socket.on('requestgenre',function(qualificationName){
-        var sql = 'select g.question_genre from question_table q,genre_table g where q.question_name = ? and q.question_ID = g.question_ID;';
-        Socket.on('request_genre',async function(){
-          var data={
-            sql:"select g.question_genre from question_table q,genre_table g where q.question_name = ? and q.question_ID = g.question_ID",
-            value:[qualificationName]
-          }
-          try{
-            var result=await SQL_exec(data);
-            socket.emit('genre_result',result);
-          }
-          catch{
-            console.error(error);
-            socket.emit('genre_result',error);
-          }
-        })
-        /*
-        connection.query(sql,qualificationName,(err,result,fields)=>{
-          if(err){
-            console.log(err);
-          }
-          socket.emit('questiongenre', result);
-        });*/
-      });
-
-
+      socket.on('request_genre',async function(){
+        var data={
+          sql:"select g.question_genre from question_table q,genre_table g where q.question_name = ? and q.question_ID = g.question_ID",
+          value:[qualificationName]
+        }
+        try{
+          var result=await SQL_exec(data);
+          socket.emit('genre_result',result);
+        }
+        catch{
+          console.error(error);
+          socket.emit('genre_result',error);
+        }
+      })
+    
       socket.on('logout',function(){
         socket.request.session.destroy(function(err) {
           if (err) {
@@ -1361,78 +1209,55 @@ const { SQL_exec } = require( '../db/SQL_module');
         });
       });
 
-      //ユーザー追加手動
-      socket.on('Add_user_manually',(data) =>{
-        var pool = poolCluster.of('MASTER');
+      // ユーザー追加手動
+      socket.on('Add_user_manually', async (data) => {
+        try {
+            // パスワードをSHA-256でハッシュ化
+            password = hashPassword(data.password)
 
-        pool.getConnection(function(err,connection){
-          if(err){
-            console.log(err);
-          }
-          //データベースへの接続
-           try {
-        // パスワードをSHA-256でハッシュ化
-        const hash = crypto.createHash('sha256');
-        hash.update(data.password);
-        const hashedPassword = hash.digest('hex');
+            // ユーザー情報をuser_tableに挿入
+            const insertUserQuery = {
+                sql: "INSERT INTO user_table(user_ID, user_name, password, user_type) VALUES (?, ?, ?, ?);",
+                value: [data.userID, data.username, password, data.usertype]
+            };
+            await SQL_exec(insertUserQuery);
 
-        // データベースへの接続
-        var insertuser = 'INSERT INTO user_table(user_ID, user_name, password, user_type) values (?, ?, ?, ?);';
-        Socket.on('isert_files',async function(){
-          var data={
-            sql:"INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?)",
-            value:[data.room_name,data.userID]
-          }
-          try{
-            var result=await SQL_exec(data);
-            socket.emit('insert_result',result);
-          }
-          catch{
-            console.error(error);
-            socket.emit('insert_result',error);
-          }
-        })
-        
-        connection.query(insertuser, [data.userID, data.username, hashedPassword, data.usertype], (err, result, field) => {
-          if (err) {
-            throw err; // エラーを投げる
-          }
-          if (data.room_name && data.userID) {
-            var insertRoom = 'INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?);';
-            Socket.on('isert_files',async function(){
-              var data={
-                sql:"INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?)",
-                value:[data.room_name,data.userID]
-              }
-              try{
-                var result=await SQL_exec(data);
-                socket.emit('insert_result',result);
-              }
+            console.log('User data inserted successfully.');
 
-              catch{
-                console.error(error);
-                socket.emit('insert_result',error);
-              }
-            })
             
-            connection.query(insertRoom, [data.room_name, data.userID], (err, result) => {
-              if (err) {
-                throw err; // エラーを投げる
-              }
-              // room_tableへの挿入が完了
-              console.log('Room data inserted successfully.');
-            });
-          }
-          io.emit('Add_user_manually_Complete'); // 処理が完了したらイベントを発火
-        });
+            // room_tableにユーザーと部屋情報を追加する
+            if (data.usertype == 2) {
+                const insertRoomQuery = {
+                    sql: "INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?);",
+                    value: [data.room_name, data.userID]
+                };
+                await SQL_exec(insertRoomQuery);
+                console.log('Room data inserted successfully.');
+            }
+
+            io.emit('Add_user_manually_Complete'); 
         } catch (error) {
-          console.error('Hashing error:', error); // ハッシュ化でエラーが発生した場合
-        } finally {
-          if (connection) connection.release(); // コネクションをプールに戻す
+            console.error('Error adding user manually:', error); 
+            socket.emit('insert_result', error);
         }
-          })
       });
 
+      // Insert files handling for room_table insertion
+      socket.on('insert_files', async (data) => {
+        const insertRoomData = {
+            sql: "INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?);",
+            value: [data.room_name, data.userID]
+        };
+
+        try {
+            const result = await SQL_exec(insertRoomData);
+            socket.emit('insert_result', result);
+        } catch (error) {
+            console.error('Insert files error:', error);
+            socket.emit('insert_result', error);
+        }
+      });
+     
       function hashPassword(password) {
         const sha256 = crypto.createHash('sha256');
         sha256.update(password);
@@ -1467,32 +1292,25 @@ const { SQL_exec } = require( '../db/SQL_module');
             return result;
         };
 
-        socket.on('file_upload', function(data) {
-          console.log('受信したファイル名:', data.fileName);
+        socket.on('insert_files',async function(){
           const normalizedData = data.data.replace(/\r\n/g, '\n');
           const records = parseCSV(normalizedData); // CSVデータをパースしてレコードの配列に変換
-          console.log(records);
-          // レコードをバルクインサートするSQL文を構築
-          const insertQuery = 'INSERT INTO user_table(user_ID,user_name,password,user_type) VALUES ?';
           const values = records.map(record => [record.学籍番号, record.名前, record.パスワード, record.アカウント区分]);
-          
-          Socket.on('isert_files',async function(){
-            var data={
-              sql:"INSERT INTO user_table(user_ID,user_name,password,user_type) VALUES ?",
-              value:[values]
-            }
-            try{
-              var result=await SQL_exec(data);
-              socket.emit('insert_result',result);
-            }
-            catch{
-              console.error(error);
-              socket.emit('insert_result',error);
-            }
-          })
-        });
+          var data={
+            sql:"INSERT INTO user_table(user_ID,user_name,password,user_type) VALUES ?",
+            value:[values]
+          }
+          try{
+            var result=await SQL_exec(data);
+            socket.emit('insert_result',result);
+          }
+          catch{
+            console.error(error);
+            socket.emit('insert_result',error);
+          }
+        })
 
-
+       
       socket.on('searchQuery', async function(data) {
         var pool = poolCluster.of('MASTER');
         const query = '%' + data.query + '%';
@@ -1529,7 +1347,7 @@ const { SQL_exec } = require( '../db/SQL_module');
           socket.emit('question',error);
         }
         
-        pool.getConnection(async function(err,connection){
+       /* pool.getConnection(async function(err,connection){
           var data={
             sql:"select g.qualification_name, g.question_genre, g.question_years, q.question_name, q.question_text, COALESCE(s.select_1, \'\') AS select_1, COALESCE(s.select_2, \'\') AS select_2, COALESCE(s.select_3, \'\') AS select_3, COALESCE(s.select_4, \'\') AS select_4, a.type_name, CASE WHEN q.picture_flag = 0 THEN \'\' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR a.type_name LIKE ?",
             value:[query,query,query,query,query,query]
@@ -1542,64 +1360,52 @@ const { SQL_exec } = require( '../db/SQL_module');
             console.log(error);
             socket.emit('select_quali',error);
           }
-        })
+        })*/
       });
 
-      socket.on('question_delete',async function(question_name){
-        var pool = poolCluster.of('MASTER');
-        pool.getConnection(function(err,connection){
-          if(err){
-            console.log(err)
-          }
-          async.waterfall([
-            async function(callback) { 
-                // ① question_nameを使ってSQLでquestion_tableからquestion_IDを取得
-                  var data={
-                    sql:"SELECT question_ID FROM question_table WHERE question_name = ?",
-                    value:[question_name]
-                  }
-                  try{
-                    var result=await SQL_exec(data);
-                    socket.emit('id_result',result);
-                  }
-                  catch{
-                    console.error(error);
-                    socket.emit('id_result',error);
-                  }
-                if(err) return callback(err);
-                if (result.length === 0) return callback(new Error("Question not found"));
-                const question_ID = result[0].question_ID;
-                callback(null, question_ID);
-            },
-            
-            async function(question_ID, callback) {
-                // ⑥ question_IDを使用してquestion_tableからデータ削除
-                  var data={
-                    sql:"DELETE FROM question_table WHERE question_ID = ?",
-                    value:[question_ID]
-                  }
-                  try{
-                    var result=await SQL_exec(data);
-                    socket.emit('delete_result',delete_result);
-                  }
-                  catch{
-                    console.error(error);
-                    socket.emit('delete_result',error);
-                  }
-            }
-        ], function(err, question_ID) {
-            if (err) {
-                // エラーがあった場合、クライアントにエラーメッセージを送信
-                connection.release();
-                socket.emit('error', err.message);
-            } else {
-                // 全ての操作が成功した場合、クライアントに完了メッセージを送信
-                connection.release();
-                socket.emit('question_Complete');
-            }
+      socket.on('question_delete', async function(question_name) {
+            async.waterfall([
+                async function(callback) {
+                    const data = {
+                        sql: "SELECT question_ID FROM question_table WHERE question_name = ?",
+                        value: [question_name]
+                    };
+    
+                    try {
+                        const result = await SQL_exec(data);
+                        if (result.length === 0) {
+                            return callback(new Error("Question not found"));
+                        }
+                        const question_ID = result[0].question_ID;
+                        callback(null, question_ID);
+                    } catch (error) {
+                        console.error("Error fetching question_ID:", error);
+                        callback(error);
+                    }
+                },
+                async function(question_ID, callback) {
+                    const deleteData = {
+                        sql: "DELETE FROM question_table WHERE question_ID = ?",
+                        value: [question_ID]
+                    };
+    
+                    try {
+                        await SQL_exec(deleteData);
+                        callback(null);
+                    } catch (error) {
+                        console.error("Error deleting question:", error);
+                        callback(error);
+                    }
+                }
+            ], function(err) {
+                if (err) {
+                    socket.emit('error', err.message); 
+                } else {
+                    socket.emit('question_Complete'); 
+                }
+            });
         });
-        })
-     })
+    
 
      //テスト用Socket.io
      socket.on('SQL_test',async function(){
@@ -1673,4 +1479,3 @@ const { SQL_exec } = require( '../db/SQL_module');
       }
      })
    })
-  });
