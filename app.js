@@ -70,7 +70,7 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'192.168.0.16',//172.18.96.186
+  host :'172.18.96.186',//192.168.0.16
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -102,7 +102,7 @@ app.use(express.static('public'));
 app.use(express.static('images'));
 
 const sessionpool = mysql.createPool({
-  host: '192.168.0.16',//172.18.96.186
+  host: '172.18.96.186',//192.168.0.16
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
