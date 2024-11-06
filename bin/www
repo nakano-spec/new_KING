@@ -992,7 +992,7 @@
       })
     });
       
-      socket.on('kiroku',(m1,kaitou1) =>{
+      socket.on('record',(m1,kaitou1) =>{
         var kaitou = sanitizeHtml(kaitou1)
         var pool = poolCluster.of('MASTER');
         async.waterfall([
@@ -1034,7 +1034,6 @@
               }
           },
           async function(connection, question, callback) {
-            var checkAnswerExists = 'SELECT * FROM answer_table WHERE user_ID = ? AND question_ID = ?;';
               var data={
                 sql:"SELECT * FROM answer_table WHERE user_ID = ? AND q_log_ID = ?", //引数を変えて
                 value:[question]
@@ -1057,7 +1056,6 @@
                 callback(null, connection, question);
          },
           async function(connection,question,callback){
-            var correct = 'select answer from correct_table where question_ID = ?';
               var data={
                 sql:"select answer from correct_table where question_ID = ?",
                 value:[question]
@@ -1079,8 +1077,7 @@
             callback(null,question,judgement);
           },
           async function(question,judgement,callback){
-            var insert = "insert into answer_table(user_ID,question_ID,answer,ans_pics_flag,result) values(?,?,?,0,?);";
-              var data={
+            var data={
                 sql:"insert into answer_table(user_ID,question_ID,answer,ans_pics_flag,result) values(?,?,?,0,?)",
                 value:[m1,question,kaitou,judgement]
               }
@@ -1304,7 +1301,6 @@
       socket.on('searchQuery', async function(data) {
         var pool = poolCluster.of('MASTER');
         const query = '%' + data.query + '%';
-        var sql = 'select user_ID,user_name,log_time from user_table where user_ID LIKE ? OR user_name LIKE ? OR password LIKE ? OR log_time LIKE ?;';
         var data={
          sql:"select user_ID,user_name,log_time from user_table where user_ID LIKE ? OR user_name LIKE ? OR password LIKE ? OR log_time LIKE ?",
          value:[query,query,query,query]
