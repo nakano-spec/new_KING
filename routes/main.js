@@ -6,11 +6,7 @@ const async = require('async');
 
 /* GET home page. */
 router.get('/', function(req, res) {
-  if(!req.session.user){
-        res.render('login.ejs');
-  }else{
     res.render('main',{name:req.session.user.username});
-  }
 });
 
 

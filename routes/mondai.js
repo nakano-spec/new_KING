@@ -13,7 +13,7 @@ router.get('/', async function(req, res, next) {
     var result = await SQL_exec2(sql);
     var data = {
       name:req.session.user.username,
-      web:result1
+      web:result
     }
     res.render('mondai2',data);
   }catch(error){
