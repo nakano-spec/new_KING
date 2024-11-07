@@ -94,7 +94,7 @@
             </button>
             <h1 style="margin-left: 1rem;">ニコキタ教育委員会：問題出題</h1>
         </div>
-        <div>ユーザー：sensei</div>
+        <div>ユーザー：<%= name %></div>
     </header>
 
     <main class="container">
@@ -159,19 +159,9 @@
             <div style="text-align: right; margin-top: 2rem;">
                 <button type="submit" class="submit-button" name="okuru">出題する</button>
             </div>
+            <button style="height: 50px; width: 50px;"onclick="window.location.href='/main'">メイン画面に戻る
         </form>
     </main>
-
-    <button id="menu-button">メニュー</button>
-    <ul id="menu-dropdown" class="hidden">
-        <li><a href="#" id="main-link">メインメニュー</a></li>
-        <li><a href="#" id="question-link">アカウント一覧表示</a></li>
-        <li><a href="#" id="questionmanage-link">問題一覧表示</a></li>
-    </ul>
-
-    <div class="sumple">
-        <a href="http://localhost:3000/login">戻る</a>
-    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
