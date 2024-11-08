@@ -4,6 +4,8 @@
  * Module dependencies.
  */
 
+import { error } from 'console';
+
  var { app,sessionMiddleware } = require('../app');
  var debug = require('debug')('sotuken:server');
  var http = require('http');
@@ -967,6 +969,20 @@
         io.emit('questionPosted');
       });
       
+      socket.on('answer_view',async function(user_ID){
+        var select_data={
+          sql:"SELECT question_ID,answer,result FROM answer_table WHERE user_id=?;",
+          value:[user_ID]
+        }
+        try{
+          var view_result=await SQL_exec(select_data);
+          socket.emit('answer_view',view_result);
+        }
+        catch{
+          console.erroe(error);
+          socket.emit('answer_view',error);
+        }
+      });
       
       socket.on('room_IDserach',() =>{
         var pool = poolCluster.of('MASTER');
