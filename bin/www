@@ -124,10 +124,10 @@ const { SQL_exec } = require( '../db/SQL_module');
  io.on('connection', (socket) => {//ページが繋がったとき
    console.log(socket.request.session);
    const mysql_setting = {
-    host :'192.168.0.16',//172.18.96.186,172.18.96.162
-    user :'connect',
-    password :'K1ng@Oyster',
-    database :'mydb',
+    host :'sql307.infinityfree.com',//172.18.96.186,172.18.96.162
+    user :'if0_37673553',
+    password :'Nakano.0426',
+    database :'if0_37673553mydb',
    }
    
    const connection = mysql.createConnection(mysql_setting);
