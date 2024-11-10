@@ -7,11 +7,7 @@ const mysql = require("mysql")
 //このページに来たら最初に行う処理
 /* GET users listing. */
 router.get("/", (req, res)=> {
-  if(!req.session.user){
-        res.render('login.ejs');
-  }else{
-    res.render('account_addition.ejs');
-  }
+    res.render('account_addition.ejs',{name:req.session.user.username});
 });
 
 module.exports = router;

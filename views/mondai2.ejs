@@ -4,85 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ニコキタ教育委員会：問題出題</title>
-    <link type="text/css" rel="stylesheet" href="/stylesheets/mondai2.css">
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-        }
-        .header {
-            background-color: #F47B20;
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .hamburger {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 24px;
-            height: 18px;
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        .hamburger div {
-            width: 24px;
-            height: 2px;
-            background-color: white;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-        .button {
-            background-color: #e0e0e0;
-            border: none;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .button:hover {
-            background-color: #d0d0d0;
-        }
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 1.125rem;
-        }
-        select, input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .flex {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-        .submit-button {
-            background-color: #FFA500;
-            color: black;
-            font-weight: bold;
-            font-size: 1.125rem;
-            padding: 1rem 3rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .submit-button:hover {
-            background-color: #FF8C00;
-        }
-    </style>
+    <link rel="stylesheet" href="/stylesheets/mondai2.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 </head>
 <body>
     <header class="header">
@@ -94,8 +19,15 @@
             </button>
             <h1 style="margin-left: 1rem;">ニコキタ教育委員会：問題出題</h1>
         </div>
-        <div>ユーザー：sensei</div>
+        <div>ユーザー：<%= name %></div>
     </header>
+
+    <nav class="sidebar" id="sidebar">
+        <a href="/main">メインページ</a>
+        <a href="/mondai">問題出題</a>
+        <a href="/question_list">問題管理</a>
+        <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+    </nav>
 
     <main class="container">
         <div style="text-align: right; margin-bottom: 2rem;">
@@ -105,7 +37,7 @@
         <form name="f1" style="max-width: 768px; margin: 0 auto;">
             <div class="form-group">
                 <label for="qualification-select">試験名を選択してください。</label>
-                <select id="qualification-select" name="mo1" class="cp_sl02" required>
+                <select id="qualification-select" name="mo1" class="cp_sl02 select2" required>
                     <option value="">(試験名を選択)</option>
                     <% web.forEach((list) => { %>
                         <option><%= list.qualification_name %></option>
@@ -115,7 +47,7 @@
 
             <div class="form-group">
                 <label for="year-select">年度を選択してください。</label>
-                <select id="year-select" name="year" class="cp_sl02">
+                <select id="year-select" name="year" class="cp_sl02 select2">
                     <option value="">(年度を選択)</option>
                     <% web.forEach((list) => { %>
                         <option><%= list.question_years %></option>
@@ -125,7 +57,7 @@
 
             <div class="form-group">
                 <label for="question-select">問題を選択してください。</label>
-                <select id="question-select" name="question" class="cp_sl02" required>
+                <select id="question-select" name="question" class="cp_sl02 select2" required>
                     <option value="">(問題を選択)</option>
                     <% web.forEach((list) => { %>
                         <option><%= list.question_name %></option> 
@@ -135,7 +67,7 @@
 
             <div class="form-group">
                 <label for="genre-select">ジャンルを選択してください。</label>
-                <select id="genre-select" name="genre" class="cp_sl02">
+                <select id="genre-select" name="genre" class="cp_sl02 select2">
                     <option value="">(ジャンルを選択)</option>
                     <% web.forEach((list) => { %>
                         <option><%= list.question_genre %></option>
@@ -144,16 +76,13 @@
             </div>
 
             <div class="form-group">
-                <label>回答の正否判定の仕方を選択してください。</label>
-                <div>
-                    <input type="radio" name="hantei" value="自動">自動
-                    <input type="radio" name="hantei" value="手動">手動
+                <label>制限時間を分と秒単位で入力してください。</label>
+                <div class="time-input-container">
+                    <label for="time">分:</label>
+                    <input id="time" type="number" name="minute" min="0" max="59" placeholder="分">
+                    <label for="time2">秒:</label>
+                    <input id="time2" type="number" name="second" min="0" max="59" placeholder="秒">
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>制限時間を秒単位で入力してください。</label>
-                <input id="time2" type="number" name="byou" min="1" max="3600" placeholder="秒">
             </div>
 
             <div style="text-align: right; margin-top: 2rem;">
@@ -162,131 +91,83 @@
         </form>
     </main>
 
-    <button id="menu-button">メニュー</button>
-    <ul id="menu-dropdown" class="hidden">
-        <li><a href="#" id="main-link">メインメニュー</a></li>
-        <li><a href="#" id="question-link">アカウント一覧表示</a></li>
-        <li><a href="#" id="questionmanage-link">問題一覧表示</a></li>
-    </ul>
-
-    <div class="sumple">
-        <a href="http://localhost:3000/login">戻る</a>
-    </div>
-
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        $(document).ready(() => $('.select2').select2());
+
         const socket = io();
         const form = document.forms.f1;
-        const questionSelect = document.getElementById('question-select');
-        const menuButton = document.getElementById('menu-button');
-        const menuDropdown = document.getElementById('menu-dropdown');
-        let hanteiFlag = false;
-        let hanteiValue = '';
+        const menuButton = document.getElementById('hambtn');
+        const menu = document.getElementById('menu');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
 
-        // メニューの表示・非表示
         menuButton.addEventListener('click', () => {
-            menuDropdown.classList.toggle('active');
+            sidebar.classList.toggle('active');
+            mainContent.classList.toggle('sidebar-active');
         });
 
         document.addEventListener('click', (event) => {
-            if (!menuButton.contains(event.target)) {
-                menuDropdown.classList.remove('active');
+            if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
+                sidebar.classList.remove('active');
+                mainContent.classList.remove('sidebar-active');
             }
         });
 
-        // 出題ボタンのクリックイベント
-        form.okuru.addEventListener('click', function(e) {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            for (let radio of form.hantei) {
-                if (radio.checked) {
-                    hanteiFlag = true;
-                    hanteiValue = radio.value;
-                }
-            }
-            if (!hanteiFlag) {
-                alert("採点形式が選択されていません。");
-                return;
-            }
-
             const timeLimit = form.time2.value;
-            if (!timeLimit || isNaN(timeLimit)) {
-                alert("制限時間が入力されていません。");
-                return;
-            }
+            const hantei = [...form.hantei].find(radio => radio.checked)?.value;
+
+            if (!hantei) return alert("採点形式が選択されていません。");
+            if (!timeLimit || isNaN(timeLimit)) return alert("制限時間が入力されていません。");
 
             socket.emit('search_room');
         });
 
-        form.kakunin.addEventListener('click', function(e) {
-            e.preventDefault();
-            const params = new URLSearchParams({
-                qualificationName: form.mo1.value,
-                year: form.year.value,
-                questionName: form.question.value,
-                genre: form.genre.value
-            }).toString();
-            window.location.href = "/kakunin?" + params;
-        });
-
-        form.tuika.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.location.href = "/tuika";
-        });
-
-        socket.on('room_IDget', function(room_ID) {
-            const questionIndex = questionSelect.selectedIndex;
-            const selectedQuestion = questionSelect.options[questionIndex].innerText;
+        socket.on('room_IDget', room_ID => {
+            const selectedQuestion = form.question.options[form.question.selectedIndex].innerText;
             const newWin = open("/hyouji2");
-            socket.emit('mondai_btnclick', selectedQuestion, hanteiValue, room_ID);
+            socket.emit('mondai_btnclick', selectedQuestion, form.hantei.value, room_ID);
         });
 
-        socket.on('mondai_kekka', function(flag) {
-            const time = form.time2.value;
-            if (flag === 1) {
-                window.location.href = '/mondai2?byou=' + encodeURIComponent(time);
-            } else {
-                window.location.href = '/hello';
+        function updateSelect(selectId, data, property) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            data.forEach(item => select.add(new Option(item[property])));
+        }
+
+        async function logout() {
+            try {
+                await new Promise((resolve, reject) => {
+                    socket.emit('session_destroy', (response) => {
+                        if (response.success) resolve();
+                        else reject(response.error);
+                    });
+                });
+                // 成功時はログインページにリダイレクト
+                window.location.href = '/login';
+            } catch (error) {
+                alert('ログアウトに失敗しました: ' + error);
             }
+        }
+        
+        socket.on('qualificationData', data => updateSelect('year-select', data, 'question_years'));
+        socket.on('questionname', data => updateSelect('question-select', data, 'question_name'));
+        socket.on('questiongenre', data => updateSelect('genre-select', data, 'question_genre'));
+        socket.on('session_destroy_success', () => {
+            window.location.href = '/login';
+        });
+
+        socket.on('session_destroy_failed', (error) => {
+            alert('ログアウトに失敗しました: ' + error);
         });
 
         function sanitize(str) {
             return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#x27;')
-                .replace(/\//g,'&#x2F;')
-                .replace(/:/g, '')
-                .replace(/;/g, '')
-                .replace(/\*/g, '');
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g, '&#x2F;');
         }
-
-        // ソケットイベントを用いたセレクトボックスの動的更新
-        function updateSelect(selectId, data, property) {
-            const select = document.getElementById(selectId);
-            select.innerHTML = '';
-            data.forEach(item => {
-                const option = document.createElement('option');
-                option.textContent = item[property];
-                select.appendChild(option);
-            });
-        }
-
-        socket.on('qualificationData', function(data) {
-            updateSelect('year-select', data, 'question_years');
-            updateSelect('question-select', data, 'question_name');
-            updateSelect('genre-select', data, 'question_genre');
-        });
-
-        socket.on('questionname', function(data) {
-            updateSelect('question-select', data, 'question_name');
-            updateSelect('genre-select', data, 'question_genre');
-        });
-
-        socket.on('questiongenre', function(data) {
-            updateSelect('genre-select', data, 'question_genre');
-        });
     </script>
 </body>
 </html>

@@ -4,136 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ニコキタ教育委員会</title>
-    <style>
-       * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-color: white;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            background-color: #F47B20;
-            color: white;
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .menu-icon {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 24px;
-            height: 18px;
-        }
-
-        .menu-icon div {
-            width: 100%;
-            height: 3px;
-            background-color: white;
-        }
-
-        h1 {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        .user {
-            font-size: 1.2rem;
-        }
-
-        main {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-        }
-
-        .button-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .action-button{
-            width: 100%;
-            height: 200px; /* ここでボタンの高さを統一 */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-            background-color: #FFDDCC;
-            border: 2px solid #F47B20;
-            border-radius: 1rem;
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: black;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .logout-button{
-            width: 30%;
-            height: 200px; /* ここでボタンの高さを統一 */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-            background-color: #FFDDCC;
-            border: 2px solid #F47B20;
-            border-radius: 1rem;
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: black;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .action-button:hover, .logout-button:hover {
-            background-color: #FFE8DD;
-        }
-
-        .action-button svg, .logout-button svg {
-            width: 48px;
-            height: 48px;
-        }
-
-        .button-space{
-            height: 1rem;
-        }
-        @media (max-width: 480px) {
-            .button-container {
-                grid-template-columns: 1fr; /* モバイルでは1列表示 */
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/stylesheets/main.css">
 </head>
 <body>
     <script src="/socket.io/socket.io.js"></script>
     <div class="container">
         <header>
-            <div class="menu-icon">
+            <div class="menu-icon" id="hambtn">
                 <div></div>
                 <div></div>
                 <div></div>
@@ -148,6 +25,13 @@
             </div>
         </header>
         
+        <nav class="sidebar" id="sidebar">
+            <a href="/main">メインページ</a>
+            <a href="/mondai">問題出題</a>
+            <a href="/question_list">問題管理</a>
+            <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+        </nav>
+
         <main>
             <div class="button-container">
                 <button id="post-question-button" class="action-button">
@@ -183,6 +67,20 @@
 
     <script>
         var socket = io();
+        const menuButton = document.getElementById('hambtn');
+        const sidebar = document.getElementById('sidebar');
+
+        menuButton.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            mainContent.classList.toggle('sidebar-active');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
+                sidebar.classList.remove('active');
+                mainContent.classList.remove('sidebar-active');
+            }
+        });
 
         // ボタンイベント
         document.getElementById('post-question-button').addEventListener('click', function() {
@@ -196,6 +94,21 @@
         document.getElementById('logout-button').addEventListener('click', function() {
             socket.emit('logout');
         });
+
+        async function logout() {
+            try {
+                await new Promise((resolve, reject) => {
+                    socket.emit('session_destroy', (response) => {
+                        if (response.success) resolve();
+                        else reject(response.error);
+                    });
+                });
+                // 成功時はログインページにリダイレクト
+                window.location.href = '/login';
+            } catch (error) {
+                alert('ログアウトに失敗しました: ' + error);
+            }
+        }
 
         // サーバー側からの応答
         socket.on('page_updatecomplete', function() {
@@ -212,6 +125,14 @@
 
         socket.on('logout_complete', function() {
             window.location.href = '/';
+        });
+
+        socket.on('session_destroy_success', () => {
+            window.location.href = '/login';
+        });
+
+        socket.on('session_destroy_failed', (error) => {
+            alert('ログアウトに失敗しました: ' + error);
         });
     </script>
 </body>

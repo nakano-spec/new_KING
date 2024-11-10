@@ -161,7 +161,7 @@
         // ログイン時の処理（表示用アカウント）
         socket.on('login_flug2', function(flug, name) {
             if (flug === 1) {
-                window.location.href = '/hyouji2?name=' + encodeURIComponent(name);
+                window.location.href = '/admin_main';
             } else {
                 item.textContent = 'パスワードが不一致、または登録されていないuserデータです。';
                 mondai.appendChild(item);

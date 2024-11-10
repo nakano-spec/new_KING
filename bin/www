@@ -22,7 +22,9 @@ const { SQL_exec } = require( '../db/SQL_module');
  const sha512 = crypto.createHash('sha512');
  const encoding = 'hex';
  const sanitizeHtml = require('sanitize-html');
- 
+ const csv = require('csv-parser');
+ const bcrypt = require('bcrypt');
+ const { Readable } = require('stream');
  
  /**
   * Get port from environment and store in Express.
@@ -144,6 +146,8 @@ const { SQL_exec } = require( '../db/SQL_module');
    //書き換えたバージョン　負荷テスト的にこちらの書き方がいい
   async function SQL_exec(data) {
     return new Promise((resolve, reject) => {
+      console.log("SQL_start");
+      console.log(data.sql,data.value);
       pool.query(data.sql, data.value, (err, result) => {
         if (err) {
           console.error('Database query failed:', err);
@@ -466,6 +470,7 @@ const { SQL_exec } = require( '../db/SQL_module');
                 value:[username,password]
               };
               const users = await SQL_exec(loginSelect);
+              console.log(users.login_result);
               if(users[0].login_result == 1){
                 const loginFlag = 1;
                 var user_data = {
@@ -473,25 +478,23 @@ const { SQL_exec } = require( '../db/SQL_module');
                     value: [username]
                 }
                 var user_SQL = await SQL_exec(user_data);
+                console.log(user_SQL[0].user_type);
                 switch (user_SQL[0].user_type) {
                     case 1: // User type 1
                         try {
-                            console.log("start");
-                            const roomIDData = { sql: "SELECT room_ID FROM room_table WHERE user_ID = ?", value: [username] };
+                            console.log(data.selectedOption)
+                            const roomIDData = { sql: "SELECT r.room_ID FROM room_table r,user_table u WHERE r.user_ID = u.user_ID and u.user_name = ?", value: [data.selectedOption] };
                             const roomIDResult = await SQL_exec(roomIDData);
                             const roomID = roomIDResult[0].room_ID;
         
-                            const insertLog = { sql: "INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);", value: [roomID, username] };
+                            const insertLog = { sql: "INSERT INTO login_log(user_ID,room_ID,log_time) VALUES (?,?,CURRENT_TIMESTAMP);", value: [username,roomID] };
                             await SQL_exec(insertLog);
-        
-                            const updateLogTime = { sql: "UPDATE login_log SET log_time = CURRENT_TIMESTAMP WHERE user_ID = ?", value: [username] };
-                            await SQL_exec(updateLogTime);
         
                             socket.request.session.student = { username: username };
                             socket.request.session.studentroom_ID = data.selectedOption;
                             socket.request.session.save();
                             
-                            io.to(socket.id).emit('login_flug2', loginFlag, username);
+                            io.to(socket.id).emit('login_flug1', loginFlag, username);
                         } catch (error) {
                             console.log(error);
                             io.emit('new_flug', 0);
@@ -521,14 +524,15 @@ const { SQL_exec } = require( '../db/SQL_module');
                             const getUserIDData = { sql: "SELECT user_ID FROM user_table WHERE user_name = ?", value: [data.selectedOption] };
                             const userIDResult = await SQL_exec(getUserIDData);
                             const userID = userIDResult[0].user_ID;
-                            console.log(userID);
                             const getRoomIDData = { sql: "SELECT room_ID FROM room_table WHERE user_ID = ?", value: [userID] };
                             const roomIDResult = await SQL_exec(getRoomIDData);
                             const roomID = roomIDResult[0].room_ID;
-                            console.log(roomID);
-                            const insertAdminLog = { sql: "INSERT INTO login_log(room_ID, user_ID) VALUES (?, ?);", value: [roomID, username] };
+                            const insertAdminLog = { sql: "INSERT INTO login_log(user_ID,room_ID,log_time) VALUES (?,?,CURRENT_TIMESTAMP);", value: [username,roomID] };
                             await SQL_exec(insertAdminLog);
-        
+
+                            socket.request.session.user = { username: username };
+                            socket.request.session.save();
+
                             io.to(socket.id).emit('login_flug2', loginFlag, username);
                         } catch (error) {
                             console.log(error);
@@ -549,36 +553,68 @@ const { SQL_exec } = require( '../db/SQL_module');
           }
         });
    
-        socket.on('search_accounts', function(searchTerm) {
-          var searchTerm1 = sanitizeHtml(searchTerm);
-          const sql = 'SELECT user_ID, user_name, password,log_time FROM user_table WHERE user_ID LIKE ? OR user_name LIKE ? OR password LIKE ?';
-          connection.query(sql, [`%${searchTerm1}%`, `%${searchTerm1}%`, `%${searchTerm1}%`], function(err, results) {
-              if (err) {
-                  // エラー処理
-                  console.log(err);
-                  socket.emit('search_results', []);
-              } else {
-                  // 検索結果をクライアントに送信
-                  socket.emit('search_results', results);
-              }
-          });
+        socket.on('search_accounts', async function(searchTerm) {
+          try{
+            var searchTerm = sanitizeHtml(searchTerm);
+            const sql = {
+              sql:'SELECT u.user_ID, u.user_name, u.password, l.log_time FROM user_table u LEFT JOIN login_log l ON u.user_ID = l.user_ID  WHERE (u.user_ID LIKE ? OR u.user_name LIKE ? OR u.password LIKE ?) AND l.log_time = (SELECT MAX(log_time) FROM login_log WHERE user_ID = u.user_ID)',
+              value:[`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`]
+            }
+            var result = await SQL_exec(sql);
+            console.log(result);
+            socket.emit('search_results', result);
+          }catch(error){
+            console.log(error);
+            socket.emit('search_error', error);
+          }
         });
 
       socket.on('account_delete',async function(user_ID){
-        var user_ID1 = sanitizeHtml(user_ID);
+        var user_ID = sanitizeHtml(user_ID);
+        console.log(user_ID);
+        var user_typeSQL ={
+          sql:"select user_type from user_table where user_ID = ?",
+          value:[user_ID]
+        }
+
         var delete_data={
           sql:"delete from user_table where user_ID = ?", 
-          value:[user_ID1]
-         }
+          value:[user_ID]
+        }
          try{
-          var result=await SQL_exec(get_id_data);
-          socket.emit('delete_result',question_id);
+          await SQL_exec({ sql: 'START TRANSACTION' });
+
+          // 外部キー制約を一時的に無効化
+          await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 0' });
+          var SQL_result = await SQL_exec(user_typeSQL);
+          await SQL_exec(delete_data);
+
+          if(SQL_result[0].user_type === 2){
+            const room_delete ={
+              sql:"delete from room_table where user_ID = ?",
+              value:[user_ID]
+            }
+            await SQL_exec(room_delete)
+          }
+            const login_delete = {
+              sql:"delete from login_log where user_ID = ?",
+              value:[user_ID]
+            }
+            await SQL_exec(login_delete)
+          
+
+           // 外部キー制約を再度有効化
+          await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 1' });
+
+          // トランザクションをコミット
+          await SQL_exec({ sql: 'COMMIT' });
+
+          socket.emit('delete_complete');
          }
          catch(error){
           console.error(error);
           socket.emit('account_delete',error);
          }
-         io.emit('delete_complete');
       });
       
       
@@ -725,145 +761,140 @@ const { SQL_exec } = require( '../db/SQL_module');
             }
         }
     });
-    
-      /*socket.on('mondai_btnclick',async function(mondai,o,room_ID) {
-        var mondai1 = sanitizeHtml(mondai);
-        var o = sanitizeHtml(o);
-        var room_ID = sanitizeHtml(room_ID);
-        console.log(room_ID)
-        if(mondai != ''){
-          var pool = poolCluster.of('MASTER');
-          
-          let get_status = "select count(*) as cnt from question_log where room_ID = ? AND question_status = 1;"
-          let question_reset = "update question_log set question_status = 0 WHERE room_id = ?;"
-          let get_id_sql = "select question_ID from question_table where question_name=?;"
-          let mondai_sentaku = "insert into question_log(question_id,room_id,question_status) VALUES (?,?,1) ;"  //出題問題SQL
-          var mondai_select = "select question_table.question_ID,question_text from question_table,question_log where question_log.question_ID=question_table.question_ID AND question_status = 1 AND room_ID = ?;" //選択した問題SQL
-          
-          console.log(room_ID); 
-          
-          pool.getConnection(async function(err,connection){
-          if(err != null){
-           console.log("db" + err);
-           return;
-          }
-          var status_data={
-           sql:get_status, 
-           value:[room_ID]
-          }
-          try{
-           var result=await SQL_exec(status_data);
-           socket.emit('status_result',status_count);
-          }
-          catch{
-           console.error(error);
-           socket.emit('status_result',error);
-          }
-          console.log("count" + status_count[0].cnt);
-          if(status_count[0].cnt >= 1){
-           console.log("count" + status_count[0].cnt);
-           var reset_data={
-            sql:question_reset, 
-            value:[room_ID]
-           }
-           try{
-            var result=await SQL_exec(reset_data);
-            socket.emit('reset_result',reset_result);
-           }
-           catch{
-            console.error(error);
-            socket.emit('reset_result',error);
-           }
-           var get_id_data={
-            sql:get_id_sql, 
-            value:[mondai1]
-           }
-           try{
-            var result=await SQL_exec(get_id_data);
-            socket.emit('status_result',question_id);
-           }
-           catch{
-            console.error(error);
-            socket.emit('status_result',error);
-           }
-           var q_ID = question_id[0].question_ID;
-           var sentaku_data={
-            sql:mondai_sentaku, 
-            value:[q_ID,room_ID]
-           }
-           try{
-            var result=await SQL_exec(sentaku_data);
-            socket.emit('question_insert',question_result);
-           }
-           catch{
-            console.error(error);
-            socket.emit('question_insert',error);
-           }
-           connection.commit((err) =>{if(err){connection.rollback(() =>{throw console.log('error');});}})
-           var mondai_data={
-            sql:mondai_select, 
-            value:[room_ID]
-           }
-           try{
-            var result=await SQL_exec(mondai_data);
-            socket.emit('mondai_select',mondai_result2);
-           }
-           catch{
-            console.error(error);
-            socket.emit('mondai_select',error);
-           }
-           var flag = 1;
-           io.emit('mondai_kekka',flag);
-        }})
-        }else{
-         console.log("naiyo--");
-          var get_id_data={
-           sql:get_id_sql, 
-           value:[mondai1]
-          }
-          try{
-           var result=await SQL_exec(get_id_data);
-           socket.emit('get_id_result',question_id);
-          }
-          catch{
-           console.error(error);
-           socket.emit('status_result',error);
-          }
-         var q_ID = question_id[0].question_ID;
-         var sentaku_data={
-          sql:mondai_sentaku, 
-          value:[qID,room_ID]
-         }
-         try{
-          var result=await SQL_exec(sentaku_data);
-          socket.emit('sentaku_result',sentaku_result);
-         }
-         catch{
-          console.error(error);
-          socket.emit('sentaku_result',error);
-         }
-         if(err){
-          console.log("sentaku_err" + err);
-         }
-         connection.commit((err) =>{
-          if(err){connection.rollback(() =>{throw console.log('error');});}
-         })
-         connection.query(mondai_select,room_ID,(err,mondai_result2,fields)=>{
-          if(err){
-           var flag = 0;
-           io.emit('mondai_kekka',flag);
-          }
-          connection.commit((err) =>{
-           if(err){connection.rollback(() =>{throw console.log('error');});}
-          })
-          var ID = mondai_result2[0].question_ID;
-          var flag = 1;
-          io.emit('mondai_kekka',flag);	 
-         })
-      	}
-      })
-    })*/
 
+    socket.on('account_update',async (accountData)=>{
+      try {
+        const { user_ID, user_name, password, role_name,original_user_ID,original_role_name } = accountData;
+      
+        const hashedPassword = await hashPassword(password);
+
+        // トランザクションの開始
+        await SQL_exec({ sql: 'START TRANSACTION' });
+
+        // 外部キー制約を一時的に無効化
+        await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 0' });
+
+          // データベースの更新クエリ
+        const updateUserQuery = {
+            sql: 'UPDATE user_table SET user_ID = ?, user_name = ?, password = ?, user_type = ? WHERE user_ID = ?',
+            value: [user_ID,user_name, hashedPassword, role_name === 'student' ? 1 : role_name === 'teacher' ? 2 : 3, original_user_ID]
+        };
+
+        // SQL実行
+        await SQL_exec(updateUserQuery);
+
+        const updateloginlogQuery = {
+          sql: 'UPDATE login_log SET user_ID = ? WHERE user_ID = ?',
+          value: [user_ID,original_user_ID]
+        };
+
+        await SQL_exec(updateloginlogQuery)
+
+         // 条件を満たす場合に room_table から削除
+        if (original_role_name === 'teacher' && role_name !== 'teacher') {
+          console.log("更新")
+          const deleteRoomQuery = {
+              sql: 'DELETE FROM room_table WHERE user_ID = ?',
+              value: [original_user_ID]
+          };
+          await SQL_exec(deleteRoomQuery);
+        }else if(user_ID !== original_user_ID){
+          "更新2"
+          const UpdateRoomQuery = {
+            sql: 'Update room_table set user_ID = ? WHERE user_ID = ?',
+            value: [user_ID,original_user_ID]
+          };
+          await SQL_exec(UpdateRoomQuery);
+        }else if(original_role_name !== 'teacher' && role_name === 'teacher'){
+          const room_exec={
+            sql:"SELECT t1.room_ID + 1 AS available_roomID FROM room_table t1 LEFT JOIN room_table t2 ON t1.room_ID + 1 = t2.room_ID WHERE t2.room_ID IS NULL ORDER BY t1.room_ID + 1 LIMIT 1;",
+          }
+          var SQL_result = await SQL_exec2(room_exec)
+          const room_ID = SQL_result[0].available_roomID
+          const insertRoomQuery = {
+              sql: "INSERT INTO room_table VALUES (?,?);",
+              value: [room_ID,user_ID]
+          };
+          await SQL_exec(insertRoomQuery);
+        }
+
+        // 外部キー制約を再度有効化
+        await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 1' });
+
+        // トランザクションをコミット
+        await SQL_exec({ sql: 'COMMIT' });
+
+        // 更新成功をクライアントに通知
+        socket.emit('account_update_success');
+    } catch (error) {
+        console.error('アカウント更新エラー:', error);
+        socket.emit('account_update_error', { message: 'アカウント更新中にエラーが発生しました' });
+    }
+    })
+
+    socket.on('file_upload', (fileData) => {
+      const { fileName, data } = fileData;
+      const users = [];
+  
+      // CSVデータを解析し、最初の1行をスキップ
+      const stream = Readable.from(data);
+      stream
+          .pipe(csv({ headers: ['user_ID', 'user_name', 'password', 'user_type'], skipLines: 1 })) // ヘッダー行をスキップ
+          .on('data', (row) => users.push(row))
+          .on('end', async () => {
+              try {
+                  // データベースに各ユーザーを挿入
+                  for (const user of users) {
+                      const hashedPassword = await hashPassword(user.password);
+                      
+                      // user_table にユーザーを挿入
+                      const query_SQL = {
+                          sql: 'INSERT INTO user_table (user_ID, user_name, password, user_type) VALUES (?, ?, ?, ?)',
+                          value: [user.user_ID, user.user_name, hashedPassword, user.user_type]
+                      };
+                      await SQL_exec(query_SQL);
+  
+                      // 教師の場合は room_table にもデータを挿入
+                      if (user.user_type === '2') { // 教師は user_type = 2
+                          const room_exec = {
+                              sql: "SELECT t1.room_ID + 1 AS available_roomID FROM room_table t1 LEFT JOIN room_table t2 ON t1.room_ID + 1 = t2.room_ID WHERE t2.room_ID IS NULL ORDER BY t1.room_ID + 1 LIMIT 1;",
+                          };
+                          const SQL_result = await SQL_exec2(room_exec);
+                          const room_ID = SQL_result[0].available_roomID;
+                          
+                          const insertRoomQuery = {
+                              sql: "INSERT INTO room_table VALUES (?,?);",
+                              value: [room_ID, user.user_ID]
+                          };
+                          await SQL_exec(insertRoomQuery);
+                          
+                          const login_log = {
+                              sql: "INSERT INTO login_log(user_ID, room_ID, log_time) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                              value: [user.user_ID, room_ID]
+                          };
+                          await SQL_exec(login_log);
+                      } else {
+                          const login_log = {
+                              sql: "INSERT INTO login_log(user_ID, room_ID, log_time) VALUES (?, 1, CURRENT_TIMESTAMP)",
+                              value: [user.user_ID]
+                          };
+                          await SQL_exec(login_log);
+                      }
+                  }
+  
+                  // 成功通知をクライアントに送信
+                  socket.emit('file_upload_Complete');
+              } catch (error) {
+                  console.error('データベースへの挿入エラー:', error);
+                  socket.emit('file_upload_Error', { error: 'データベース挿入エラーが発生しました' });
+              }
+          })
+          .on('error', (error) => {
+              console.error('CSV解析エラー:', error);
+              socket.emit('file_upload_Error', { error: 'CSV解析エラーが発生しました' });
+          });
+      });
+  
        
       socket.on('question_release',()=>{
         io.emit('questionPosted');
@@ -1220,15 +1251,31 @@ const { SQL_exec } = require( '../db/SQL_module');
             
             // room_tableにユーザーと部屋情報を追加する
             if (data.usertype == 2) {
+              const room_exec={
+                sql:"SELECT t1.room_ID + 1 AS available_roomID FROM room_table t1 LEFT JOIN room_table t2 ON t1.room_ID + 1 = t2.room_ID WHERE t2.room_ID IS NULL ORDER BY t1.room_ID + 1 LIMIT 1;",
+              }
+              var SQL_result = await SQL_exec2(room_exec)
+              const room_ID = SQL_result[0].available_roomID
                 const insertRoomQuery = {
-                    sql: "INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?);",
-                    value: [data.room_name, data.userID]
+                    sql: "INSERT INTO room_table VALUES (?,?);",
+                    value: [room_ID,data.userID]
                 };
                 await SQL_exec(insertRoomQuery);
+                const login_log = {
+                  sql:"Insert into login_log(user_ID,room_ID,log_time) values(?,?,CURRENT_TIMESTAMP)",
+                  value:[data.userID,room_ID]
+                }
+                await SQL_exec(login_log)
                 console.log('Room data inserted successfully.');
+                io.emit('Add_user_manually_Complete'); 
+            }else{
+              const login_log = {
+                sql:"Insert into login_log(user_ID,room_ID,log_time) values(?,1,CURRENT_TIMESTAMP)",
+                value:[data.userID]
+              }
+              await SQL_exec(login_log)
+              io.emit('Add_user_manually_Complete'); 
             }
-
-            io.emit('Add_user_manually_Complete'); 
         } catch (error) {
             console.error('Error adding user manually:', error); 
             socket.emit('insert_result', error);
@@ -1469,4 +1516,31 @@ const { SQL_exec } = require( '../db/SQL_module');
         socket.emit('test_result',"error")
       }
      })
+
+
+    // ログアウト処理
+    socket.on('session_destroy', async (callback) => {
+      const req = socket.request;
+      if (req.session) {
+          try {
+              await destroySession(req);
+              callback({ success: true }); // 成功の応答を返す
+          } catch (error) {
+              console.error('セッションの削除に失敗しました:', error);
+              callback({ success: false, error });
+          }
+      } else {
+          callback({ success: false, error: 'セッションが見つかりません' });
+      }
+    });
+
+    // セッションを破棄する処理
+    function destroySession(req) {
+      return new Promise((resolve, reject) => {
+          req.session.destroy((err) => {
+              if (err) reject('サーバーエラーが発生しました');
+              else resolve();
+          });
+      });
+    }
    })

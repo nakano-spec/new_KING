@@ -6,14 +6,9 @@ const { SQL_exec } = require('../db/SQL_module');
 /* GET users listing. */
 router.get('/', async function(req, res, next) {
     try{
-      var name1 = req.query.name;
-      var SQL_data = {
-        sql:"select user_ID from user_table where user_name= ?",
-        value:[name1]
-      }
-      var user_ID = await SQL_exec(SQL_data)
+      var name = req.session.student.username;
       var data ={
-        name: result[0].user_ID 
+        name: name
       }
       res.render('kaitou.ejs',data);
     }catch(err){

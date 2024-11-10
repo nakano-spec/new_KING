@@ -1,0 +1,213 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f5f5f5;
+}
+
+.header {
+  background-color: #F47B20;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.menu-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.menu-line {
+    width: 24px;
+    height: 2px;
+    background-color: white;
+    margin: 4px 0;
+}
+
+.header-title {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.header-user {
+    font-size: 0.9rem;
+}
+
+/* Rest of the CSS remains unchanged */
+
+.container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #F47B20;
+}
+
+.password-strength {
+    height: 4px;
+    margin-top: 0.5rem;
+    border-radius: 2px;
+    background: #eee;
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+.role-options {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.role-option {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.role-option.selected {
+    border-color: #F47B20;
+    background-color: #FFF5EC;
+}
+
+.role-option:hover {
+    border-color: #F47B20;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.btn-back {
+    background-color: #ccc;
+    color: #333;
+}
+
+.btn-back:hover {
+    background-color: #bbb;
+}
+
+.btn-submit {
+    background-color: #FFB800;
+    color: #333;
+    flex: 1;
+}
+
+.btn-submit:hover {
+    background-color: #FFA600;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.3s ease-in-out;
+}
+
+/* サイドメニューのスタイル */
+.sidebar {
+width: 500px;
+background-color: #f9f9f9;
+position: fixed;
+top: 0;
+left: 0;
+height: 100%;
+padding-top: 60px;
+box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+transition: transform 0.3s ease;
+transform: translateX(-100%);
+z-index: 2000; 
+}
+
+.sidebar.active {
+transform: translateX(0);
+}
+
+.sidebar a {
+display: block;
+padding: 1.2rem 1.5rem; /* クリック範囲を広げるためにパディングを増やす */
+color: #0066cc;
+text-decoration: none;
+font-size: 20px; /* フォントサイズを大きくすることで視認性を向上 */
+font-weight: bold;
+}
+
+.sidebar a:hover {
+background-color: #ddd;
+}
