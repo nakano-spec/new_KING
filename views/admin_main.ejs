@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会</title>
+    <link rel="stylesheet" href="/stylesheets/admin_main.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left" id="hambtn">
+                <button class="menu-button">
+                    <div class="menu-line"></div>
+                    <div class="menu-line"></div>
+                    <div class="menu-line"></div>
+                </button>
+                <h1>ニコキタ教育委員会</h1>
+            </div>
+            <div class="user-info">
+            <% if (name) { %>
+                ユーザー：<%= name %>
+            <% } else { %>
+                ユーザー：admin
+            <% } %></div>
+        </header>
+
+        <nav class="sidebar" id="sidebar">
+            <a href="/admin_main">メインページ</a>
+            <a href="/account_list">ユーザー管理</a>
+            <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+        </nav>
+
+        <main>
+            <div class="button-container">
+                <button id='account-button' class="action-button">
+                    <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <div class="button-text">ユーザー<br>管理</div>
+                </button>
+                <button id="logout-button" class="action-button">
+                    <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <div class="button-text">ログアウト</div>
+                </button>
+            </div>
+        </main>
+    </div>
+    <script>
+        const menuButton = document.getElementById('hambtn');
+        const sidebar = document.getElementById('sidebar');
+
+        menuButton.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            mainContent.classList.toggle('sidebar-active');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
+                sidebar.classList.remove('active');
+                mainContent.classList.remove('sidebar-active');
+            }
+        });
+
+        document.getElementById('account-button').addEventListener('click', function() {
+            window.location.href = "/account_list"
+        });
+        document.getElementById('logout-button').addEventListener('click', function() {
+            window.location.href = "/"
+        });
+
+        async function logout() {
+            try {
+                await new Promise((resolve, reject) => {
+                    socket.emit('session_destroy', (response) => {
+                        if (response.success) resolve();
+                        else reject(response.error);
+                    });
+                });
+                // 成功時はログインページにリダイレクト
+                window.location.href = '/login';
+            } catch (error) {
+                alert('ログアウトに失敗しました: ' + error);
+            }
+        }
+        
+        socket.on('session_destroy_success', () => {
+            window.location.href = '/login';
+        });
+
+        socket.on('session_destroy_failed', (error) => {
+            alert('ログアウトに失敗しました: ' + error);
+        });
+    </script>
+</body>
+</html>

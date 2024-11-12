@@ -1,0 +1,265 @@
+ /* リセットとベーススタイル */
+ * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+/* ヘッダースタイル */
+.header {
+  background-color: #F47B20;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: background-color 0.3s;
+  border-radius: 4px;
+}
+
+.menu-button:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.menu-line {
+  width: 24px;
+  height: 2px;
+  background-color: white;
+  margin: 4px 0;
+  transition: transform 0.3s;
+}
+
+/* メインコンテンツエリア */
+.main-content {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* アクションボタン */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.action-button {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-button:hover {
+  background-color: #f0f0f0;
+  border-color: #999;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 検索ボックス */
+.search-box {
+  display: flex;
+  margin-left: auto;
+  max-width: 300px;
+  width: 100%;
+}
+
+.search-input {
+  flex-grow: 1;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px 0 0 4px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #F47B20;
+}
+
+.search-button {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  background-color: #f0f0f0;
+}
+
+/* テーブルスタイル */
+.table-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+th {
+  background-color: #FFD4BA;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  position: sticky;
+  top: 0;
+}
+
+th, td {
+  border: 1px solid #ddd; /* セルにボーダーを追加 */
+  padding: 8px;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+  background-color: #f8f8f8;
+}
+
+/* ページネーション */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.pagination-button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.pagination-button:hover {
+  background-color: #f0f0f0;
+}
+
+.pagination-button.active {
+  background-color: #F47B20;
+  color: white;
+  border-color: #F47B20;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .action-buttons {
+      flex-direction: column;
+      align-items: stretch;
+  }
+
+  .search-box {
+      margin-left: 0;
+      max-width: none;
+  }
+
+  .table-container {
+      margin: 0 -1rem;
+      border-radius: 0;
+  }
+}
+
+/* サイドメニューのスタイル */
+.sidebar {
+  width: 500px;
+  background-color: #f9f9f9;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  padding-top: 60px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
+  z-index: 2000; 
+}
+
+.sidebar.active {
+  transform: translateX(0);
+}
+
+.sidebar a {
+  display: block;
+  padding: 1.2rem 1.5rem; /* クリック範囲を広げるためにパディングを増やす */
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 20px; /* フォントサイズを大きくすることで視認性を向上 */
+  font-weight: bold;
+}
+
+.sidebar a:hover {
+  background-color: #ddd;
+}
+
+.sort-icon {
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 0.9em;
+  color: #666;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.sort-icon:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.sorted-asc::after {
+  content: "\f062"; /* Font Awesome up arrow */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}
+
+.sorted-desc::after {
+  content: "\f063"; /* Font Awesome down arrow */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+}

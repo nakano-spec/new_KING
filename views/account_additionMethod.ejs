@@ -1,23 +1,138 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meat charset="utf-8">
-<title>ユーザー新規追加方法選択画面</title>
-<link type="text/css" rel="stylesheet" href="/stylesheets/account_additionMethod.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：ユーザ新規追加</title>
+    <link rel="stylesheet" href="/stylesheets/account_additionMethod.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: #F47B20;
+            color: white;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .menu-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .menu-line {
+            width: 24px;
+            height: 2px;
+            background-color: white;
+            margin: 4px 0;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .header-user {
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            min-height: calc(100vh - 60px);
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .option-button {
+            width: 100%;
+            max-width: 400px;
+            padding: 1rem;
+            font-size: 1.2rem;
+            background-color: #E6E6E6;
+            border: 2px solid #000080;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .option-button:hover {
+            background-color: #D6D6D6;
+        }
+
+        .back-button {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 0.5rem 2rem;
+            font-size: 1rem;
+            background-color: #E6E6E6;
+            border: 1px solid #999;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background-color: #D6D6D6;
+        }
+    </style>
 </head>
-
 <body>
-    <div class="orange">
-        <h1>回答即時判断システム：ユーザーの新規追加</h1>
-        <hr>
-    </div>
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-button" aria-label="メニュー">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </button>
+            <h1 class="header-title">ニコキタ教育委員会：ユーザ新規追加</h1>
+        </div>
+        <div class="header-user">ユーザー：Admin</div>
+    </header>
 
-    <a>追加方法を選択してください。</a>
-    <p></p>
-    <br><button onclick="location.href='/account_additionCSV'">csvファイルで追加</button>
-    <p></p>
-    <br><button onclick="location.href='/account_addition'">　　手入力で追加　　</button>
-    <p></p>
-    <br><button onclick="location.href='account'">戻る</button>
+    <main class="main-content">
+        <h2 class="page-title">追加方法を選択してください。</h2>
+        
+        <div class="button-container">
+            <button class="option-button" onclick="location.href='/account_additionCSV'">CSVファイルで追加</button>
+            <button class="option-button" onclick="location.href='/account_addition'">手入力で追加</button>
+        </div>
+    </main>
 </body>
 </html>

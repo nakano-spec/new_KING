@@ -1,25 +1,137 @@
 <!DOCTYPE html>
-<html lang ="ja">
-    <head>
-        <title>表示</title>
-        <meta charset="utf-8">
-        <link type="text/css" rel="stylesheet" href="/stylesheets/kaitou.css">
-    </head>
-    <body>
-        <script src="/socket.io/socket.io.js"></script>
-        <div id = "myid">
-        <p><%= name %></p>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：受付中</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: #F47B20;
+            color: white;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .menu-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .menu-line {
+            width: 24px;
+            height: 2px;
+            background-color: white;
+            margin: 4px 0;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .header-user {
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 60px); /* Subtract header height */
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .status-title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+        .status-message {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80% { content: '...'; }
+            100% { content: ''; }
+        }
+
+       /* HTML: <div class="loader"></div> */
+        .loader {
+            width: 50px;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 8px solid #514b82;
+            animation:
+                l20-1 0.8s infinite linear alternate,
+                l20-2 1.6s infinite linear;
+        }
+        @keyframes l20-1{
+            0%    {clip-path: polygon(50% 50%,0       0,  50%   0%,  50%    0%, 50%    0%, 50%    0%, 50%    0% )}
+            12.5% {clip-path: polygon(50% 50%,0       0,  50%   0%,  100%   0%, 100%   0%, 100%   0%, 100%   0% )}
+            25%   {clip-path: polygon(50% 50%,0       0,  50%   0%,  100%   0%, 100% 100%, 100% 100%, 100% 100% )}
+            50%   {clip-path: polygon(50% 50%,0       0,  50%   0%,  100%   0%, 100% 100%, 50%  100%, 0%   100% )}
+            62.5% {clip-path: polygon(50% 50%,100%    0, 100%   0%,  100%   0%, 100% 100%, 50%  100%, 0%   100% )}
+            75%   {clip-path: polygon(50% 50%,100% 100%, 100% 100%,  100% 100%, 100% 100%, 50%  100%, 0%   100% )}
+            100%  {clip-path: polygon(50% 50%,50%  100%,  50% 100%,   50% 100%,  50% 100%, 50%  100%, 0%   100% )}
+        }
+        @keyframes l20-2{ 
+            0%    {transform:scaleY(1)  rotate(0deg)}
+            49.99%{transform:scaleY(1)  rotate(135deg)}
+            50%   {transform:scaleY(-1) rotate(0deg)}
+            100%  {transform:scaleY(-1) rotate(-135deg)}
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-button" aria-label="メニュー">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </button>
+            <h1 class="header-title">ニコキタ教育委員会：受付中</h1>
         </div>
-        <section class="main">
-            <div class="container">
-                <form name ="s1">
-                <h1>受付中…</h1>
-                <input type ="submit" name="modoru" value = "戻る" class="s"> 
-                </form>
-                
-            </div>
-        </section>
-        <script src="/javascripts/kaitou.js"></script>
-    </body>
-    
+        <div class="header-user">ユーザー：student</div>
+    </header>
+
+    <main class="main-content">
+        <h2 class="status-title">受付中</h2>
+        <p class="status-message">しばらくお待ちください</p>
+        <br>
+        <div class="loader"></div>
+    </main>
+    <script src="javascripts/kaitou.js"></script>
+</body>
 </html>

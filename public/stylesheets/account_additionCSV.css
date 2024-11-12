@@ -1,0 +1,147 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+.header {
+    background-color: #F47B20;
+    color: white;
+    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.menu-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.menu-line {
+    width: 24px;
+    height: 2px;
+    background-color: white;
+    margin: 4px 0;
+}
+
+.header-title {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.header-user {
+    font-size: 0.9rem;
+}
+
+.main-content {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    min-height: calc(100vh - 60px);
+}
+
+.page-title {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.help-link {
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.help-link:hover {
+    text-decoration: underline;
+}
+
+.upload-instructions {
+    margin: 2rem 0;
+    font-size: 1.1rem;
+}
+
+.file-upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background-color: #f8f9fa;
+    margin-bottom: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-area.dragover {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.file-upload-text {
+    margin-bottom: 1rem;
+    color: #666;
+}
+
+.file-input-wrapper {
+    margin-top: 1rem;
+}
+
+.file-input-button {
+    background-color: #E6E6E6;
+    border: 1px solid #999;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.file-name {
+    margin-left: 1rem;
+    color: #666;
+}
+
+.button-container {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 2rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-back {
+    background-color: #E6E6E6;
+    border: 1px solid #999;
+}
+
+.btn-submit {
+    background-color: #FFB800;
+    border: none;
+}
+
+.btn-submit:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}

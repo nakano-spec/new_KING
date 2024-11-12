@@ -1,118 +1,112 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="utf-8">
-    <title>ユーザー新規追加画面：CSV</title>
-    <link type="text/css" rel="stylesheet" href="/stylesheets/account.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：ユーザ新規追加</title>
+    <link rel="stylesheet" href="/stylesheets/account_additionCSV.css">
 </head>
 <body>
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-button" aria-label="メニュー">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </button>
+            <h1 class="header-title">ニコキタ教育委員会：ユーザ新規追加</h1>
+        </div>
+        <div class="header-user">ユーザー：Admin</div>
+    </header>
+
+    <main class="main-content">
+        <h2 class="page-title">CSVファイルでユーザーを追加</h2>
+        <a href="account_additionCSVExplanation" class="help-link">詳しい追加方法はこちら</a>
+        <a href="account_additionCSVExplanation" class="help-link">詳しい追加方法はこちら</a>
+
+        <p class="upload-instructions">アップロードするCSVファイルを選択してください。</p>
+
+        <div id="dropZone" class="file-upload-area">
+            <div class="file-upload-text">
+                ここにCSVファイルをドラッグ＆ドロップ
+                <br>
+                または
+            </div>
+            <div class="file-input-wrapper">
+                <label class="file-input-button">
+                    ファイルを選択
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                </label>
+                <span id="fileName" class="file-name">選択されていません</span>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="upload_button" class="btn btn-submit" disabled>追加</button>
+            <button class="btn btn-back" onclick="history.back()">戻る</button>
+        </div>
+    </main>
+
     <script src="/socket.io/socket.io.js"></script>
-    <div class="orange">
-        <h1>回答即時判断システム：ユーザーの新規追加</h1>
-        <hr>
-    </div>
-
-    <a>csvファイルでユーザーを追加</a>
-    <br><a href="account_additionCSVExplanation">詳しい追加方法はこちら</a>
-
-    <!-- ドラッグアンドドロップエリア -->
-    <div id="drop_area" style="border: 2px dashed #ccc; padding: 20px; width: 300px; text-align: center; margin: 20px; cursor: pointer;"
-        onclick="document.getElementById('file_input').click();">
-        ファイルをここにドラッグアンドドロップ<br>
-        <input type="file" id="file_input" style="display: none;" multiple>
-    </div>
-
-
-    <!-- CSVの画像とファイル名を表示するコンテナ -->
-    <div id="files_info"></div>
-
-    <button id="upload_button">追加</button>
-    <button onclick="history.back()">戻る</button>
-
     <script>
         var socket = io();
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropArea = document.getElementById('drop_area');
-            const fileInput = document.getElementById('file_input');
-            const filesInfo = document.getElementById('files_info');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const uploadButton = document.getElementById('upload_button');
 
-            dropArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                dropArea.style.backgroundColor = "#f0f0f0";
-            });
-
-            dropArea.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                dropArea.style.backgroundColor = "#fff";
-            });
-
-            dropArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                dropArea.style.backgroundColor = "#fff";
-                const files = e.dataTransfer.files;
-                fileInput.files = files;
-                displayFiles(files);
-            });
-
-            fileInput.addEventListener('change', function() {
-                displayFiles(this.files);
-            });
-
-            function displayFiles(files) {
-                filesInfo.innerHTML = ''; // コンテナをクリア
-                Array.from(files).forEach(file => {
-                // 画像とファイル名を表示するdivを作成
-                const fileDiv = document.createElement('div');
-                fileDiv.innerHTML = `
-                    <img src="csv/csvpicture.png" alt="CSV" style="width: 50px;"><br>
-                    ${file.name}
-                `;
-                filesInfo.appendChild(fileDiv);
-
-                
-                // FileReaderを使用してファイルの内容を読み込む
-                const reader = new FileReader();
-                
-                // ファイル読み込みエラーのハンドリング
-                reader.onerror = function() {
-                    console.error("ファイルの読み込みに失敗しました。");
-                };
-                
-                // ファイルをテキストとして読み込む
-                reader.readAsText(file);
-            });
-            }
-
-            document.getElementById('upload_button').addEventListener('click', function() {
-                const files = fileInput.files;
-                if (files.length === 0) {
-                    alert('ファイルが選択されていません。');
-                    return;
-                }if(files.length >= 2){
-                    alert('ファイルを複数選択しています。ファイルを一つだけ選択してください。')
-                }
-
-                // 選択された全ファイルに対して処理
-                Array.from(files).forEach(file => {
-                    const reader = new FileReader();
-
-                    reader.onload = function(event) {
-                        // Socket.ioを使用してサーバーにファイルの内容を送信
-                        socket.emit('file_upload', { fileName: file.name, data: event.target.result });
-                    };
-
-                    reader.onerror = function() {
-                        console.error("ファイルの読み込みに失敗しました。", file.name);
-                    };
-
-                    reader.readAsText(file); // ファイルをテキストとして読み込む
-                });
-            });
+        // ドラッグ＆ドロップエリアのイベントハンドラ
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
         });
 
-        socket.on('file_upload_Complete',function(){
-            window.location.href ='/account';
-        })
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // クリックでファイル選択
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            const file = files[0];
+            if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+                fileName.textContent = file.name;
+                uploadButton.disabled = false;
+
+                uploadButton.addEventListener('click', () => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        socket.emit('file_upload', { fileName: file.name, data: event.target.result });
+                    };
+                    reader.onerror = function() {
+                        alert("ファイルの読み込みに失敗しました。");
+                    };
+                    reader.readAsText(file);
+                });
+            } else {
+                alert('CSVファイルのみアップロード可能です。');
+                fileName.textContent = '選択されていません';
+                uploadButton.disabled = true;
+            }
+        }
+
+        // アップロード完了通知
+        socket.on('file_upload_Complete', () => {
+            alert('ファイルが正常にアップロードされました。');
+            window.location.href = '/account_list';
+        });
     </script>
 </body>
 </html>

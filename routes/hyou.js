@@ -2,15 +2,25 @@ var express = require('express');
 var router = express.Router();
 const mysql = require("mysql");
 const async = require('async');
-//mysqlに接続する際のデータを入れ、接続できるようにする。
-/*const connection = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "20021225",
-    database: "mydb"
-});*/
-
+const { SQL_exec } = require('../db/SQL_module');
 /* GET users listing. */
+
+router.get('/',async function(req,res){
+    var data1 = req.query.data;
+    const sql = {
+        sql: "select u.user_name, k.answer from answer_table k, user_table u where u.user_ID = k.user_ID and u.user_ID = ?;",
+        values: [data1]
+    };
+    const result = await SQL_exec(sql);
+    const data = {
+      user_ID: data1,
+      user_name: result[0].user_name,
+      answer: result[0].answer
+    };
+    res.render('hyouji3', data);
+})
+
+/*
 router.get('/', function(req, res, next) {
    var data1 = req.query.data
    var app = req.app;
@@ -60,6 +70,6 @@ router.get('/', function(req, res, next) {
         })
     })
   }
-});
+});*/
 
 module.exports = router;

@@ -1,286 +1,214 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <title>ユーザー新規追加画面：入力</title>
-  <link type="text/css" rel="stylesheet" href="/stylesheets/account_addition.css">
-</head>
-
-<body>
-  <script src='/socket.io/socket.io.js'></script>
-  <h1>解答即時判断システム：ユーザーの新規追加</h1>
-  <hr>
-  <h2>ユーザーの新規追加</h2>
-  <h3>各項目を入力してください。</h3>
-  <div id="data"></div>
-  <div id="form">
-    <div id="text">
-      ユーザー名 : <input type="text" id="user_name">
-      <p></p>
-      <br>学籍番号　 : <input type="text" id="user_ID">
-      <p></p>
-      <br>パスワード : <input type="password" id="password">
-      <p></p>
-      <br>確認　　　 : <input type="password" id="confirmationText">
-      <p></p>
-      <br>教師権限 : <input type="checkbox" id="user_type">
-      <div id="room_select_container" style="display:none;">
-        <p>担当部屋名を選択してください。</p>
-        <select id="room_name">
-            <option value="1">PC4</option>
-            <option value="2">PC2</option>
-            <option value="3">DS</option>
-            <option value="4">PC1</option>
-            <option value="5">225</option>
-            <option value="6">226</option>  
-          <!-- 部屋名は適宜追加 -->
-        </select>
-      </div>           
-    </div>
-    <p></p>
-    <p></p>
-    <div id="button">
-      <input type="button" value="戻る" id="submit" onclick="location.href='account_additionMethod'">
-      <input type="button" value="追加" id="addUserButton">
-    </div>
-  </div>
-
-  <script>
-    var socket = io();
-    document.getElementById('user_type').addEventListener('change', function() {
-    var roomSelectContainer = document.getElementById('room_select_container');
-    if (this.checked) {
-      roomSelectContainer.style.display = 'block'; // チェックボックスが選択されたら表示
-    } else {
-      roomSelectContainer.style.display = 'none';  // チェックボックスが選択されていなければ非表示
-    }
-    });
-
-    document.getElementById("addUserButton").addEventListener("click", function() {
-      // フォームから入力された値を取得
-      var user_ID =  sanitize(document.getElementById("user_ID").value);  
-      var user_name = sanitize(document.getElementById("user_name").value);
-      var password = sanitize(document.getElementById("password").value); 
-      var passwordcheck = sanitize(document.getElementById("confirmationText").value); 
-      var user_type = document.getElementById("user_type").checked ? 1 : 2; // チェックが入っていれば1、そうでなければ2
-
-      // user_typeが1の場合に選択された部屋のvalueを取得
-    　var room_name = user_type === 1 ? document.getElementById("room_name").value : null;
-      if(!user_ID){
-        alert("学籍番号が入力されていません。");
-        return
-      }else if(!user_name){
-        alert("ユーザ名が入力されていません");
-        return
-      }else if(!password){
-        alert("パスワードが入力されていません");
-        return
-      }else if(password != passwordcheck){
-        alert("確認用パスワードが違います。入力し直してください。");
-        return
-      }
-      // 現在の日時と時間を取得
-      var currentDate = new Date();
-      var formattedDate = currentDate.toLocaleString(); // ローカルの日時を文字列に変換
-
-      // テキストファイルに日時を保存
-      var textToSave = "Clicked on: " + formattedDate;
-      var blob = new Blob([textToSave], { type: "text/plain;charset=utf-8" });
-      /*saveAs(blob, "click_log.txt");*/
-      var data ={
-        userID:user_ID,
-        username:user_name,
-        password:password,
-        usertype:user_type
-      }
-
-      // user_typeが1の場合は、部屋のvalueをdataに追加
-        if(user_type === 1 && room_name !== null) {
-            data.room_name = room_name;
-        }
-      // データベースへの書き込み処理を行う関数を呼び出す
-      socket.emit('Add_user_manually',data);
-      //writeToDatabase(user_ID, user_name, password, log_time, user_type);
-    });
-    socket.on('Add_user_manually_Complete',function(){
-        window.location.href ='/account';
-    })
-    /*const mysql = require('mysql');
-
-    //接続情報の設定
-    const connection = mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: 'matosui122083',
-      database: 'mysql'
-    });*/
-
-    //サニタイズ処理
-    function sanitize(str) {
-          return String(str)
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, '&#x27;')
-              .replace(/\//g,'&#x2F;')
-              .replace(/:/g, '')  // コロンを取り除く
-              .replace(/;/g, '') // セミコロンを取り除く
-              .replace(/\*/g, ''); // アスタリスクを完全に除去
-      }
-  </script>
-</body>
-<!-- <html>
-<head>
-    <title>アカウント追加</title>
-    必要なCSSやJavaScriptを追加 -->
-     <!--<style>
-        /* タブのスタイル */
-        .tab {
-            cursor: pointer;
-            padding: 10px;
-            margin: 10px;
-            background-color: #f4f4f4;
-            display: inline-block;
-            border: 1px solid #ddd;
-        }
-        .tab.active {
-            background-color: white;
-            border-bottom: none;
-        }
-        /* コンテンツエリアのスタイル */
-        .content {
-            border: 1px solid #ddd;
-            padding: 20px;
-        }
-        /* 非表示のコンテンツ */
-        .content.hidden {
-            display: none;
-        }
-
-        .drop-area {
-            border: 2px dashed #ccc;
-            padding: 20px;
-            text-align: center;
-            margin: 10px 0;
-        }
-        .drop-area.hover {
-            border-color: #333;
-        }
-    </style>
-</head>
-<body>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：ユーザ新規追加</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <h1>アカウント追加</h1>
-
-    <div class="tab" id="tab-csv">CSVファイル追加</div>
-    <div class="tab" id="tab-manual">手入力追加</div>
-
-    <div class="content" id="content-csv">
-        <div class="drop-area" id="drop-area">
-            <p>CSVファイルをここにドラッグアンドドロップ、またはクリックしてファイルを選択</p>
-            <input type="file" id="file-input" accept=".csv" style="display: none;">
+    <link rel="stylesheet" href="/stylesheets/account_addition.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left" id="hambtn">
+            <button class="menu-button"  aria-label="メニュー">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </button>
+            <h1>ニコキタ教育委員会：ユーザ新規追加</h1>
         </div>
-    </div>
+        <div class="user">
+          <% if (name) { %>
+              ユーザー：<%= name %>
+          <% } else { %>
+              ユーザー：guest
+          <% } %>
+      </div>
+    </header>
 
-    <div class="content hidden" id="content-manual">
-        <form id="manual-form">
-            <div>
-                <label>学籍番号: <input type="text" name="user_id"></label>
+    <nav class="sidebar" id="sidebar">
+      <a href="/admin_main">メインページ</a>
+      <a href="/account_list">ユーザー管理</a>
+      <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+    </nav>
+
+    <div class="container">
+        <h1>ユーザーの新規追加</h1>
+        <form id="userForm">
+            <div class="form-group">
+                <label for="username">ユーザー名：</label>
+                <input type="text" id="username" class="input-field" required>
+                <div class="error-message" id="username-error">ユーザー名を入力してください</div>
             </div>
-            <div>
-                <label>名前: <input type="text" name="user_name"></label>
+
+            <div class="form-group">
+                <label for="user_ID">学籍番号：</label>
+                <input type="text" id="user_ID" class="input-field" required>
+                <div class="error-message" id="userID-error">学籍番号を入力してください</div>
             </div>
-            <div>
-                <label>パスワード: <input type="text" name="pass_word"></label>
+
+            <div class="form-group">
+                <label for="password">パスワード：</label>
+                <input type="password" id="password" class="input-field" required>
+                <div class="error-message" id="password-error">パスワードを入力してください</div>
             </div>
-            <div>
-                <label>ユーザータイプ:
-                    <select name="user_type">
-                        <option value="student">学生</option>
-                        <option value="teacher">先生</option>
-                    </select>
-                </label>
+
+            <div class="form-group">
+                <label for="confirm-password">確認：</label>
+                <input type="password" id="confirm-password" class="input-field" required>
+                <div class="error-message" id="confirm-error">パスワードが一致しません</div>
             </div>
-            <button type="submit">追加</button>
+
+            <div class="form-group">
+                <label>権限：</label>
+                <div class="role-options">
+                    <div class="role-option" data-role="student">学生</div>
+                    <div class="role-option" data-role="teacher">教師</div>
+                    <div class="role-option" data-role="admin">管理者</div>
+                </div>
+                <div class="error-message" id="role-error">権限を選択してください</div>
+            </div>
+
+            <div class="button-group">
+              <button type="submit" class="btn btn-submit">追加</button>
+              <button type="button" class="btn btn-back">戻る</button>
+            </div>
         </form>
     </div>
 
-    <div id="completion-notification" style="display: none;">
-        <p>アカウントの追加が完了しました。</p>
-        <button id="back-button">戻る</button>
-    </div>
     <script>
-        /*var socket = io(); // Socket.ioのインスタンス
-        // タブの切り替え処理
-        var dropArea = document.getElementById('drop-area');
-        var fileInput = document.getElementById('file-input');
-        document.getElementById('tab-csv').addEventListener('click', function() {
-            document.getElementById('content-csv').classList.remove('hidden');
-            document.getElementById('content-manual').classList.add('hidden');
-            this.classList.add('active');
-            document.getElementById('tab-manual').classList.remove('active');
-        });
-        
-        document.getElementById('tab-manual').addEventListener('click', function() {
-            document.getElementById('content-manual').classList.remove('hidden');
-            document.getElementById('content-csv').classList.add('hidden');
-            this.classList.add('active');
-            document.getElementById('tab-csv').classList.remove('active');
+        const menuButton = document.getElementById('hambtn');
+        const sidebar = document.getElementById('sidebar');
+
+        menuButton.addEventListener('click', () => {
+          sidebar.classList.toggle('active');
+          mainContent.classList.toggle('sidebar-active');
         });
 
-        dropArea.addEventListener('click', function() {
-        fileInput.click();
-    });
+        document.addEventListener('click', (event) => {
+          if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
+            sidebar.classList.remove('active');
+            mainContent.classList.remove('sidebar-active');
+            }
+        });
 
-    dropArea.addEventListener('dragover', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        dropArea.classList.add('hover');
-    });
+        $(document).ready(function() {
+            var socket = io();
 
-    dropArea.addEventListener('dragleave', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        dropArea.classList.remove('hover');
-    });
+            // 権限選択
+            $('.role-option').click(function() {
+                $('.role-option').removeClass('selected');
+                $(this).addClass('selected');
+                $('#role-error').hide();
+                $('#room_select_container').toggle($(this).data('role') === 'teacher');
+            });
 
-    dropArea.addEventListener('drop', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        dropArea.classList.remove('hover');
+            // フォームのバリデーション
+            $('#userForm').on('submit', function(e) {
+                e.preventDefault();
+                var isValid = validateForm();
 
-        var files = event.dataTransfer.files;
-        if (files.length) {
-            // ファイル処理
-            console.log(files[0]); // ここでファイルを処理
+                if (isValid) {
+                    var data = gatherFormData();
+                    socket.emit('Add_user_manually', data);
+                }
+            });
+
+            socket.on('Add_user_manually_Complete', function() {
+                alert('ユーザーを追加しました！');
+                window.location.href = '/account_list';
+            });
+
+            // 戻るボタン
+            $('.btn-back').click(function() {
+                history.back();
+            });
+
+            function validateForm() {
+                let isValid = true;
+
+                if (!$('#username').val()) {
+                    showError('username-error');
+                    isValid = false;
+                } else {
+                    hideError('username-error');
+                }
+
+                if (!$('#user_ID').val()) {
+                    showError('userID-error');
+                    isValid = false;
+                } else {
+                    hideError('userID-error');
+                }
+
+                if (!$('#password').val()) {
+                    showError('password-error');
+                    isValid = false;
+                } else {
+                    hideError('password-error');
+                }
+
+                if ($('#password').val() !== $('#confirm-password').val()) {
+                    showError('confirm-error');
+                    isValid = false;
+                } else {
+                    hideError('confirm-error');
+                }
+
+                if (!$('.role-option.selected').length) {
+                    showError('role-error');
+                    isValid = false;
+                } else {
+                    hideError('role-error');
+                }
+
+                return isValid;
+            }
+
+            function showError(errorId) {
+                $('#' + errorId).show();
+            }
+
+            function hideError(errorId) {
+                $('#' + errorId).hide();
+            }
+
+            function gatherFormData() {
+              var userID = sanitize($('#user_ID').val());
+              var username = sanitize($('#username').val());
+              var password = sanitize($('#password').val());
+              var selectedRole = $('.role-option.selected').data('role');
+              
+              // Map the selected role to a userType value
+              var userType = selectedRole === 'student' ? 1 :
+                            selectedRole === 'teacher' ? 2 :
+                            selectedRole === 'admin' ? 3 : null;
+
+              var data = { userID, username, password, usertype: userType };
+
+              return data;
+          }
+            function sanitize(str) {
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g, '&#x2F;');
+            }
+            
+        });
+
+        async function logout() {
+            try {
+                await new Promise((resolve, reject) => {
+                    socket.emit('session_destroy', (response) => response.success ? resolve() : reject(response.error));
+                });
+                navigateTo('/login');
+            } catch (error) {
+                alert('ログアウトに失敗しました: ' + error);
+            }
         }
-    });
 
-        // 手入力フォームの送信処理
-        document.getElementById('manual-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            var formData = {
-                user_ID: this.user_id.value,
-                user_name: this.user_name.value,
-                pass_word: this.pass_word.value,
-                user_type: this.user_type.value
-            };
-
-            socket.emit('add_account', formData);
-        });
-
-        // アカウント追加完了の通知を受け取る
-        socket.on('account_added', function() {
-            document.getElementById('content-manual').style.display = 'none';
-            document.getElementById('completion-notification').style.display = 'block';
-        });
-
-        // 戻るボタンの処理
-        document.getElementById('back-button').addEventListener('click', function() {
-            window.location.href = '/account_list'; // 指定ページへの遷移
-        });*/
+        socket.on('session_destroy_success', () => navigateTo('/login'));
+        socket.on('session_destroy_failed', (error) => alert('ログアウトに失敗しました: ' + error));
     </script>
-    </body>
-</html>-->
+</body>
+</html>

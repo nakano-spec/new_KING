@@ -3,164 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>回答即時判断表示システム</title>
-    <link type="text/css" rel="stylesheet" href="/stylesheets/login.css">
+    <title>ニコキタ教育委員会：ログイン</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: white;
+        }
+
+        header {
+            background-color: #F47B20;
+            padding: 1rem;
+        }
+
+        h1 {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        main {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        input, select, button {
+            height: 3rem;
+            padding: 0 1rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input::placeholder, select {
+            color: #999;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        button {
+            background-color: #FDB813;
+            color: black;
+            border: none;
+            border-radius: 9999px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #e5a611;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            main {
+                margin: 1rem auto;
+            }
+        }
+    </style>
 </head>
 <body>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <p id="abc">回答即時判断表示システム</p><br>
-    <div align="center">
-         <table>
-            <form name = "myform" action="/login">
-                <div class="row">
-                    <form class="col s12">
-                      <div class="row">
-                        <div class="input-field-col-s6">
-                          <input id="first_name" name="name" type="text" class="validate" minlength="2" maxlength="10" placeholder="学籍番号"
-                          value=""  >
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="input-field-col-s12">
-                          <input id="password" type="password" name="password1" class="validate" minlength="8" maxlength="16" placeholder="パスワード"
-                            value="" >
-                        </div>
-                      </div>
-                      <!-- <div class="row">
-                        <div class="input-field col s12">
-                          <label for="password">　確　認　</label>
-                          <input id="password" type="password" name="password2" class="validate" minlength="8" maxlength="16" placeholder="もう一度入力"
-                          value="" size="20" style="font-size: 50px;">
-                        </div>
-                      </div> -->
-                      <div class="row">
-                      </div>
-                  </div> 
-                  <br>
-                  <select name = "select1" required style = "width: 30%;height: 50px;font-size: 20px;text-align: center;padding: 10px;position: relative;top: 10px;">
-                    <option value="1">PC3</option>
-                    <option value="2">PC2</option>
-                    <option value="3">DS</option>
-                    <option value="4">PC1</option>
-                    <option value="5">225</option>
-                    <option value="6">226</option>                    
-                  </select>
-                  <br>
-                  <br>
-                  <input type="submit" name="button" value="ログイン" class="s"></button>
-            </form>
-        </table>
-    </div>
-    <br>
-    <div class="container">
-    <ul id="mondai"></ul>
-    </div>
+    <header>
+        <h1>ニコキタ教育委員会：ログイン</h1>
+    </header>
+    
+    <main>
+        <form name="myform">
+            <input type="text" id="first_name" name="name" placeholder="User ID" aria-label="User ID">
+            <input type="password" id="password" name="password1" placeholder="Password" aria-label="Password">
+            <select name="select1" required aria-label="教員を選択">
+                <option value="" disabled selected>(教員を選択)</option>
+                <% teacher_name.forEach(function(teacher) { %>
+                  <option value="<%= teacher.user_name %>"><%= teacher.user_name %></option>
+                <% }); %>
+            </select>
+            <button type="submit" name="button">ログイン</button>
+        </form>
+        <div class="container">
+            <ul id="mondai"></ul>
+        </div>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-      //socket.ioを読み込む。
-      var socket = io();
-      //
-      //データを読み込む
-      var f = document.forms.myform;
-      var flug = 0;
-      var token = 0;
-      var mondai = document.getElementById('mondai');
-      var item = document.createElement('h3');
-      //
+        // Socket.ioとフォーム要素の設定
+        const socket = io({ transports: ['websocket'], upgrade: false });
+        const form = document.forms.myform;
+        const mondai = document.getElementById('mondai');
+        const item = document.createElement('h3');
 
-      //ログインボタンが押されたら行う処理
-      f.button.addEventListener('click',function(e){
-        //formの自動送信処理を阻止
-        e.preventDefault();
-        /*
-        if(!f.name.value){
-          alert("学籍番号が入力されていません。");
-        }else if(!f.password.value){
-          alert("パスワードが入力されていません。");
-        }*/
-        //ユーザーIDとパスワード、セレクトボックスの中身を取得しオブジェクトにする。
-        var name1 = sanitize(f.name.value);
-        var passwordInput = sanitize(f.password1.value);
-        var form = document.forms.myform;
-        var selectBox = form.select1;
-        var data = {
-            username: name1,
-            password: passwordInput,
-            selectedOption: selectBox.value
-        };
-        //
-        //wwwのlogin_btnclickにdataをSocket.ioに送信する。
-        //socket.emit('login_btnclick',data);
-        console.log(data);
-        socket.emit('login',data);
-      })
-
-      //ログインしたユーザーが先生だった場合の処理
-      socket.on('login_flug',function(flug,name){
-        if(flug == 1) {
-          window.location.href = 'main?name=' + encodeURIComponent(name);
-        }else if(flug == 0){
-          console.log('パスワードが不一致、または登録されていないuserデータです。');
+        // サニタイズ処理
+        function sanitize(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;')
+                .replace(/\//g, '&#x2F;')
+                .replace(/:/g, '')
+                .replace(/;/g, '')
+                .replace(/\*/g, '');
         }
-      })
-      //
 
-      //ログインしたユーザーが学生だった場合
-      socket.on('login_flug1',function(flug,name){
-        if(flug == 1) {
-          window.location.href = '/kaitou?name=' + encodeURIComponent(name);
-        }else if(flug == 0){
-          item.textContent = 'パスワードが不一致、または登録されていないuserデータです。';
-          mondai.appendChild(item);
-        }
-      })
-      //
+        // ログインボタンのクリックイベント
+        form.button.addEventListener('click', function(e) {
+            e.preventDefault(); // デフォルト送信を防止
 
-      //ログインしたユーザーが表示用アカウントだった場合
-      socket.on('login_flug2',function(flug,name){
-        if(flug == 1) {
-          window.location.href = '/hyouji2?name=' + encodeURIComponent(name);
-        }else if(flug == 0){
-          item.textContent = 'パスワードが不一致、または登録されていないuserデータです。';
-          mondai.appendChild(item);
-        }
-      })
+            // 入力データのサニタイズ
+            const name1 = sanitize(form.name.value);
+            const passwordInput = sanitize(form.password1.value);
+            const selectedOption = form.select1.value;
 
-      //ログインが失敗したときの処理
-      socket.on('new_flug',function(flug){
-        if(flug == 0) {
-          console.log('ユーザー名とパスワードが違います。');
-        }
-      }) 
+            // ログインデータをオブジェクトにまとめて送信
+            const data = { username: name1, password: passwordInput, selectedOption };
+            socket.emit('login', data);
+        });
 
-      socket.on('login_error',function(){
-        if(flug == 0) {
-          alert('入力内容に不備があります。\n再度入力し直してください。');
-        }
-      }) 
+        // ログイン時の処理（先生）
+        socket.on('login_flug', function(flug, name) {
+            if (flug === 1) {
+                window.location.href = 'main?name=' + encodeURIComponent(name);
+            } else {
+                console.log('パスワードが不一致、または登録されていないuserデータです。');
+            }
+        });
 
-      socket.on('login_sucess',function(result){
+        // ログイン時の処理（学生）
+        socket.on('login_flug1', function(flug, name) {
+            if (flug === 1) {
+                window.location.href = '/kaitou?name=' + encodeURIComponent(name);
+            } else {
+                item.textContent = 'パスワードが不一致、または登録されていないuserデータです。';
+                mondai.appendChild(item);
+            }
+        });
+
+        // ログイン時の処理（表示用アカウント）
+        socket.on('login_flug2', function(flug, name) {
+            if (flug === 1) {
+                window.location.href = '/admin_main';
+            } else {
+                item.textContent = 'パスワードが不一致、または登録されていないuserデータです。';
+                mondai.appendChild(item);
+            }
+        });
+
+        // ログイン失敗時の処理
+        socket.on('new_flug', function(flug) {
+            if (flug === 0) {
+                console.log('ユーザー名とパスワードが違います。');
+            }
+        });
+
+        // 入力内容に不備がある場合の処理
+        socket.on('login_error', function() {
+            alert('入力内容に不備があります。\n再度入力し直してください。');
+        });
+
+        // ログイン成功の確認用
+        socket.on('login_success', function(result) {
             console.log(result);
-      })
+        });
 
-      socket.on('login_null',function(result){
+        // ユーザーが見つからない場合
+        socket.on('login_null', function(result) {
             console.log(result);
-      })
-
-
-      //サニタイズ処理
-      function sanitize(str) {
-          return String(str)
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
-              .replace(/'/g, '&#x27;')
-              .replace(/\//g,'&#x2F;')
-              .replace(/:/g, '')  // コロンを取り除く
-              .replace(/;/g, '') // セミコロンを取り除く
-              .replace(/\*/g, ''); // アスタリスクを完全に除去
-      }
+        });
     </script>
 </body>
 </html>

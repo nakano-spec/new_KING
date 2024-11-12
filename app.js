@@ -40,7 +40,7 @@ var kakuninRouter = require('./routes/kakunin');
 var tuikaRouter = require('./routes/tuika');
 var failRouter = require('./routes/fail');
 var kanryouRouter = require('./routes/kanryou');
-var missRouter = require('./routes/miss');
+//var missRouter = require('./routes/miss');
 var uploadRouter = require('./routes/upload.js');
 var tuika2Router = require('./routes/tuika2');
 var Question_manageRouter = require('./routes/Question_manage.js');
@@ -53,7 +53,7 @@ var question_listRouter = require('./routes/question_list');
 var question_additionRouter = require('./routes/question_addition');
 var question_editRouter = require('./routes/question_edit');
 var mailaddressRouter = require('./routes/mailaddress');
-const emailRoutes = require('./routes/emailRoute');
+const adminmainRouter = require('./routes/admin_main');
 var question_additionMethodRouter = require('./routes/question_additionMethod');
 var question_additionmanualRouter = require('./routes/question_additionmanual');
 var testRouter = require('./routes/SQL_test');
@@ -70,13 +70,15 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'172.18.96.186',
+  host :'172.18.96.186',//192.168.0.16,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 100,
+  queueLimit: 500,
+  idleTimeout: 60000,
+  connectTimeout: 30000 
 }
   
 //192.168.0.17
@@ -84,11 +86,8 @@ const db_conf ={
 const pool = mysql.createPoolCluster();
 pool.add('MASTER',db_conf);
 
-//const pool2 = mysql.createPoolCluster();
-//pool2.add('MASTER',db_conf2);
 
 app.set('pool',pool);
-//app.set('pool2',pool2);
 
 //ejsを使えるようにしている。
 app.set('views', path.join(__dirname, 'views'));
@@ -103,7 +102,7 @@ app.use(express.static('public'));
 app.use(express.static('images'));
 
 const sessionpool = mysql.createPool({
-  host: '172.18.96.186',
+  host: '172.18.96.186',//192.168.0.16,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -164,12 +163,13 @@ app.use('/kakunin',kakuninRouter);
 app.use('/tuika',tuikaRouter);
 app.use('/fail',failRouter);
 app.use('/kanryou',kanryouRouter);
-app.use('/miss',missRouter);
+//app.use('/miss',missRouter);
 app.use('/upload',uploadRouter);
 app.use('/tuika2',tuika2Router);
 app.use('/Question_manage',Question_manageRouter);
 app.use('/Answer_back',Answer_backRouter);
 app.use('/main',mainRouter);
+app.use('/admin_main',adminmainRouter);
 app.use('/account_list',account_listRouter);
 app.use('/account_addition',account_additionRouter);
 app.use('/account_edit',account_editRouter);
@@ -177,7 +177,7 @@ app.use('/question_list',question_listRouter);
 app.use('/question_addition',question_additionRouter);
 app.use('/question_edit',question_editRouter);
 app.use('/mailaddress',mailaddressRouter);
-app.use('/api', emailRoutes);
+//app.use('/api', emailRoutes);
 app.use('/question_select', question_additionMethodRouter);
 app.use('/question_additionmanual', question_additionmanualRouter);
 app.use('/SQL_test', testRouter);
@@ -210,13 +210,5 @@ var storage = multer.diskStorage({
   }
 })
 
-var upload = multer({storage: storage});
-
-app.post('/',upload.array('uploadfile'),function(req,res){
-  console.log(req.file);
-})
-
 app.use(cors());
 module.exports = { app,sessionMiddleware };
-//コメント1
-//コメント2

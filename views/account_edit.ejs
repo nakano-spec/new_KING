@@ -1,52 +1,120 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <title>ユーザー編集</title>
-    <!-- スタイルやスクリプトの追加が必要な場合はここに記述 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：ユーザー編集</title>
+    <link rel="stylesheet" href="/stylesheets/account_edit.css">
 </head>
 <body>
-    <h1>ユーザー情報編集</h1>
-    <form action="/your-post-route" method="post">
-        <div>
-            <label for="user-id">学籍番号:</label>
-            <input type="text" id="user-id" name="user_ID" value="<%= user_ID %>" required>
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-button" aria-label="メニュー">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </button>
+            <h1 class="header-title">ニコキタ教育委員会：ユーザー編集</h1>
         </div>
-        <div>
-            <label for="user-name">名前:</label>
-            <input type="text" id="user-name" name="user_name" value="<%= user_name %>" required>
-        </div>
-        <div>
-            <label for="password">パスワード:</label>
-            <input type="password" id="password" name="pass_word" value="<%= pass_word %>" required>
-        </div>
-        <div>
-            <label for="role-name">ロールタイプ:</label>
-            <select id="role-name" name="role_name">
-                <% if (role_name === '学生') { %>
-                    <option value="student" selected>学生</option>
-                    <option value="teacher">教員</option>
-                    <option value="view">表示</option>
-                    <!-- その他のロールオプションを追加する場合はここに -->
-                <% } else if (role_name === '先生') { %>
-                    <option value="student">学生</option>
-                    <option value="teacher" selected>教員</option>
-                    <option value="view">表示</option>
-                    <!-- その他のロールオプションを追加する場合はここに -->
-                 <% } else if (role_name === '表示') { %>
-                    <option value="student">学生</option>
-                    <option value="teacher">教員</option>
-                    <option value="view" selected>表示</option>
-                    <!-- その他のロールオプションを追加する場合はここに -->
-                <% } else { %>
-                    <!-- デフォルトの選択肢を設定 -->
-                    <option value="student">学生</option>
-                    <option value="teacher">教員</option>
-                    <option value="view">表示</option>
-                    <!-- その他のロールオプションを追加する場合はここに -->
-                <% } %>
-            </select>
-        </div>
-        <button type="submit">保存</button>
-    </form>
+        <div class="header-user">ユーザー：Admin</div>
+    </header>
+
+    <main class="main-content">
+        <h2 class="page-title">ユーザーの編集</h2>
+        <p class="page-subtitle">各項目を入力してください。</p>
+
+        <form >
+            <div class="form-group">
+                <label for="user-id" class="form-label">学籍番号:</label>
+                <input type="text" id="user-id" name="user_ID" class="form-control" value="<%= user_ID %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="user-name" class="form-label">名前:</label>
+                <input type="text" id="user-name" name="user_name" class="form-control" value="<%= user_name %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">パスワード:</label>
+                <input type="password" id="password" name="pass_word" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm-password" class="form-label">確認:</label>
+                <input type="password" id="confirm-password" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="role-name" class="form-label">ロールタイプ:</label>
+                <select id="role-name" name="role_name" class="form-control">
+                    <% if (role_name === '生徒') { %>
+                        <option value="student" selected>生徒</option>
+                        <option value="teacher">教師</option>
+                        <option value="view">管理者</option>
+                    <% } else if (role_name === '教師') { %>
+                        <option value="student">生徒</option>
+                        <option value="teacher" selected>教師</option>
+                        <option value="view">管理者</option>
+                    <% } else if (role_name === '管理者') { %>
+                        <option value="student">生徒</option>
+                        <option value="teacher">教師</option>
+                        <option value="view" selected>管理者</option>
+                    <% } else { %>
+                        <option value="student">学生</option>
+                        <option value="teacher">教員</option>
+                        <option value="view">表示</option>
+                    <% } %>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" id="saveButton" class="btn btn-submit">保存</button>
+                <button type="button" class="btn btn-back">戻る</button>
+            </div>
+        </form>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // 元の学籍番号を保持（ページロード時に取得）
+        const originalUserId = "<%= user_ID %>";
+        const originalrolename = "<%= role_name %>";
+        console.log(originalUserId);
+
+        document.getElementById('saveButton').addEventListener('click', (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('user-id').value;
+            const userName = document.getElementById('user-name').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const role = document.getElementById('role-name').value;
+
+            if (password !== confirmPassword) {
+                alert('パスワードが一致しません');
+                return;
+            }
+
+            const accountData = {
+                original_user_ID: originalUserId,
+                original_role_name:originalrolename,
+                user_ID: userId,
+                user_name: userName,
+                password: password,
+                role_name: role
+            };
+
+            socket.emit('account_update', accountData);
+        });
+
+        socket.on('account_update_success', () => {
+            alert('ユーザー情報が更新されました');
+            window.location.href = '/account_list';
+        });
+
+        socket.on('account_update_error', (error) => {
+            alert(`エラー: ${error.message}`);
+        });
+    </script>
 </body>
 </html>

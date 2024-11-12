@@ -74,27 +74,27 @@ function updateYearSelect(years) {
      //試験名が選択されるとwwwのelectedQualificationNameにSocket.ioで試験名を送信する。
      document.f1.mo1.addEventListener('change', function() {
       var selectedQualificationName = this.value;
-      socket.emit('requestQualificationData', selectedQualificationName);
+      socket.emit('request_data', selectedQualificationName);
     });
     //
 
     //年度が選択されるとwwwのelectedQualificationyearsにSocket.ioで年度を送信する。
     document.f1.year.addEventListener('change', function() {
       var selectedQualificationyears = this.value;
-      socket.emit('requestquestionname', selectedQualificationyears);
+      socket.emit('request_name', selectedQualificationyears);
     });
     //
 
     //問題名が選択されるとwwwのelectedQualificationquestionにSocket.ioで問題名を送信する。
     document.f1.question.addEventListener('change', function() {
       var selectedQualificationquestion = this.value;
-      socket.emit('requestgenre', selectedQualificationquestion);
+      socket.emit('request_genre', selectedQualificationquestion);
     });
     //
 
     //wwwのelectedQualificationNameから年度・問題名・ジャンルのデータを取得し、セレクトボックス内のデータを
     //更新する。
-    socket.on('qualificationData', function(data) {
+    socket.on('data_result', function(data) {
         updateYearSelect(data);
         updateQuestionSelect(data);
         updateGenreSelect(data);
@@ -103,13 +103,13 @@ function updateYearSelect(years) {
 
     //wwwのelectedQualificationyearsから問題名とジャンルのデータを取得し、セレクトボックス内のデータを
     //更新する。
-    socket.on('questionname', function(data) {
+    socket.on('name_result', function(data) {
         updateQuestionSelect(data);
         updateGenreSelect(data);
     });
     //wwwのelectedQualificationquestionからジャンルのデータを取得し、セレクトボックス内のデータを
     //更新する。
-    socket.on('questiongenre', function(data) {
+    socket.on('genre_result', function(data) {
         updateGenreSelect(data);
     });
 
