@@ -1,22 +1,117 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meat charset="utf-8">
-<title>問題新規追加方法選択画面</title>
-<link type="text/css" rel="stylesheet" href="/stylesheets/account_additionMethod.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：問題追加</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        body {
+            background-color: #f9f9f9;
+        }
+
+        .header {
+            background-color: #F47B20;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-icon {
+            width: 30px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .menu-icon span {
+            height: 3px;
+            width: 100%;
+            background-color: white;
+            border-radius: 2px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .user-info {
+            font-size: 14px;
+        }
+
+        .main-content {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 24px;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .button {
+            background-color: #E0E0E0;
+            border: 2px solid #1A237E;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #1A237E;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <div class="orange">
-        <h1>回答即時判断システム：問題の新規追加</h1>
-        <hr>
-    </div>
+    <header class="header">
+        <div class="menu-icon" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="header-title">ニコキタ教育委員会：問題追加</div>
+        <div class="user-info">ユーザー：sensei</div>
+    </header>
 
-    <a>追加方法を選択してください。</a>
-    <p></p>
-    <br><button onclick="location.href='question_additionCSV'">csvファイルで追加</button>
-    <p></p>
-    <br><button onclick="location.href='/question_additionmanual'">手入力で追加</button>
-    <p></p>
-    <br><button onclick="location.href='account'">戻る</button>
+    <main class="main-content">
+        <h1 class="title">追加方法を選択してください。</h1>
+        <div class="button-container">
+            <button class="button" onclick="location.href='/question_additionCSV'">CSVファイルで追加</button>
+            <button class="button" onclick="location.href='/question_additionmanual'">手入力で追加</button>
+            <button class="button" onclick="location.href='/Question_manage'">戻る</button>
+        </div>
+    </main>
+
+    <script>
+        function toggleMenu() {
+            // メニューの開閉処理をここに追加できます。
+            alert("メニューアイコンがクリックされました。");
+        }
+    </script>
 </body>
 </html>

@@ -6,85 +6,121 @@
     <title>表示２</title>
     <link type="text/css" rel="stylesheet" href="/stylesheets/index.css">
     <style>
-      /* 追加されたCSSスタイル */
       #picture {
-          text-align: center; /* 画像を中央揃えに */
+          text-align: center;
       }
       #picture img {
-          max-width: 100%; /* 画像がコンテナを超えないように */
-          height: auto; /* 画像のアスペクト比を維持 */
+          max-width: 100%;
+          height: auto;
       }
     </style>
   </head>
+  <header>
+    <div style="display: flex; align-items: center;">
+        <div class="menu-icon">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <span class="header-title">ニコキタ教育委員会：問題表示</span>
+    </div>
+    <div class="user-info">ユーザー</div>
+</header>
   <body>
     <script src='/socket.io/socket.io.js'></script>
-    <div id="mytime">
-     <p><%= time %></p> 
+
+    <!-- タイマーと問題表示用のHTML -->
+    <div id="mytime"></div>
+    <div class="timer">
+      <div id="re" class="hun"></div>
+      <div id="re2" class="ti">:</div>
+      <div id="re3" class="byou"></div>
     </div>
-    <div class ="R">
-    <div id = "re" class = "hun"></div>
-    <div id = "re2" class = "ti">:</div>
-    <div id = "re3" class = "byou"></div>
-    </div>
-    <h1><%= text %></h1>
-    <p id="photoName"><%= picture %></p>
-    <div id = "picture" class="picture"></div>
-    <br>
+    <h1 id="questionText"><%= question_text %></h1>
+    <div id="picture" class="picture"> <% if (pics_name) { %>
+      <p></p>
+      <img src="/images/<%= pics_name %>" alt="問題画像" />
+  <% } else { %>
+  <% } %></div>
+
     <script>
-      //簡易タイマーを作成
       var socket = io();
-      var hyoujiindex = 0;
-      var timer = document.getElementById('mytime');
-      var timer2 = timer.innerText;
-      //表示の時間合わせ
-      if(timer2 <= 3){
-        timer2 = 0;
-      }else{
-        timer2 = timer2 - 3;
-      }
-      var minutes = parseInt(timer2/60,10);
-      var seconds = timer2%60;
+      const limit_time = '<%= limit_time %>';
+      console.log(limit_time);
+      var totalSeconds = parseInt(limit_time, 10);
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
 
-      re.innerText=minutes;
-      re3.innerText = seconds;
+        // タイマーの表示更新
+        document.getElementById('re').innerText = minutes;
+        document.getElementById('re3').innerText = seconds;
 
-      //カウンドダウン開始
-      if(minutes == 0 && seconds == 0){
-        re.innerText=minutes;
-        re3.innerText = seconds;
-      }else{
-        var countdownid = setInterval(function(){
-        if(minutes != 0 && seconds == 0){
-          minutes --;
-          seconds = 59;
-        }else{
-          seconds --; 
+        var countdownId = setInterval(function() {
+          if (minutes === 0 && seconds === 0) {
+            clearInterval(countdownId);
+          } else {
+            if (seconds === 0) {
+              minutes--;
+              seconds = 59;
+            } else {
+              seconds--;
+            }
+            document.getElementById('re').innerText = minutes;
+            document.getElementById('re3').innerText = seconds;
+          }
+        }, 1000);
+
+        // 他のページへの遷移処理
+      socket.on('hyouji', function(de) {
+        window.location.href = '/hyou3?data=' + encodeURIComponent(de);
+      });
+
+      socket.on('result_display2', function(data) {
+        window.location.href = '/hyou4';
+      });
+      /*socket.on('problem_display_data', function(data) {
+        // 問題テキストを表示
+        document.getElementById('questionText').innerText = question_text;
+        // 画像がある場合の処理
+        if (pics_name) {
+          var imgElement = document.createElement('img');
+          imgElement.src = '/images/' + data.pics_name;
+          document.getElementById('picture').appendChild(imgElement);
         }
-        re.innerText=minutes;
-        re3.innerText = seconds;
-        if(minutes == 0 && seconds == 0){
-          clearInterval(countdownid);
-        }
-      }, 1000);
-    }
 
-    // 写真名が<p>タグ内にあるか確認し、あれば表示
-      var photoName = document.getElementById('photoName').innerText;
-      console.log(photoName);
-    if(photoName != 0) {
-      var imagePath = 'images/' + photoName;
-      var imgElement = document.createElement('img');
-      imgElement.src = imagePath;
-      document.getElementById('picture').appendChild(imgElement);
-    }
+        // タイマーの設定と開始
+        var totalSeconds = parseInt(limit_time, 10);
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
 
-        socket.on('hyouji',function(de){
-          window.location.href ='/hyou3?data=' + encodeURIComponent(de);
-        })
-        
-        socket.on('result_display2',function(data){
-          window.location.href='/hyou4';
-        })
+        // タイマーの表示更新
+        document.getElementById('re').innerText = minutes;
+        document.getElementById('re3').innerText = seconds;
+
+        var countdownId = setInterval(function() {
+          if (minutes === 0 && seconds === 0) {
+            clearInterval(countdownId);
+          } else {
+            if (seconds === 0) {
+              minutes--;
+              seconds = 59;
+            } else {
+              seconds--;
+            }
+            document.getElementById('re').innerText = minutes;
+            document.getElementById('re3').innerText = seconds;
+          }
+        }, 1000);
+      });
+
+      // 他のページへの遷移処理
+      socket.on('hyouji', function(de) {
+        window.location.href = '/hyou3?data=' + encodeURIComponent(de);
+      });
+
+      socket.on('result_display2', function(data) {
+        window.location.href = '/hyou4';
+      });*/
     </script>
   </body>
 </html>

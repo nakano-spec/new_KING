@@ -23,8 +23,9 @@ const { SQL_exec } = require( '../db/SQL_module');
  const encoding = 'hex';
  const sanitizeHtml = require('sanitize-html');
  const csv = require('csv-parser');
- const bcrypt = require('bcrypt');
  const { Readable } = require('stream');
+ //ROOMを管理する場所
+ const rooms = {}; // ルームデータを管理するオブジェクト
  
  /**
   * Get port from environment and store in Express.
@@ -126,7 +127,7 @@ const { SQL_exec } = require( '../db/SQL_module');
  io.on('connection', (socket) => {//ページが繋がったとき
    console.log(socket.request.session);
    const mysql_setting = {
-    host :'172.18.96.186',//192.168.0.16,172.18.96.162
+    host :'172.18.96.162',//172.18.96.186,172.18.96.162,192.168.0.18
     user :'connect',
     password :'K1ng@Oyster',
     database :'mydb',
@@ -458,100 +459,177 @@ const { SQL_exec } = require( '../db/SQL_module');
       });
     }
 
-        socket.on('login', async (data) => {
-          try {
-              const username = sanitizeHtml(data.username);
-              let password = sanitizeHtml(data.password);
-              
-              password = await hashPassword(password); // ハッシュ化されたパスワード
-              // Fetch user data from user_table
-              const loginSelect = { 
-                sql: "select EXISTS(select 1 from user_table where user_ID =? and password=?) as login_result",
-                value:[username,password]
-              };
-              const users = await SQL_exec(loginSelect);
-              console.log(users.login_result);
-              if(users[0].login_result == 1){
-                const loginFlag = 1;
-                var user_data = {
-                    sql: "select user_type from user_table where user_ID=?",
-                    value: [username]
-                }
-                var user_SQL = await SQL_exec(user_data);
-                console.log(user_SQL[0].user_type);
-                switch (user_SQL[0].user_type) {
-                    case 1: // User type 1
-                        try {
-                            console.log(data.selectedOption)
-                            const roomIDData = { sql: "SELECT r.room_ID FROM room_table r,user_table u WHERE r.user_ID = u.user_ID and u.user_name = ?", value: [data.selectedOption] };
-                            const roomIDResult = await SQL_exec(roomIDData);
-                            const roomID = roomIDResult[0].room_ID;
-        
-                            const insertLog = { sql: "INSERT INTO login_log(user_ID,room_ID,log_time) VALUES (?,?,CURRENT_TIMESTAMP);", value: [username,roomID] };
-                            await SQL_exec(insertLog);
-        
-                            socket.request.session.student = { username: username };
-                            socket.request.session.studentroom_ID = data.selectedOption;
-                            socket.request.session.save();
-                            
-                            io.to(socket.id).emit('login_flug1', loginFlag, username);
-                        } catch (error) {
-                            console.log(error);
-                            io.emit('new_flug', 0);
-                        }
-                        break;
-                    case 2: // User type 2
-                        try {
-                            socket.request.session.user = { username: username };
-                            socket.request.session.save();
-                            const roomID_SQL ={
-                              sql:"select r.room_ID from room_table r,user_table u where r.user_ID = u.user_ID and u.user_name = ?",
-                              value:[data.selectedOption]
-                            }
-                            const room_ID = await SQL_exec(roomID_SQL);
-                            const roomIDvalue = room_ID[0].room_ID;
-                            const insertStudentLog = { sql: "INSERT INTO login_log(user_ID,room_ID,log_time) VALUES (?,?,CURRENT_TIMESTAMP);", value: [username,roomIDvalue] };
-                            await SQL_exec(insertStudentLog);
-        
-                            io.to(socket.id).emit('login_flug', loginFlag, username);
-                        } catch (error) {
-                            console.log(error);
-                            io.emit('login_error');
-                        }
-                        break;
-                    case 3: // User type 3
-                        try {
-                            const getUserIDData = { sql: "SELECT user_ID FROM user_table WHERE user_name = ?", value: [data.selectedOption] };
-                            const userIDResult = await SQL_exec(getUserIDData);
-                            const userID = userIDResult[0].user_ID;
-                            const getRoomIDData = { sql: "SELECT room_ID FROM room_table WHERE user_ID = ?", value: [userID] };
-                            const roomIDResult = await SQL_exec(getRoomIDData);
-                            const roomID = roomIDResult[0].room_ID;
-                            const insertAdminLog = { sql: "INSERT INTO login_log(user_ID,room_ID,log_time) VALUES (?,?,CURRENT_TIMESTAMP);", value: [username,roomID] };
-                            await SQL_exec(insertAdminLog);
+    const USER_TYPE = {
+      STUDENT: 1,
+      TEACHER: 2,
+      ADMIN: 3
+    };
 
-                            socket.request.session.user = { username: username };
-                            socket.request.session.save();
+    socket.on('login', async (data) => {
+      try {
+          // 入力データのサニタイズ
+          const username = sanitizeHtml(data.username.trim());
+          let password = sanitizeHtml(data.password.trim());
 
-                            io.to(socket.id).emit('login_flug2', loginFlag, username);
-                        } catch (error) {
-                            console.log(error);
-                            io.emit('login_error');
-                        }
-                        break;
-                    default:
-                      console.log("start3");
-                      io.to(socket.id).emit('new_flug', 0);
-                      break;
-                  }
-              }else{
-                io.to(socket.id).emit('new_flug', 0);
-              }
-          } catch (error) {
-              console.log("Error in login process:", error);
+          // パスワードのハッシュ化
+          password = await hashPassword(password);
+
+          // ユーザー認証クエリ
+          const authQuery = {
+              sql: "SELECT EXISTS(SELECT 1 FROM user_table WHERE user_ID = ? AND password = ?) AS login_result",
+              value: [username, password]
+          };
+          const authResult = await SQL_exec(authQuery);
+
+          if (authResult[0].login_result !== 1) {
+              // 認証失敗
+              io.to(socket.id).emit('login_flug', 0, null, null);
+              return;
+          }
+
+          // ユーザータイプ取得クエリ
+          const userTypeQuery = {
+              sql: "SELECT user_type FROM user_table WHERE user_ID = ?",
+              value: [username]
+          };
+          const userTypeResult = await SQL_exec(userTypeQuery);
+
+          if (userTypeResult.length === 0) {
+              throw new Error('User type not found');
+          }
+
+          const userType = userTypeResult[0].user_type;
+
+          // ユーザータイプに基づいてログイン処理を実行
+          const roomID = await handleUserLogin(userType, username, data.selectedOption, socket);
+
+          // ログイン成功のフラグとタイプを設定
+          let loginType;
+          switch (userType) {
+              case USER_TYPE.STUDENT:
+                  loginType = 'student';
+                  break;
+              case USER_TYPE.TEACHER:
+                  loginType = 'teacher';
+                  break;
+              case USER_TYPE.ADMIN:
+                  loginType = 'admin';
+                  break;
+              default:
+                  loginType = 'unknown';
+          }
+
+          // ログイン成功をクライアントに通知
+          io.to(socket.id).emit('login_flug', 1, username, loginType);
+
+      } catch (error) {
+          console.error("Error in login process:", error);
+
+          // エラーメッセージを適切に送信
+          if (error.message.includes('User type') || error.message.includes('Room ID')) {
+              io.to(socket.id).emit('new_flug', 0);
+          } else {
               io.to(socket.id).emit('login_error');
           }
+      }
+  });
+    // ログインログを挿入する関数
+  const insertLoginLog = async (username, roomID) => {
+    const insertLogQuery = {
+        sql: "INSERT INTO login_log(user_ID, room_ID, log_time) VALUES (?, ?, CURRENT_TIMESTAMP);",
+        value: [username, roomID]
+    };
+    await SQL_exec(insertLogQuery);
+  };
+
+  // ルームIDを取得する関数
+  const getRoomID = async (userName) => {
+    const roomIDQuery = {
+        sql: "SELECT r.room_ID FROM room_table r JOIN user_table u ON r.user_ID = u.user_ID WHERE u.user_name = ?",
+        value: [userName]
+    };
+    const result = await SQL_exec(roomIDQuery);
+    if (result.length === 0) throw new Error('Room ID not found');
+    return result[0].room_ID;
+  };
+
+  // ユーザータイプに基づいてログイン処理を行う関数
+  const handleUserLogin = async (userType, username, selectedOption, socket) => {
+    let roomID;
+
+    switch (userType) {
+        case USER_TYPE.STUDENT:
+            roomID = await getRoomID(selectedOption);
+            await insertLoginLog(username, roomID);
+            socket.request.session.student = { username };
+            socket.request.session.studentroom_ID = selectedOption;
+            break;
+
+        case USER_TYPE.TEACHER:
+            roomID = await getRoomID(selectedOption);
+            await insertLoginLog(username, roomID);
+            socket.request.session.user = { username };
+            break;
+
+        case USER_TYPE.ADMIN:
+            const userIDQuery = {
+                sql: "SELECT user_ID FROM user_table WHERE user_name = ?",
+                value: [selectedOption]
+            };
+            const userIDResult = await SQL_exec(userIDQuery);
+            if (userIDResult.length === 0) throw new Error('User ID not found');
+            const userID = userIDResult[0].user_ID;
+
+            const roomIDAdminQuery = {
+                sql: "SELECT room_ID FROM room_table WHERE user_ID = ?",
+                value: [userID]
+            };
+            const roomIDAdminResult = await SQL_exec(roomIDAdminQuery);
+            if (roomIDAdminResult.length === 0) throw new Error('Room ID not found for admin');
+            roomID = roomIDAdminResult[0].room_ID;
+
+            await insertLoginLog(username, roomID);
+            socket.request.session.user = { username };
+            break;
+
+        default:
+            throw new Error('Invalid user type');
+    }
+
+    // セッションを保存
+    await new Promise((resolve, reject) => {
+        socket.request.session.save(err => {
+            if (err) return reject(err);
+            resolve();
         });
+    });
+
+    return roomID;
+  };
+
+  // ルームに参加するイベント
+  socket.on('join_room', ({ room_ID, role }) => { 
+      socket.join(room_ID);
+      console.log(`Socket ${socket.id} がルーム ${room_ID} に参加しました。役割: ${role}`);
+
+      // ルームの参加者リストを更新
+      if (!rooms[room_ID]) {
+          rooms[room_ID] = { teacher: null, display: null, students: [] };
+      }
+
+      // 役割に応じて参加者リストを更新
+      if (role === 2) {
+          rooms[room_ID].teacher = socket.id;
+      } else if (role === 1) {
+        rooms[room_ID].students.push(socket.id);
+      } else{
+        rooms[room_ID].display = socket.id;  
+      }
+
+      // ルーム内の全員に参加者リストを送信
+      io.to(room_ID).emit('room_participants', rooms[room_ID]);
+  });
+
    
         socket.on('search_accounts', async function(searchTerm) {
           try{
@@ -672,52 +750,136 @@ const { SQL_exec } = require( '../db/SQL_module');
         }
       })
 
-      socket.on('mondai_btnclick', async function(mondai, o, room_ID) {
-        // 入力値のサニタイズ
-        const mondai1 = sanitizeHtml(mondai);
-        const oSanitized = sanitizeHtml(o);
-        const room_IDSanitized = sanitizeHtml(room_ID);
-        
-        console.log(room_IDSanitized);
+      socket.on('mondai_btnclick', async function(data) {
+        // タイマーを秒数に変換
+        const totalSeconds = (parseInt(data.timer?.minute, 10) || 0) * 60 + (parseInt(data.timer?.second, 10) || 0);
     
-        if (mondai1 !== '') {
-            const pool = poolCluster.of('MASTER');
+        if (data) {
+            // SQLクエリの定義
+            const get_status = `
+                SELECT COUNT(*) AS cnt 
+                FROM question_log 
+                WHERE room_ID = ? AND question_status = 1;
+            `;
+            
+            const question_reset = `
+                UPDATE question_log 
+                SET question_status = 0 
+                WHERE room_ID = ?;
+            `;
+            
+            const get_id_sql = `
+                SELECT q.question_ID 
+                FROM question_table q 
+                JOIN genre_table g ON q.question_ID = g.question_ID 
+                WHERE q.question_name = ? 
+                  AND g.qualification_name = ? 
+                  AND g.question_genre = ? 
+                  AND g.question_years = ?;
+            `;
+            
+            const mondai_sentaku = `
+                INSERT INTO question_log (question_ID, room_ID, question_status, limit_time) 
+                VALUES (?, ?, 1, ?);
+            `;
+            
+            const mondai_select = `
+                SELECT q.question_ID, q.question_text, q.pics_name, o.question_optional 
+                FROM question_table q 
+                JOIN question_log l ON q.question_ID = l.question_ID 
+                LEFT JOIN optional_table o ON q.question_ID = o.question_ID
+                WHERE l.question_status = 1 AND l.room_ID = ?;
+            `;
     
+            try {
+                // 現在の出題状況を確認
+                const status_data = { sql: get_status, value: [data.room_ID] };
+                const statusResult = await SQL_exec(status_data);
+                const status_count = statusResult[0].cnt;
+                console.log("Current active questions count:", status_count);
+    
+                // 出題中の問題があればリセット
+                if (status_count >= 1) {
+                    const reset_data = { sql: question_reset, value: [data.room_ID] };
+                    await SQL_exec(reset_data);
+                    console.log("Question status reset.");
+                }
+    
+                // question_IDの取得
+                const get_id_data = { sql: get_id_sql, value: [data.question, data.qualification, data.genre, data.year] };
+                const questionIDResult = await SQL_exec(get_id_data);
+                if (!questionIDResult || questionIDResult.length === 0) {
+                    throw new Error("指定された問題が見つかりません。");
+                }
+                const q_ID = questionIDResult[0].question_ID;
+    
+                // question_logへの挿入
+                const sentaku_data = { sql: mondai_sentaku, value: [q_ID, data.room_ID, totalSeconds] };
+                await SQL_exec(sentaku_data);
+                console.log("Inserted question into question_log with time limit.");
+    
+                // 選択した問題のデータを取得
+                const mondai_data = { sql: mondai_select, value: [data.room_ID] };
+                const mondaiResult2 = await SQL_exec(mondai_data);
+                const questionData = mondaiResult2[0]; // 問題文とオプションなどの情報
+                io.emit('student_answer_data', {
+                  room_ID: data.room_ID,
+                  question_text: questionData.question_text,
+                  options: mondaiResult2.map(opt => opt.question_optional) 
+                });
+                // 教師ページにタイマー情報を送信
+                socket.emit('timer_data', { room_ID: data.room_ID,question_ID: questionData.question_ID,limit_time: totalSeconds });
+                // 完了フラグを全員に送信
+                const flag = 1;
+                io.emit('mondai_kekka', flag);
+            } catch (error) {
+                console.error('Error during mondai_btnclick process:', error);
+                socket.emit('error', { message: 'Error in mondai_btnclick process', error });
+            }
+        } else {
+            console.log("データがありません");
+            socket.emit('error', { message: 'データがありません' });
+        }
+    });
+    
+      /*socket.on('mondai_btnclick', async function(data) {
+        // タイマーを秒数に変換
+        const totalSeconds = (parseInt(data.timer.minute, 10) || 0) * 60 + (parseInt(data.timer.second, 10) || 0);
+        if (data !== '') {
             // SQLクエリの定義
             const get_status = "SELECT COUNT(*) AS cnt FROM question_log WHERE room_ID = ? AND question_status = 1;";
             const question_reset = "UPDATE question_log SET question_status = 0 WHERE room_id = ?;";
-            const get_id_sql = "SELECT question_ID FROM question_table WHERE question_name = ?;";
-            const mondai_sentaku = "INSERT INTO question_log (question_id, room_id, question_status) VALUES (?, ?, 1);";
-            const mondai_select = "SELECT question_table.question_ID, question_text FROM question_table, question_log WHERE question_log.question_ID = question_table.question_ID AND question_status = 1 AND room_ID = ?;";
+            const get_id_sql = "SELECT q.question_ID FROM question_table q,genre_table g WHERE q.question_name = ? and g.qualification_name = ? and g.question_genre = ? and question_years = ?;";
+            const mondai_sentaku = "INSERT INTO question_log (question_id, room_id, question_status) VALUES (?, ?, 1,?);";
+            const mondai_select = "SELECT question_table.question_ID, question_text FROM question_table q, question_log l WHERE question_log.question_ID = question_table.question_ID AND question_status = 1 AND room_ID = ?;";
     
             try {
-                const connection = await pool.getConnection();
-    
                 // 現在の出題状況を確認
-                const status_data = { sql: get_status, value: [room_IDSanitized] };
+                const status_data = { sql: get_status, value: [data.room_ID] };
                 const statusResult = await SQL_exec(status_data);
                 const status_count = statusResult[0].cnt;
                 console.log("count:", status_count);
     
                 // 出題中の問題があればリセット
                 if (status_count >= 1) {
-                    const reset_data = { sql: question_reset, value: [room_IDSanitized] };
+                    const reset_data = { sql: question_reset, value: [data.room_ID] };
                     await SQL_exec(reset_data);
                     console.log("Question status reset.");
                 }
     
                 // question_IDの取得
-                const get_id_data = { sql: get_id_sql, value: [mondai1] };
+                const get_id_data = { sql: get_id_sql, value: [data.question,data.qualification,data.genre,data.year] };
                 const questionIDResult = await SQL_exec(get_id_data);
+                console.log(questionIDResult);
                 const q_ID = questionIDResult[0].question_ID;
     
                 // question_logへの挿入
-                const sentaku_data = { sql: mondai_sentaku, value: [q_ID, room_IDSanitized] };
+                const sentaku_data = { sql: mondai_sentaku, value: [q_ID, data.room_ID,totalSeconds] };
                 await SQL_exec(sentaku_data);
                 console.log("Inserted into question_log.");
     
                 // 選択した問題のデータを取得
-                const mondai_data = { sql: mondai_select, value: [room_IDSanitized] };
+                const mondai_data = { sql: mondai_select, value: [data.room_ID] };
                 const mondaiResult2 = await SQL_exec(mondai_data);
                 socket.emit('mondai_select', mondaiResult2);
     
@@ -760,7 +922,7 @@ const { SQL_exec } = require( '../db/SQL_module');
                 io.emit('mondai_kekka', flag);
             }
         }
-    });
+    }); */
 
     socket.on('account_update',async (accountData)=>{
       try {
@@ -1188,18 +1350,18 @@ const { SQL_exec } = require( '../db/SQL_module');
       })
     });*/
 
-      socket.on('request_data',async function(){
+      socket.on('request_data',async function(qualificationName){
         var data={
-          sql:"select g.question_genre,g.question_years,q.question_name from question_table q,genre_table g where g.qualification_name = ? and q.question_ID = g.question_ID",
+          sql:"select distinct question_name,question_genre,question_years from (select q.question_name,g.question_genre,g.question_years from question_table q JOIN genre_table g ON q.question_id = g.question_id) AS subquery;",
           value:[qualificationName]
         }
         try{
           var result=await SQL_exec(data);
-          socket.emit('data_result',result);
+          socket.emit('qualificationData',result);
         }
-        catch{
+        catch(error){
           console.error(error);
-          socket.emit('data_result',error);
+          socket.emit('qualificationData',error);
         }
       })
 

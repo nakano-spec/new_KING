@@ -8,38 +8,41 @@
         <link type="text/css" rel="stylesheet" href="/stylesheets/mondai3.css">
     </head>
     <body>
+        <header class="header">
+            <div class="header-left">
+                <div class="hamburger">
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                </div>
+                <h1 style="margin: 0; font-size: 1.2em;">ニコキタ教育委員会：出題管理</h1>
+            </div>
+            <div>ユーザー：<%= name %></div>
+        </header>
         <script src ='/socket.io/socket.io.js'></script>
-        <p id="nameElement"><%= name %></p>
-        <div id="my">
-            <p><%= second %></p>
-        </div>
-        <div class="rem" >
+        <div class="timer" >
         <div id = "remain" class = "rem2"></div>
         <div id = remain3 class = "rem3">:</div>
         <div id="remain2" class = "rem4"></div>
         </div>
        
         <form name = myform2>
-        <div class="example">
+            <div class="button-container">
             
-            <br>
-            <br>
-            <input type ="submit" class ="s" name="button4" value ="問題再送信">
-            <br>
-            <br>
-            <input type ="submit" class ="s" name="button3" value ="回答終了">
-            <br>
-            <br>
-            <input type="submit" class="a" name="kekka" value ="回答結果へ">
-        </div>
+                <input type ="submit" class="button" name="button4" value ="問題再送信">
+            
+                <input type ="submit" class="button" name="button3" value ="回答終了">
+                
+                <input type="submit" class="button" name="kekka" value ="回答結果へ">
+            </div>
         </form>
         <script>
             var f  = document.forms.myform2;
             var socket = io();
-            socket.emit('question_release');
+            //socket.emit('question_release');
             //値設定
-            var rend = document.getElementById('my');
-            var inner2 = rend.innerText;  //入力値を受け取る
+            //var rend = document.getElementById('my');
+            var inner2 = '<%= second %>'  //入力値を受け取る
             var minites = parseInt(inner2/60,10); //分を取得
             var seconds = Math.round(inner2%60); //秒を取得
             seconds = Math.abs(seconds);

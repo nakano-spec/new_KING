@@ -1,85 +1,75 @@
-.radiobutton1 {
-    display: none;
- }
-
- .radiobutton2 {
-    display: none;
- }
-
- .radiobutton3 {
-    display: none;
- }
-
- .radiobutton4 {
-    display: none;
- }
-
- .radiobutton1 + label {
-    background-color: #ff8c00;
-    padding: 10px;
-    border: 2px solid #dcdcdc;
-    display: block;
-    margin: 10px 0;
-    cursor: pointer;
-  }
-
-  .radiobutton2 + label {
-    background-color: #4169e1;
-    padding: 10px;
-    border: 2px solid #dcdcdc;
-    display: block;
-    margin: 10px 0;
-    cursor: pointer;
-  }
-
-  .radiobutton3 + label {
-    background-color: #90ee90;
-    padding: 10px;
-    border: 2px solid #dcdcdc;
-    display: block;
-    margin: 10px 0;
-    cursor: pointer;
-  }
-
-  .radiobutton4 + label {
-    background-color: #ba55d3;
-    padding: 10px;
-    border: 2px solid #dcdcdc;
-    display: block;
-    margin: 10px 0;
-    cursor: pointer;
-  }
-
-.radiobutton1:checked + label {
-    background-color: #f4a460;
-    border-color: #ff8c00;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: white;
 }
 
-.radiobutton2:checked + label {
-    background-color: #87cefa;
-    border-color: #4169e1;
+.header {
+  background-color: #F47B20;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.radiobutton3:checked + label {
-    background-color: #c8e6c9;
-    border-color: #90ee90;
+.header-title {
+  font-size: 1.5em;
 }
 
-.radiobutton4:checked + label {
-    background-color: #ee82ee;
-    border-color: #ba55d3;
-}
-/* ラベルのスタイル */
-label {
-    display: inline-block;
-    margin-right: 20px;
+.content {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.s{
-    width: 100px;
-    height: 50px;
+.exam-info {
+  font-size: 1.2em;
+  margin-bottom: 20px;
 }
-body{
-    background-color: #fffca9;
-    background-size: cover;
+
+.question {
+  font-size: 1.4em;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.answer-section {
+  margin-top: 20px;
+}
+
+.answer-label {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.answer-box {
+  width: 100%;
+  height: 300px;
+  border: 1px solid black;
+  margin-top: 10px;
+}
+
+.select-box {
+  margin-bottom: 20px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.buttons button {
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  transition: background-color 0.3s;
+}
+
+.buttons button:hover {
+  background-color: #ddd;
 }

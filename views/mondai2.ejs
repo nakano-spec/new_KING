@@ -25,7 +25,7 @@
     <nav class="sidebar" id="sidebar">
         <a href="/main">メインページ</a>
         <a href="/mondai">問題出題</a>
-        <a href="/question_list">問題管理</a>
+        <a href="/Question_manage">問題管理</a>
         <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
     </nav>
 
@@ -39,9 +39,17 @@
                 <label for="qualification-select">試験名を選択してください。</label>
                 <select id="qualification-select" name="mo1" class="cp_sl02 select2" required>
                     <option value="">(試験名を選択)</option>
-                    <% web.forEach((list) => { %>
-                        <option><%= list.qualification_name %></option>
-                    <% }) %>
+                    <% 
+                    const uniqueQualifications = [];
+                    web.forEach(item => {
+                      if (!uniqueQualifications.includes(item.qualification_name)) {
+                        uniqueQualifications.push(item.qualification_name);
+                      }
+                    });
+                  %>
+                  <% uniqueQualifications.forEach(name => { %>
+                    <option value="<%= name %>"><%= name %></option>
+                  <% }); %>
                 </select>
             </div>
 
@@ -101,12 +109,31 @@
         const menu = document.getElementById('menu');
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('main-content');
+        const room_ID = '<%= name %>';
 
+
+        // 接続が確立した時点でルームに参加
+        socket.on('connect',async function(){
+                const room_ID = '<%= name %>';
+                const role = 2
+                if (room_ID) {
+                    socket.emit('join_room', { room_ID, role });
+                    console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+                } else {
+                    console.error('ルームIDが指定されていません。');
+                }
+        });
+
+        //ルームの部屋
+        socket.on('room_participants',async function(participants){
+            console.log('参加者リストを受信:', participants);
+        })
+
+        //メニュー処理
         menuButton.addEventListener('click', () => {
             sidebar.classList.toggle('active');
             mainContent.classList.toggle('sidebar-active');
         });
-
         document.addEventListener('click', (event) => {
             if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
                 sidebar.classList.remove('active');
@@ -114,29 +141,76 @@
             }
         });
 
+        // 試験名のセレクトボックスが選択されたときに他のデータをリクエスト
+        document.getElementById('qualification-select').addEventListener('change', (event) => {
+            const selectedQualification = event.target.value;
+            console.log("選択された試験名:", selectedQualification);
+
+            if (selectedQualification) {
+                // 選択された試験名をサーバーに送信してデータをリクエスト
+                socket.emit('request_data', { qualification_name: selectedQualification });
+            }
+        });
+
+        //問題送信
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const timeLimit = form.time2.value;
-            const hantei = [...form.hantei].find(radio => radio.checked)?.value;
-
-            if (!hantei) return alert("採点形式が選択されていません。");
             if (!timeLimit || isNaN(timeLimit)) return alert("制限時間が入力されていません。");
 
             socket.emit('search_room');
         });
-
+        
         socket.on('room_IDget', room_ID => {
-            const selectedQuestion = form.question.options[form.question.selectedIndex].innerText;
-            const newWin = open("/hyouji2");
-            socket.emit('mondai_btnclick', selectedQuestion, form.hantei.value, room_ID);
+            // 各セレクトボックスの選択された値を取得
+            const selectedQualification = document.getElementById('qualification-select').value;
+            const selectedYear = document.getElementById('year-select').value;
+            const selectedQuestion = document.getElementById('question-select').value;
+            const selectedGenre = document.getElementById('genre-select').value;
+
+            // タイマーの分と秒を取得
+            const minute = document.getElementById('time').value;
+            const second = document.getElementById('time2').value;
+
+            // データをまとめる
+            const data = {
+                room_ID: room_ID,
+                qualification: selectedQualification,
+                year: selectedYear,
+                question: selectedQuestion,
+                genre: selectedGenre,
+                timer: {
+                    minute: minute || 0, // 入力が空の場合は0
+                    second: second || 0
+                }
+            };
+            console.log(data);
+            socket.emit('mondai_btnclick', data);
         });
 
+        // 教師ページでタイマー情報を受け取る
+        socket.on('timer_data', async function(data) {
+            try{
+                 const question_ID = data.question_ID;
+                 const room_ID = data.question_ID;
+                 const limit_time = data.limit_time;
+                 const queryString = `?question_ID=${encodeURIComponent(question_ID)}&room_ID=${encodeURIComponent(room_ID)}&limit_time=${encodeURIComponent(limit_time)}`;
+                 const newWin = window.open(`/question_view${queryString}`, '_blank');
+                 window.location.href = `/mondai2${queryString}`;
+            }catch(error){
+                alert(error);
+            }
+        });
+       
+        //セレクトボックス更新処理
         function updateSelect(selectId, data, property) {
+            cosole.log("開始");
             const select = document.getElementById(selectId);
             select.innerHTML = '';
             data.forEach(item => select.add(new Option(item[property])));
         }
 
+        //ログアウト処理
         async function logout() {
             try {
                 await new Promise((resolve, reject) => {
@@ -155,14 +229,17 @@
         socket.on('qualificationData', data => updateSelect('year-select', data, 'question_years'));
         socket.on('questionname', data => updateSelect('question-select', data, 'question_name'));
         socket.on('questiongenre', data => updateSelect('genre-select', data, 'question_genre'));
+        
         socket.on('session_destroy_success', () => {
             window.location.href = '/login';
         });
 
+        //セッション削除失敗時エラー処理
         socket.on('session_destroy_failed', (error) => {
             alert('ログアウトに失敗しました: ' + error);
         });
 
+        //サニタイズ処理
         function sanitize(str) {
             return String(str)
                 .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

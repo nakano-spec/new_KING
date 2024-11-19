@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：CSVアップロード</title>
+    <style>
+        /* 共通のスタイル */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        body {
+            background-color: #f9f9f9;
+        }
+
+        .header {
+            background-color: #F47B20;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .title {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .upload-section {
+            margin: 30px 0;
+        }
+
+        .upload-label {
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: block;
+            color: #333;
+        }
+
+        .dropzone {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            background-color: #fafafa;
+            cursor: pointer;
+        }
+
+        .file-list {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-title">ニコキタ教育委員会：CSVアップロード</div>
+    </header>
+
+    <main class="main-content">
+        <h1 class="title">CSVファイルのアップロード</h1>
+
+        <div class="upload-section">
+            <label class="upload-label">アップロードするCSVファイルを選択してください。</label>
+            <div class="dropzone" id="csv-dropzone">
+                ドラッグ＆ドロップするか、ここをクリックしてファイルを選択
+                <input type="file" id="csv-input" accept=".csv" style="display: none;">
+            </div>
+            <div class="file-list" id="csv-file-list">
+                <ul></ul>
+            </div>
+        </div>
+        <button id="send-csv-button" style="margin-top: 20px; padding: 10px 20px; background-color: #F47B20; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            CSVファイルを送信
+        </button>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        //CSVファイルの処理を行うメイン処理
+        function setupCSVUpload() {
+            const dropzone = document.getElementById('csv-dropzone');
+            const input = document.getElementById('csv-input');
+            const fileList = document.getElementById('csv-file-list').querySelector('ul');
+            const sendButton = document.getElementById('send-csv-button');
+
+            // ドラッグ＆ドロップのイベントリスナー登録
+            setupDragAndDrop(dropzone, input, handleFileSelection);
+
+            // ボタンが押されたときの処理
+            sendButton.addEventListener('click', sendFileToServer);
+        }
+
+        let selectedFile = null; // グローバル変数でファイルを保持
+
+        // ドラッグ＆ドロップ設定
+        function setupDragAndDrop(dropzone, input, fileHandler) {
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                fileHandler(e.dataTransfer.files);
+            });
+
+            dropzone.addEventListener('click', () => {
+                input.click();
+            });
+
+            input.addEventListener('change', () => {
+                fileHandler(input.files);
+            });
+        }
+
+        // ファイルが選択されたときの処理
+        function handleFileSelection(files) {
+            const fileList = document.getElementById('csv-file-list').querySelector('ul');
+            fileList.innerHTML = '';
+            if (files.length > 0) {
+                selectedFile = files[0]; // 最初のファイルを選択
+                const li = document.createElement('li');
+                li.textContent = selectedFile.name;
+                fileList.appendChild(li);
+            }
+        }
+
+        // サーバーにファイルを送信
+        function sendFileToServer() {
+            if (!selectedFile) {
+                alert('CSVファイルを選択してください！');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const fileContent = e.target.result;
+                socket.emit('upload_csv', {
+                    fileName: selectedFile.name,
+                    content: fileContent,
+                });
+                alert(`問題を登録しました。`);
+            };
+            reader.readAsText(selectedFile);
+        }
+
+        // 初期化
+        setupCSVUpload();
+
+    </script>
+</body>
+</html>

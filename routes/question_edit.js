@@ -6,38 +6,43 @@ const { SQL_exec } = require('../db/SQL_module');
 //このページに来たら最初に行う処理
 /* GET users listing. */
 
-router.get('/', async function(req, res) {
-  try {
-      var user_ID = req.query.userID;
-      var user_name = req.query.userName;
-      var password = req.query.password;
-  
-      var selectSQL = {
-          sql: 'select user_type from user_table where user_ID = ?;',
-          value: [user_ID]
-      };
-       
-      var result = await SQL_exec(selectSQL);
-      var role_name = role_sort(result[0].user_type);
-
-      var data = {
-          user_ID: user_ID,
-          user_name: user_name,
-          pass_word: password,
-          role_name: role_name
-      };
-      res.render('account_edit.ejs', data);
-  } catch (err) {
-      console.error(err);
+// 編集ページのルート
+router.get('/', async function(req, res, next){
+  const questionID = req.query.question_ID;
+  try{
+    var SQL_data ={
+      sql: `
+      SELECT 
+          g.qualification_name,
+          g.question_genre,
+          g.question_years,
+          q.question_name,
+          q.question_text,
+          COALESCE(q.pics_name, '') AS pics_name,
+          GROUP_CONCAT(o.question_optional ORDER BY o.question_optional SEPARATOR ', ') AS options,
+          c.answer
+      FROM 
+          question_table q
+      LEFT JOIN 
+          optional_table o ON q.question_ID = o.question_ID
+      LEFT JOIN 
+          correct_table c ON q.question_ID = c.question_ID
+      LEFT JOIN 
+          genre_table g ON q.question_ID = g.question_ID
+      WHERE
+                q.question_ID = ?
+      GROUP BY 
+          q.question_ID, g.qualification_name, g.question_genre, g.question_years, 
+          q.question_name, q.question_text, q.pics_name, c.answer;
+      `,
+      value:[questionID]
+      }
+      var results = await SQL_exec(SQL_data)
+      res.render('question_edit', { question:results[0],name:req.session.user.username });
+    }catch(error){
+      console.error(error);
       res.status(500).send("エラーが発生しました");
-  }
+    }
 });
 
-async function role_sort(data){
-  switch(data){
-    case 1: return "生徒";
-    case 2: return "教師";
-    case 3: return "管理者";
-  }
-}
 module.exports = router;

@@ -1,36 +1,82 @@
-p{
-  font-size: 1px;
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: white;
 }
-.R{
+header {
+  background-color: #F47B20;
+  color: white;
+  padding: 15px;
   display: flex;
-  justify-content: center;
-  border: solid 3px;
+  justify-content: space-between;
+  align-items: center;
 }
-.hun{
-  font-size: 50px;
+.menu-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 21px;
 }
-.ti{
-  font-size: 50px;
+.menu-icon div {
+  width: 100%;
+  height: 3px;
+  background-color: white;
 }
-.byou{
-  font-size: 50px;
+.header-title {
+  font-size: 24px;
+  margin-left: 10px;
 }
-h1{
-text-align: center;
+.user-info {
+  font-size: 14px;
 }
-#picture {
-  text-align: center; /* 画像を中央揃えに */
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.timer, .problem, .photo {
+  border: 2px solid black;
+  margin-bottom: 20px;
+  padding: 20px;
+  text-align: center;
+}
+.timer {
+  font-size: 24px;
+}
+.problem {
+  font-size: 28px;
+}
+.photo {
+  font-size: 48px;
+  padding: 50px;
 }
 #picture img {
-  max-width: 100%; /* 画像がコンテナを超えないように */
-  height: auto; /* 画像のアスペクト比を維持 */
+  max-width: 100%;
+  height: auto;
 }
-.example{
-text-align: center;
-width: 600px;
-height: 400px;
+
+/* タイマー*/
+.timer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 128px; /* 大きなフォントサイズ */
+  font-weight: bold;
+  color: #333; /* 見やすい色 */
+  background-color: #f7f7f7; /* 淡い背景色 */
+  border: 3px solid #F47B20; /* アクセントカラーのボーダー */
+  border-radius: 10px; /* 角丸にする */
+  padding: 20px;
+  width: 600px; /* タイマー全体の幅 */
+  margin: 20px auto; /* 中央揃え */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* 軽い影を追加 */
 }
-body{
-background-color: #fffca9;
-background-size: cover;
+.timer span {
+  margin: 0 10px; /* 各セグメント間のスペース */
+}
+.timer .ti {
+  font-size: 128px; /* セパレーター ":" のサイズ */
+  color: #666; /* セパレーターの色 */
 }

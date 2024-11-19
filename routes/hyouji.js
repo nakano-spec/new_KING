@@ -3,11 +3,30 @@ var router = express.Router();
 const mysql = require("mysql");
 const { route } = require(".");
 const async = require('async');
-//mysqlに接続する際のデータを入れ、接続できるようにする。
+const { SQL_exec } = require('../db/SQL_module');
 
-router.get("/",(req,res) =>{
-    var name1 = req.session.user.username;
+router.get("/",async function(req,res){
+    try{
+        var name1 = req.session.user.username;
+        const { room_ID, question_ID, limit_time } = req.query;
+        console.log(limit_time);
+        const SQL_data = {
+            sql:"select q.question_text,pics_name from question_table q,question_log l where q.question_ID = l.question_ID and l.question_ID =? and l.room_ID = ? and question_status = 1",
+            value:[question_ID,room_ID]
+        }
+        const result = await SQL_exec(SQL_data);
+        const result_data = result[0]
     
+        // EJSテンプレートにデータを渡してレンダリング
+        res.render('index', { 
+            room_ID:room_ID, 
+            question_text:result_data.question_text, 
+            pics_name:result_data.pics_name,
+            limit_time:limit_time
+        });
+    }catch(error){
+        console.error(error);
+    }
 })
 /*
 router.get("/", (req, res)=>{

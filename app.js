@@ -52,7 +52,7 @@ var account_editRouter = require('./routes/account_edit');
 var question_listRouter = require('./routes/question_list');
 var question_additionRouter = require('./routes/question_addition');
 var question_editRouter = require('./routes/question_edit');
-var mailaddressRouter = require('./routes/mailaddress');
+var question_additionCSVRouter = require('./routes/question_additionCSV');
 const adminmainRouter = require('./routes/admin_main');
 var question_additionMethodRouter = require('./routes/question_additionMethod');
 var question_additionmanualRouter = require('./routes/question_additionmanual');
@@ -70,7 +70,7 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'172.18.96.186',//192.168.0.16,172.18.96.162
+  host :'172.18.96.162',//172.18.96.186,172.18.96.162,192.168.0.18
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -102,7 +102,7 @@ app.use(express.static('public'));
 app.use(express.static('images'));
 
 const sessionpool = mysql.createPool({
-  host: '172.18.96.186',//192.168.0.16,172.18.96.162
+  host: '172.18.96.162',//172.18.96.186,172.18.96.162,192.168.0.18
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -124,7 +124,7 @@ const sessionMiddleware = session({
   store: sessionStore,
   saveUninitialized: true,
   cookie: {
-    maxAge: 30 * 60 * 1000
+    maxAge: 24 * 60 * 60 * 1000
   }
 });
 app.use(sessionMiddleware);
@@ -150,7 +150,7 @@ app.use('/hello',helloRouter);
 app.use('/new_player',newplayerRouter);
 app.use('/login',loginRouter);
 app.use('/mondai',mondaiRouter);
-app.use('/h',hyoujiRouter);
+app.use('/question_view',hyoujiRouter);
 app.use('/kaitou',kaitouRouter);
 app.use('/kaitou2',kaitou2Router);
 app.use('/hyouji2',hyouji2Router);
@@ -176,7 +176,7 @@ app.use('/account_edit',account_editRouter);
 app.use('/question_list',question_listRouter);
 app.use('/question_addition',question_additionRouter);
 app.use('/question_edit',question_editRouter);
-app.use('/mailaddress',mailaddressRouter);
+app.use('/question_additionCSV',question_additionCSVRouter);
 //app.use('/api', emailRoutes);
 app.use('/question_select', question_additionMethodRouter);
 app.use('/question_additionmanual', question_additionmanualRouter);

@@ -11,7 +11,30 @@ router.get('/', async function(req, res, next) {
   try{
      var name1 = req.query.name;
     var select_SQL = {
-      sql:"SELECT g.qualification_name,g.question_genre,g.question_years,q.question_name,q.question_text,COALESCE(s.select_1, '') AS select_1,COALESCE(s.select_2, '') AS select_2,COALESCE(s.select_3, '') AS select_3,COALESCE(s.select_4, '') AS select_4,a.type_name,CASE  WHEN q.picture_flag = 0 THEN '' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID;"
+      sql:`
+        SELECT 
+            g.qualification_name,
+            g.question_genre,
+            g.question_years,
+            q.question_name,
+            q.question_text,
+            COALESCE(p.pics_name, '') AS pics_name,
+            GROUP_CONCAT(o.question_optional ORDER BY o.question_optional SEPARATOR ', ') AS options,
+            c.correct
+        FROM 
+            question_table q
+        LEFT JOIN 
+            optional_table o ON q.question_ID = o.question_ID
+        LEFT JOIN 
+            correct_table c ON q.question_ID = c.question_ID
+        LEFT JOIN 
+            genre_table g ON q.question_ID = g.question_ID
+        LEFT JOIN 
+            pics_table p ON q.question_ID = p.question_ID
+        GROUP BY 
+            q.question_ID, g.qualification_name, g.question_genre, g.question_years, 
+            q.question_name, q.question_text, p.pics_name, c.correct;
+      `
     }
     var result = await SQL_exec2(select_SQL);
     res.render('question_list',{data:result});

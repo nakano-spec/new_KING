@@ -3,116 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>問題作成ページ</title>
+    <title>ニコキタ教育委員会：問題追加</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        .header {
+            background-color: #F47B20;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-icon {
+            width: 30px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-icon span {
+            height: 3px;
+            width: 100%;
+            background-color: white;
+        }
+
+        .main-content {
             padding: 20px;
         }
 
-        form {
-            max-width: 600px;
-            margin: auto;
+        .title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            margin-bottom: 30px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
+        .form-label {
+            min-width: 100px;
         }
 
-        input[type="text"], textarea {
-            width: 100%;
+        .form-input {
+            flex: 1;
             padding: 8px;
-            margin-bottom: 10px; /* 入力フィールドの間に余白を追加 */
-            box-sizing: border-box; /* パディングとボーダーを幅に含める */
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
-        #choice-fields {
-            display: none; /* JavaScriptによる表示切替のため初期状態は非表示 */
+        .question-text {
+            height: 100px;
+            resize: vertical;
         }
 
-        input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
+        .choices-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .add-choice-btn {
+            background-color: #FFCDB2;
             border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
             cursor: pointer;
+            float: right;
         }
 
-        input[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        input[type="radio"] {
-            margin-right: 5px;
-        }
-        .header {
-            background-color: #fd9221;
-            padding: 10px;
-            text-align: center;
+        .add-choice-btn:hover {
+            background-color: #FFB4A2;
         }
     </style>
 </head>
 <body>
-    <script src="/socket.io/socket.io.js"></script>
-    <div class="header">
-        <h1>問題手動追加ページ</h1>
-    </div>
-    <form id="question-form">
-        <p>問題の形式を選択してください。</p>
-        <div>
-            <label><input type="radio" name="questionType" value="choice" checked> 選択問題</label>
-            <label><input type="radio" name="questionType" value="input"> 入力問題</label>
+    <header class="header">
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
-        <p>問題の試験名・ジャンル・試験年度・問題名・問題文を選択してください。</p>
-        <div class="common-field">
-            <label>試験名：<input type="text" name="examName" placeholder="例：応用情報技術者試験"></label>
-            <label>ジャンル：<input type="text" name="genre" placeholder="例：オープンソースソフトウェア"></label>
-            <label>試験年度：<input type="text" name="examYear" placeholder="例：25年度春"></label>
-            <label>問題名：<input type="text" name="questionName" placeholder="例：問45"></label>
-            <label>問題文：<input type="text" name="questionText" placeholder="例：この問題の試験年度は"></label>　
-        </div>
+        <div>ニコキタ教育委員会：問題追加</div>
+        <div>ユーザー：sensei</div>
+    </header>
 
-        <div id="choice-fields">
-            選択肢をア〜エを一つづつ入力してください。<br><br>
-            <label>ア：<input type="text" name="choice1" placeholder="例：25年度春"></label>　
-            <label>イ：<input type="text" name="choice2" placeholder="例：26年度春"></label>　
-            <label>ウ：<input type="text" name="choice3" placeholder="例：25年度秋"></label>　
-            <label>エ：<input type="text" name="choice4" placeholder="例：26年度秋"></label>　
-        </div>
+    <main class="main-content">
+        <h1 class="title">入力形式での問題追加</h1>
+        <p class="subtitle">各項目を入力してください。</p>
 
-        <div class="common-field">
-            正解を入力してください。写真が必要ならば写真名を入力してください。<br><br>
-            <label>正解：<input type="text" name="correctAnswer" placeholder="例：25年度春"></label>　
-            <label>写真名：<input type="text" name="pictureName" placeholder="例：（写真が必要ならば写真名、写真が必要ない場合は空白とする）image.png"></label>
-        </div>
+        <form id="questionForm">
+            <div class="form-group">
+                <label class="form-label">問題名：</label>
+                <input type="text" class="form-input" required>
+            </div>
 
-        <input type="submit" value="送信">
-    </form>
+            <div class="form-group">
+                <label class="form-label">試験名：</label>
+                <input type="text" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">年度：</label>
+                <input type="text" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">問題文：</label>
+                <textarea class="form-input question-text" required></textarea>
+            </div>
+
+            <div id="choicesContainer" class="choices-container">
+                <div class="form-group">
+                    <label class="form-label">選択肢1：</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">選択肢2：</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">選択肢3：</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">選択肢4：</label>
+                    <input type="text" class="form-input" required>
+                </div>
+            </div>
+
+            <button type="button" class="add-choice-btn" id="addChoiceBtn">選択肢追加</button>
+        </form>
+    </main>
 
     <script>
-        function updateFields() {
-            const questionType = document.querySelector('input[name="questionType"]:checked').value;
-            const choiceFields = document.getElementById('choice-fields');
-
-            if (questionType === 'choice') {
-                choiceFields.style.display = 'block';
-            } else {
-                choiceFields.style.display = 'none';
-            }
-        }
-
-        document.querySelectorAll('input[name="questionType"]').forEach((input) => {
-            input.addEventListener('change', updateFields);
+        document.getElementById('addChoiceBtn').addEventListener('click', function() {
+            const container = document.getElementById('choicesContainer');
+            const choiceCount = container.children.length + 1;
+            
+            const newChoice = document.createElement('div');
+            newChoice.className = 'form-group';
+            newChoice.innerHTML = `
+                <label class="form-label">選択肢${choiceCount}：</label>
+                <input type="text" class="form-input" required>
+            `;
+            
+            container.appendChild(newChoice);
         });
-
-        // 初期表示時にフィールドを更新
-        updateFields();
     </script>
-
-    </body>
+</body>
 </html>

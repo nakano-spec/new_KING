@@ -114,6 +114,7 @@
     </style>
 </head>
 <body>
+    <script src='/socket.io/socket.io.js'></script>
     <header class="header">
         <div class="header-left">
             <button class="menu-button" aria-label="メニュー">
@@ -132,6 +133,38 @@
         <br>
         <div class="loader"></div>
     </main>
-    <script src="javascripts/kaitou.js"></script>
+    <script>
+        var socket = io();
+        console.log("解答画面です。")
+         // 接続が確立した時点でルームに参加
+         socket.on('connect',async function(){
+                const room_ID = 'HA03-1002';
+                const role = 1
+                if (room_ID) {
+                    socket.emit('join_room', { room_ID, role });
+                    console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+                } else {
+                    console.error('ルームIDが指定されていません。');
+                }
+        });
+
+        socket.on('connect_error', (err) => {
+            console.error("Socket.io接続エラー:", err);
+        });
+
+        socket.on('student_answer_data', async function(data) {
+            try{
+                console.log(data);
+                const queryString = new URLSearchParams({
+                    room_ID: data.room_ID,
+                    question_text: data.question_text,
+                    options: JSON.stringify(data.options) // 配列をJSON文字列に変換
+                }).toString();
+                window.location.href =`/kaitou2?${queryString}`;   
+            }catch(error){
+                console.error(error);
+            }   
+        });
+    </script>
 </body>
 </html>

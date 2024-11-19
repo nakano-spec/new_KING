@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：問題編集</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        .header {
+            background-color: #F47B20;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-icon {
+            width: 30px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-icon span {
+            height: 3px;
+            width: 100%;
+            background-color: white;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .form-label {
+            min-width: 100px;
+            padding-top: 8px;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .question-text {
+            height: 200px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background-color: #F47B20;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background-color: #E56A00;
+        }
+
+        .add-option-btn {
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .add-option-btn:hover {
+            background-color: #007B9A;
+        }
+
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div>ニコキタ教育委員会：問題編集</div>
+        <div>ユーザー：<%= name %></div>
+    </header>
+
+    <main class="main-content">
+        <h1 class="title">問題の編集</h1>
+        <p class="subtitle">各項目を入力してください。</p>
+
+        <form id="questionForm" method="POST" action="/questions/update">
+            <input type="hidden" name="question_ID" value="<%= question.question_ID %>">
+            
+            <div class="form-group">
+                <label class="form-label">問題名：</label>
+                <input type="text" class="form-input" name="question_name" value="<%= question.question_name %>" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">問題文：</label>
+                <textarea class="form-input question-text" name="question_text" required><%= question.question_text %></textarea>
+            </div>
+
+            <!-- 選択肢セクション -->
+            <div id="options-container">
+                <% if (question.options) { %>
+                    <% const options = question.options.split(', '); %>
+                    <% options.forEach((option, index) => { %>
+                        <div class="form-group option-group">
+                            <label class="form-label">選択肢<%= index + 1 %>：</label>
+                            <input type="text" class="form-input" name="options[]" value="<%= option %>" required>
+                        </div>
+                    <% }); %>
+                <% } %>
+            </div>
+
+            <button type="button" id="add-option-btn" class="add-option-btn">選択肢を追加</button>
+            <p id="error-message" class="error-message"></p>
+
+            <div class="form-group">
+                <label class="form-label">写真ファイル名：</label>
+                <input type="text" class="form-input" name="pics_name" value="<%= question.pics_name %>">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">正解：</label>
+                <input type="text" class="form-input" name="correct" value="<%= question.answer %>" required>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="submit-btn">編集完了</button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // 選択肢追加機能
+        const optionsContainer = document.getElementById('options-container');
+        const addOptionBtn = document.getElementById('add-option-btn');
+        const errorMessage = document.getElementById('error-message');
+
+        addOptionBtn.addEventListener('click', () => {
+            const currentOptions = optionsContainer.querySelectorAll('.option-group');
+            if (currentOptions.length >= 10) {
+                errorMessage.textContent = '選択肢は最大10個まで追加できます。';
+                return;
+            }
+            errorMessage.textContent = ''; // エラーメッセージをクリア
+            const newOptionIndex = currentOptions.length + 1;
+            const newOption = document.createElement('div');
+            newOption.className = 'form-group option-group';
+            newOption.innerHTML = `
+                <label class="form-label">選択肢${newOptionIndex}：</label>
+                <input type="text" class="form-input" name="options[]" required>
+            `;
+            optionsContainer.appendChild(newOption);
+        });
+
+        // フォーム送信時のアラート
+        document.getElementById('questionForm').addEventListener('submit', function(event) {
+            alert('編集内容を保存します。');
+        });
+    </script>
+</body>
+</html>

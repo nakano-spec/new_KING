@@ -5,24 +5,16 @@ const async = require('async');
 const { SQL_exec } = require('../db/SQL_module');
 
 router.get("/", (req, res)=>{
-      var name = req.query.name;
-      var SQL_data ={
-            sql:"select question_ID from question_log where room_ID = ? and question_status = 1",
-            value:[req.session.studentroom_ID]
-      }
+      var name = req.session.student.username;
+      const { room_ID, question_text, options } = req.query;
 
-      var question_result = SQL_exec(SQL_data);
-      var question_ID = question_result[0].question_ID;
-      SQL_data.sql = "SELECT q.question_text, o.question_optional FROM question_table q LEFT JOIN optional_table o ON q.question_ID = o.question_ID WHERE q.question_ID = ?"
-      SQL_data.value = [question_ID];
-      var result = SQL_exec(SQL_data);
-      var options = result.map(row => row.question_optional);
-      var data ={
+      // options を配列に戻す
+      const optionsArray = JSON.parse(options);
+      res.render('kaitou2.ejs',{
             name:name,
-            question_text:result[0].question_text,
-            optional:options
-      }
-      res.render('kaitou4.ejs',data);
+            question_text,
+            options:optionsArray
+      });
       /*if(!req.session.student){
             res.render('login.ejs');
       }else{

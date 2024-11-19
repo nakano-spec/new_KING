@@ -6,27 +6,61 @@
         <link type="text/css" rel="stylesheet" href="/stylesheets/kaitou2.css">
     </head>
     <body>
+        <header class="header">
+            <div class="header-title">ニコキタ教育委員会：解答</div>
+            <div>ユーザー：<%= name %></div>
+        </header>
         <script src ="/socket.io/socket.io.js"></script>
-        <div id = myid2>
-            <p><%= name %></p>
-        </div>
         <h1><%= question_text %></h1>
-        <br>
-        <form name="myform1">
-            <div class="radiobox">
-                <input id="radio1" class="radiobutton1" name="hoge" type="radio" value="ア" />
-                <label for="radio1">ア. <%= select_1 %></label>
-                <input id="radio2" class="radiobutton2" name="hoge" type="radio" value="イ" />
-                <label for="radio2">イ. <%= select_2 %></label>
-                <input id="radio3" class="radiobutton3" name="hoge" type="radio" value="ウ" />
-                <label for="radio3">ウ. <%= select_3 %></label>
-                <input id="radio4" class="radiobutton4" name="hoge" type="radio" value="エ" />
-                <label for="radio4">エ. <%= select_4 %></label>
-                <input type = "submit"class="s" name="kaitou1" value ="回答を送る" >
-            </div>
-        </form>
+        <select id="choices">
+            <!-- 動的にオプションを作成-->
+        </select>
+        <div class="buttons">
+            <!-- 動的にボタンを生成 -->
+        </div>
         <script>
-            var socket = io();
+            const urlParams = new URLSearchParams(window.location.search);
+            const room_ID = urlParams.get('name');
+            const question_text = urlParams.get('question_text');
+            const options = JSON.parse(urlParams.get('options'));
+
+            // HTML要素を取得
+            const selectBox = document.getElementById("choices");
+            const buttonContainer = document.querySelector(".buttons");
+
+            options.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+
+            options.forEach(item => {
+                // 確実にString型に変換
+                const strItem = String(item);
+
+                 // 「:」「：」「；」を「:」に正規化
+                const normalizedItem = strItem.replace(/[：；]/g, ":");
+
+                const [left,right] = normalizedItem.split(":")
+            
+                // セレクトボックスのオプションを追加
+                const option = document.createElement("option");
+                option.value = left.trim();
+                option.textContent = left.trim();
+                selectBox.appendChild(option);
+
+                // ボタンを追加
+                const button = document.createElement("button");
+                button.textContent = right.trim();
+                button.value = left.trim(); // ボタンの値に左側を設定
+                buttonContainer.appendChild(button);
+
+                // ボタンクリック時の処理
+                button.addEventListener("click", () => {
+                    alert(`選択肢: ${right.trim()} (値: ${left.trim()})`);
+                });
+            });
+
+            console.log('name:', name);
+            console.log('question_text:', question_text);
+            console.log('options:', options);
+            /*var socket = io();
             var f = document.forms.myform1;
             var myname = document.getElementById("myid2");
             var m1 = myname.innerText;
@@ -42,7 +76,7 @@
 
             socket.on('end',function(){
                 window.location.href ='/kaitou3?name=' + encodeURIComponent(myname.innerText);
-            })
+            })*/
         </script>
     </body>
 </html>

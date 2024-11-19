@@ -8,16 +8,10 @@ const { SQL_exec } = require('../db/SQL_module');
 
 router.get('/',async function(req,res){
   try{
-    var second = req.query.byou;
-    second = Math.abs(second);
-    var SQL_data ={
-      sql:"UPDATE question_log SET limit_time  = ? WHERE question_status = 1 AND room_ID = 1",
-      value:[second]
-    }
-    var result = await SQL_exec(SQL_data);
+    const { room_ID, question_ID, limit_time } = req.query;
     var data1={
-      second:parseInt(second),
-      name:req.query.name
+      second:limit_time,
+      name:req.session.user.username
     }
     res.render('mondai3.ejs',data1);
   }catch(err){
