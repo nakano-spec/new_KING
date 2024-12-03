@@ -2,22 +2,14 @@ var express = require('express');
 var router = express.Router();
 const mysql = require("mysql");
 const async = require('async');
-const { SQL_exec } = require('../db/SQL_module');
 /* GET users listing. */
 
 router.get('/',async function(req,res){
-    var data1 = req.query.data;
-    const sql = {
-        sql: "select u.user_name, k.answer from answer_table k, user_table u where u.user_ID = k.user_ID and u.user_ID = ?;",
-        values: [data1]
-    };
-    const result = await SQL_exec(sql);
-    const data = {
-      user_ID: data1,
-      user_name: result[0].user_name,
-      answer: result[0].answer
-    };
-    res.render('hyouji3', data);
+    const user_ID = req.query.user_ID;
+    const user_name = req.query.user_name;
+    const userAnswer = req.query.userAnswer;
+    console.log(user_ID,user_name,userAnswer);
+    res.render('hyouji3', {user_ID:user_ID,user_name:user_name,userAnswer:userAnswer});
 })
 
 /*

@@ -129,3 +129,27 @@ th {
 .sidebar a:hover {
   background-color: #ddd;
 }
+
+.pagination {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.pagination a, .pagination span {
+  display: inline-block;
+  padding: 8px 16px;
+  text-decoration: none;
+  margin: 0 2px;
+  border: 1px solid #ddd;
+  color: #007BFF;
+}
+
+.pagination .current-page {
+  background-color: #007BFF;
+  color: white;
+  border-color: #007BFF;
+}
+
+.pagination a:hover {
+  background-color: #ddd;
+}

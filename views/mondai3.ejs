@@ -38,10 +38,18 @@
         </form>
         <script>
             var f  = document.forms.myform2;
-            var socket = io();
+            var socket = io({ transports: ['websocket'], upgrade: false });
             //socket.emit('question_release');
             //値設定
             //var rend = document.getElementById('my');
+            const room_ID = '<%= name %>';
+                const role = 1
+                if (room_ID) {
+                    socket.emit('join_room', { room_ID, role });
+                    console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+                } else {
+                    console.error('ルームIDが指定されていません。');
+                }
             var inner2 = '<%= second %>'  //入力値を受け取る
             var minites = parseInt(inner2/60,10); //分を取得
             var seconds = Math.round(inner2%60); //秒を取得
@@ -66,7 +74,7 @@
                 remain2.innerText = seconds;
                 if(minites == 0 && seconds == 0){
                     clearInterval(countdownid);
-                    //socket.emit('owa2'); -> 自動化するならこれがいる
+                    socket.emit('owa2');
                 }
             }, 1000);
             }
@@ -84,6 +92,11 @@
             f.kekka.addEventListener('click',function(e){
                 e.preventDefault();
                 window.location.href = '/mondai3';
+            })
+
+            socket.on('end',function(){
+                window.confirm("問題が終了しました。");
+                window.location.href='/mondai3';
             })
         </script>
     </body>

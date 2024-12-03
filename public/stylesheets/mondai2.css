@@ -132,3 +132,100 @@ select, input {
   font-size: 1rem;
   color: #333;
 }
+
+/* モーダルのスタイル */
+.modal {
+  display: none; /* 初期状態では非表示 */
+  position: fixed; /* 固定位置 */
+  z-index: 3000; /* 他の要素より前面に表示 */
+  left: 0;
+  top: 0;
+  width: 100%; /* 全幅 */
+  height: 100%; /* 全高 */
+  overflow: auto; /* コンテンツが多い場合にスクロール */
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明の背景 */
+}
+
+/* モーダルコンテンツのスタイル */
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto; /* 上から10%の位置に中央揃え */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* 幅80% */
+  max-width: 1200px; /* 最大幅600px */
+  border-radius: 8px;
+  position: relative;
+}
+
+/* 閉じるボタンのスタイル */
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+}
+
+/*ボタンの位置調整*/
+.button-group {
+  display: flex;
+  justify-content: right; /* 中央揃え: 他のオプションとして flex-end（右揃え）、space-between なども可 */
+  gap: 1rem; /* ボタン間のスペースを設定 */
+  margin-top: 2rem; /* 上部のマージンを維持 */
+}
+
+/*モーダル内のヘッダー*/
+.header2 {
+  background-color: #F47B20;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 2rm;
+}
+
+/* 親コンテナにFlexboxを適用 */
+.question-container {
+  display: flex; /* フレックスコンテナに設定 */
+  align-items: center; /* 縦方向の揃え方を中央に */
+  gap: 1rem; /* 子要素間のスペースを設定 */
+  padding: 1rem; /* 内側の余白を追加（必要に応じて調整） */
+  background-color: #fff; /* 背景色を設定（オプション） */
+  border: 1px solid #ccc; /* 枠線を設定（オプション） */
+  border-radius: 8px; /* 角を丸める（オプション） */
+}
+
+.picture{
+  width: 600px;
+  height: 300px;
+}
+
+.question-text{
+  width: 600px;
+  height: 300px;
+  border: 2px solid black;
+  font-size: 1.5rem;
+}
+
+img{
+  width: 600px;
+  height: 300px;
+  border: 2px solid black;
+}
+
+.select{
+  width: 1200px;
+  height: 250px;
+  border: 2px solid black;
+}
+.options-list{
+  font-size: 2rem;
+}

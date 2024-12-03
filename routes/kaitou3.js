@@ -4,7 +4,7 @@ const async = require('async');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-    var name1 = req.query.name;
+    var name1 = req.session.student.username;
     var data ={
       name: name1
     }

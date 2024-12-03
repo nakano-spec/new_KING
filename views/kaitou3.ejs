@@ -1,18 +1,75 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset ="utf-8">
-        <title>回答完了</title>
-        <link type="text/css" rel="stylesheet" href="/stylesheets/kaitou3.css"
-    </head>
-    <body>
-        <div id = myid2>
-            <p><%= name %></p>
-        </div>
-        <h1>回答完了</h1>
-        <p>採点中です。しばらくお待ちください。</p>
-        <div id ="modoru">
-        </div>
-        <script src="javascripts/kaitou3.js"></script>
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニコキタ教育委員会：解答完了</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            min-height: 100vh;
+            background-color: white;
+        }
+
+        .header {
+            background-color: #F47B20;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5em;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 60px);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .completion-message {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+        }
+
+        .waiting-message {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <script src ="/socket.io/socket.io.js"></script>
+    <header class="header">
+        <div class="header-title">ニコキタ教育委員会：解答完了</div>
+        <div>ユーザー：student</div>
+    </header>
+
+    <div class="content">
+        <div class="completion-message">解答完了</div>
+        <div class="waiting-message">採点中です。しばらくお待ちください。</div>
+    </div>
+</body>
+<script>
+    const socket = io({ transports: ['websocket'], upgrade: false });
+    const room_ID = 'teacher';
+    const role = 2
+    if (room_ID) {
+            socket.emit('join_room', { room_ID, role });
+            console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+    } else {
+        console.error('ルームIDが指定されていません。');
+    }
+    socket.on('modoru',function(){
+        window.location.href='/kaitou'
+    })
+</script>
 </html>

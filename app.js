@@ -7,8 +7,10 @@ var logger = require('morgan');
 var multer = require('multer');
 var cors = require('cors');
 var mysql = require('mysql2');
+const redis = require('redis');
 var session = require('express-session');
-var MySQLStore = require('express-mysql-session')(session);
+const RedisStore = require('connect-redis').default
+//var MySQLStore = require('express-mysql-session')(session);
 var cookies = require('js-cookie')//いちむら追加分：Cookieの扱いを楽にするやつ
 var dotenv = require('dotenv');
 require('dotenv').config();
@@ -70,7 +72,7 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'172.18.96.162',//172.18.96.186,172.18.96.162,192.168.0.18
+  host :'172.18.96.162',//172.18.96.186,192.168.0.15
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -100,9 +102,9 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static('public'));
 app.use(express.static('images'));
-
+/*
 const sessionpool = mysql.createPool({
-  host: '172.18.96.162',//172.18.96.186,172.18.96.162,192.168.0.18
+  host: '192.168.0.15',//172.18.96.186,192.168.0.23,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -127,15 +129,40 @@ const sessionMiddleware = session({
     maxAge: 24 * 60 * 60 * 1000
   }
 });
+*/
+
+// Redisクライアント作成
+const redisClient = redis.createClient({
+  host: 'localhost', // Redisサーバーのホスト
+  port: 6379,           // Redisサーバーのポート (デフォルトは6379)
+});
+
+redisClient.on('error', (err) => {
+  console.error('Redis接続エラー:', err);
+});
+
+// セッションミドルウェアを設定
+const sessionMiddleware = session({
+  store: new RedisStore({ client: redisClient }), // Redisストアを使用
+  secret: 'team_king_oyster_mashroom',           // セッションのシークレット
+  resave: false,                                 // 必要がなければセッションを再保存しない
+  saveUninitialized: true,                       // 未初期化セッションを保存する
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000 // クッキーの有効期限を1日に設定
+  }
+});
 app.use(sessionMiddleware);
 
-var sessionCheck = function(req, res, next) {
-  if (req.session.user) {
-    next();
-  } else {
-    res.redirect('/login');
-  }
-};
+(async () => {
+  try {    
+    // Delete all sessions
+    await redisClient.connect();
+    console.log('Redisに接続しました');
+    
+    } catch (error) {
+      console.error('Error clearing sessions:', error);
+    }
+  })();
 
 //パスを読み込み、ページを移動する際に使用する。
 app.use('/', indexRouter);

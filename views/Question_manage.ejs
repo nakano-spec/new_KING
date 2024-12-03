@@ -73,12 +73,29 @@
                     <% }); %>
                 </tbody>
             </table>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>">&laquo; 前へ</a>
+                <% } %>
+        
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <% if (i === currentPage) { %>
+                            <span class="current-page"><%= i %></span>
+                        <% } else { %>
+                            <a href="?page=<%= i %>"><%= i %></a>
+                        <% } %>
+                    <% } %>
+        
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %>">次へ &raquo;</a>
+                    <% } %>
+                </div>
         </form>
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        var socket = io();
+        var socket = io({ transports: ['websocket'], upgrade: false });
 
         // メニューの動作
         const menuButton = document.getElementById('hambtn');

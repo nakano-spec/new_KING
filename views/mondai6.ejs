@@ -1,159 +1,212 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>回答一覧</title>
-        <link type="text/css" rel="stylesheet" href="/stylesheets/mondai4.css">
-  </head>
-    </head>
-    <body>
-        <script src ='/socket.io/socket.io.js'></script>
-        <h1>回答一覧</h1>
-        <div style ="display: flex;">
-            <ul>
-                <table  id ="table" class ="example">
-                  <thead>
-                    <tr><th>資格名</th><th>年度</th><th>問題名</th><th>ジャンル</th><th>学籍番号</th><th>名前</th><th>回答</th><th>正解</th><th>判定</th><th>正解追加</th><th>正解削除</th></tr>
-                  </thead>
-                  <tbody>
-                <% web.forEach((list) => { %>
-                        <tr>
-                          <td><%= list.qualification_name_%></td>
-                          <td><%= list.question_years%></td>
-                          <td><%= list.question_name%></td>
-                          <td><%= list.question_genre%></td>
-                          <td><%= list.user_ID%></td>
-                          <td><%= list.user_name %></td>
-                          <td><%= list.userAnswer %></td>
-                          <td><%= list.collectAnswer %></td>
-                          <td><%= list.result %></td>
-                            <td><input type="checkbox"></td>
-                            <td><input type="checkbox"></td>
-                        </tr>
-                <% }) %>
-              </table>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回答一覧</title>
+    <link type="text/css" rel="stylesheet" href="/stylesheets/mondai4.css">
+</head>
+<body>
+  <header>
+    <button class="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <h1>ニコキタ教育委員会：解答一覧</h1>
+    <div class="user-info">ユーザー：sensei</div>
+    </header>
+    <main>
+        <table id="table">
+            <thead>
+                <tr>
+                    <th>資格名</th>
+                    <th>年度</th>
+                    <th>問題名</th>
+                    <th>問題文</th>
+                    <th>ユーザーID</th>
+                    <th>ユーザー名</th>
+                    <th>ユーザーの回答</th>
+                    <th>正解</th>
+                    <th>結果</th>
+                    <% let hastableWithoutOptions = false; %>
+                    <% web.forEach((question) => { %>
+                        <% if (!question.options) { %>
+                            <% hastableWithoutOptions = true; %>
+                        <% } %>
+                    <% }); %>
+                    <% if (hastableWithoutOptions) { %>
+                            <th>正解追加</th>
+                            <th>正解削除</th>
+                    <% } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% web.forEach((question,index) => { %>
+                    <tr>
+                        <td><%= question.qualification_name %></td>
+                        <td><%= question.question_years %></td>
+                        <td><%= question.question_name %></td>
+                        <td><%= question.question_text %></td>
+                        <td><%= question.user_ID %></td>
+                        <td><%= question.user_name %></td>
+                        <td><%= question.user_answer %></td>
+                        <td><%= question.correct_answers %></td>
+                        <td>
+                            <% if (question.result === 1) { %>
+                                ○
+                            <% } else { %>
+                                ✕
+                            <% } %>
+                        </td>
+                        <% if(question.options){ %>
+                        <% }else{ %>
+                            <td>
+                                <input type="checkbox" class="checkbox-add">
+                              </td>
+                              <td>
+                                  <input type="checkbox" class="checkbox-delete">
+                              </td>
+                        <% } %>
+                      <td>
+                        <button class="button-display" onclick="displayCorrectAnswer(<%= index %>)">正解表示</button>
+                      </td>
+                    </tr>
+                <% }); %>
             </tbody>
-              </ul>
-              <div id = "div1"></div>
-            </div>
-            <div id = "div2"></div>
-            <div id = "div3"></div>
-            <form name ="my">
-              <input type="submit" name="kekka" value="結果発表"><br>
-              <br>
-              <input type="submit" name="tuika" value="正解追加"><br>
-              <br>
-              <input type="submit" name="sakuzyo" value="正解削除"><br>
-              <br>
-            </form>
-            <input type="submit" class="button" name="button1" value="問題選択に戻る" onclick="osareta()"><br>
-            <script>
-              var socket = io();
-              var f = document.forms.my;
-              var col = table.rows.length;
-              const div1 = document.getElementById("div1");
-              const newDiv = document.createElement("div");
-              var d ="a";
-              var ds = 0;
-              var ds2 = 0;
-              var col = col;
-              for(let i = 1;i<col;i++)
-              {
-                const newBtn = document.createElement("button");
-                newBtn.innerHTML ="表示";
-                newBtn.value =i;
-                newBtn.style="width: 100px; height: 37px; display:flex; flex-flow: column; position: relative; top:55px;";
-                newBtn.onclick = () => {
-                  var c = table.rows[i].cells[4].innerHTML;
-                  socket.emit('hyou',c);
+        </table>
+        <!-- ページネーション -->
+    <div class="pagination">
+        <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>">&laquo; 前へ</a>
+        <% } %>
+
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <% if (i === currentPage) { %>
+                    <span class="current-page"><%= i %></span>
+                <% } else { %>
+                    <a href="?page=<%= i %>"><%= i %></a>
+                <% } %>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
+                <a href="?page=<%= currentPage + 1 %>">次へ &raquo;</a>
+            <% } %>
+        </div>
+        <button class="result-button" id="resultButton">結果発表</button>
+        <% let hasQuestionWithoutOptions = false; %>
+        <% web.forEach((question) => { %>
+            <% if (!question.options) { %>
+                <% hasQuestionWithoutOptions = true; %>
+            <% } %>
+        <% }); %>
+        <% if (hasQuestionWithoutOptions) { %>
+            <input type="submit" class="add-button" name="tuika" value="正解追加"><br>
+            <br>
+            <input type="submit" class="delete-button" name="sakuzyo" value="正解削除"><br>
+        <% } %>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io({ transports: ['websocket'], upgrade: false });
+        const table = document.getElementById("table");
+        const resultButton = document.getElementById("resultButton");
+
+        const room_ID = '<%= name %>';
+                const role = 1
+                if (room_ID) {
+                    socket.emit('join_room', { room_ID, role });
+                    console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+                } else {
+                    console.error('ルームIDが指定されていません。');
                 }
-                newDiv.appendChild(newBtn);
-                div1.appendChild(newDiv);
-              }
 
-              f.kekka.addEventListener('click',function(e){
-                e.preventDefault();
-                socket.emit('result_display');
-              })
+         // 正解表示ボタン処理
+        function displayCorrectAnswer(index) {
+          const row = table.rows[index + 1]; 
+          const user_ID = row.cells[4].textContent;
+          const user_name = row.cells[5].textContent;
+          const userAnswer = row.cells[6].textContent;
+          var student_data = {
+            user_ID:user_ID,
+            user_name:user_name,
+            userAnswer:userAnswer
+          }
+          socket.emit('hyou',student_data);
+        }
 
-              f.tuika.addEventListener('click', function(e) {
-                e.preventDefault(); // デフォルトのフォーム送信を防ぐ
 
-                var selections = []; // 選択されたチェックボックスのデータを格納する配列
+        // 結果発表ボタン処理
+        resultButton.addEventListener("click", function () {
+          // テーブルのデータを収集
+            const tableData = [];
+            for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                const rowData = {
+                    user_ID: row.cells[4].textContent,
+                    user_name: row.cells[5].textContent,
+                    user_answer: row.cells[6].textContent,
+                    result: row.cells[8].textContent.trim() === "○" ? 1 : 0
+                };
+                tableData.push(rowData);
+            }
+            socket.emit('result_display', tableData);
+        });
 
-                // テーブルの行ごとにループ
-                for (let i = 1; i < table.rows.length; i++) {
-                    var row = table.rows[i];
-                    // "正解追加"チェックボックスがこの行で選択されているか確認
-                    var isChecked = row.cells[9].firstChild.checked; // 10番目のセル（0から数えて）にチェックボックスがあると仮定
+        // 正解追加ボタン処理
+        /*document.forms.my.tuika.addEventListener('click', function (e) {
+            e.preventDefault();
+            const selections = [];
+            for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                const isChecked = row.cells[9]?.firstChild?.checked;
+                if (isChecked) {
+                    const questionGenre = row.cells[2].textContent;
+                    const username = row.cells[4].textContent;
+                    const answer = row.cells[6].textContent;
+                    selections.push({
+                        questionGenre,
+                        username,
+                        answer,
+                        result: "○"
+                    });
+                }
+            }
+            if (selections.length > 0) {
+                socket.emit('kaitoutuika', selections);
+            }
+        });
 
-                    if (isChecked) {
-                        // チェックボックスが選択されている行からデータを取得
-                        var questionGenre = row.cells[2].textContent;
-                        var username = row.cells[4].textContent;
-                        var answer = row.cells[6].textContent;
-                        var result = "○";
+        // 正解削除ボタン処理
+        document.forms.my.sakuzyo.addEventListener('click', function (e) {
+            e.preventDefault();
+            const deletions = [];
+            for (let i = 1; i < table.rows.length; i++) {
+                const row = table.rows[i];
+                const isChecked = row.cells[10]?.firstChild?.checked;
+                if (isChecked) {
+                    const questionName = row.cells[2].textContent;
+                    const answer = row.cells[6].textContent;
+                    deletions.push({
+                        questionName,
+                        answer
+                    });
+                }
+            }
+            if (deletions.length > 0) {
+                socket.emit('kaitousakuzyo', deletions);
+            }
+        });*/
 
-                        
-                        // 取得したデータを配列に追加
-                        selections.push({
-                            questionGenre: questionGenre,
-                            username:username,
-                            answer: answer,
-                            result:result
-                        });
-                    }
-                    }
+        // 戻る処理
+        function osareta() {
+            socket.emit('clear');
+        }
 
-                    // 選択されたデータがあればサーバーに送信
-                    if (selections.length > 0) {
-                        console.log(selections); // デバッグ用
-                        socket.emit('kaitoutuika', selections);
-                    } 
-                });
-
-                f.sakuzyo.addEventListener('click', function(e) {
-                  e.preventDefault(); // デフォルトのフォーム送信を防ぐ
-
-                  var deletions = []; // 削除するために選択されたチェックボックスのデータを格納する配列
-
-                  // テーブルの行ごとにループ
-                  for (let i = 1; i < table.rows.length; i++) {
-                      var row = table.rows[i];
-                      // "正解削除"チェックボックスがこの行で選択されているか確認
-                      var isChecked = row.cells[10].firstChild.checked; // 11番目のセル（0から数えて）にチェックボックスがあると仮定
-
-                      if (isChecked) {
-                          // チェックボックスが選択されている行からデータを取得
-                          var questionName = row.cells[2].textContent;
-                          var answer = row.cells[6].textContent;
-
-                          // 取得したデータを配列に追加
-                          deletions.push({
-                              questionName: questionName,
-                              answer: answer
-                          });
-                      }
-                  }
-
-                  // 選択されたデータがあればサーバーに送信
-                  if (deletions.length > 0) {
-                      console.log(deletions); // デバッグ用
-                      socket.emit('kaitousakuzyo', deletions);
-                  }
-              });
-                      
-              socket.on('yomikomi',function(data){
-                window.location.href='/mondai3?name=' + encodeURIComponent(data.username);
-              })
-
-              function osareta(){
-                  console.log("success");
-                  socket.emit('clear');
-              }
-
-              socket.on('modoru',function(){
-                window.location.href='/mondai';
-              })
-            </script>
+        // サーバーからのリダイレクトイベント
+        socket.on('modoru', function () {
+            window.location.href = '/mondai';
+        });
+    </script>
 </body>
 </html>

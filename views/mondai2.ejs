@@ -29,7 +29,7 @@
         <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
     </nav>
 
-    <main class="container">
+    <main id="main-content" class="container">
         <div style="text-align: right; margin-bottom: 2rem;">
             <button class="button" id="add-problem">問題の新規追加</button>
         </div>
@@ -57,9 +57,18 @@
                 <label for="year-select">年度を選択してください。</label>
                 <select id="year-select" name="year" class="cp_sl02 select2">
                     <option value="">(年度を選択)</option>
-                    <% web.forEach((list) => { %>
-                        <option><%= list.question_years %></option>
-                    <% }) %>
+                    <% 
+                    const uniqueYears = [];
+                    web.forEach(item => {
+                        if (!uniqueYears.includes(item.question_years)) {
+                            uniqueYears.push(item.question_years);
+                        }
+                    });
+                    uniqueYears.sort((a, b) => b - a); // 年度を降順にソート（オプション）
+                    %>
+                    <% uniqueYears.forEach(year => { %>
+                        <option value="<%= year %>"><%= year %></option>
+                    <% }); %>
                 </select>
             </div>
 
@@ -67,21 +76,44 @@
                 <label for="question-select">問題を選択してください。</label>
                 <select id="question-select" name="question" class="cp_sl02 select2" required>
                     <option value="">(問題を選択)</option>
-                    <% web.forEach((list) => { %>
-                        <option><%= list.question_name %></option> 
-                    <% }) %>
+                    <% 
+                    const uniqueQuestions = [];
+                    web.forEach(item => {
+                        if (!uniqueQuestions.includes(item.question_name)) {
+                            uniqueQuestions.push(item.question_name);
+                        }
+                    });
+                    %>
+                    <% uniqueQuestions.forEach(question => { %>
+                        <option value="<%= question %>"><%= question %></option> 
+                    <% }); %>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="genre-select">ジャンルを選択してください。</label>
-                <select id="genre-select" name="genre" class="cp_sl02 select2">
-                    <option value="">(ジャンルを選択)</option>
-                    <% web.forEach((list) => { %>
-                        <option><%= list.question_genre %></option>
-                    <% }) %>
-                </select>
+                    <label for="genre-select">ジャンルを選択してください。</label>
+                    <select id="genre-select" name="genre" class="cp_sl02 select2">
+                        <option value="">(ジャンルを選択)</option>
+                        <% web.forEach((list) => { %>
+                            <option><%= list.question_genre %></option>
+                        <% }) %>
+                    </select>
             </div>
+
+            <div id="preview-modal" class="modal">
+                <div class="modal-content">
+                    <div class="header2">ニコキタ教育委員会：問題確認</div>
+                    <span class="close-button">&times;</span>
+                    <h2>プレビュー</h2>
+                    <div class="question-container">
+                        <div class="picture"><img src="/images/noImage.jpg" alt="問題画像" /></div>
+                        <div class="question-text">問題文</div>
+                    </div>
+                    <div class="question-container">
+                        <div class="select">選択肢</div>
+                    </div>
+                </div>
+            </div>            
 
             <div class="form-group">
                 <label>制限時間を分と秒単位で入力してください。</label>
@@ -93,9 +125,10 @@
                 </div>
             </div>
 
-            <div style="text-align: right; margin-top: 2rem;">
+            <div class="button-group">
+                <button type="button" class="submit-button" id="preview-button">プレビュー</button>
                 <button type="submit" class="submit-button" name="okuru">出題する</button>
-            </div>
+            </div>            
         </form>
     </main>
 
@@ -103,7 +136,7 @@
     <script>
         $(document).ready(() => $('.select2').select2());
 
-        const socket = io();
+        const socket = io({ transports: ['websocket'], upgrade: false });
         const form = document.forms.f1;
         const menuButton = document.getElementById('hambtn');
         const menu = document.getElementById('menu');
@@ -111,11 +144,28 @@
         const mainContent = document.getElementById('main-content');
         const room_ID = '<%= name %>';
 
+          // モーダル関連の変数を取得
+        const modal = document.getElementById("preview-modal");
+        const previewButton = document.getElementById("preview-button");
+        const closeButton = document.querySelector(".close-button");
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 「問題の新規追加」ボタンを取得
+            const addProblemButton = document.getElementById('add-problem');
+            
+            // ボタンが存在する場合にイベントリスナーを追加
+            if (addProblemButton) {
+                addProblemButton.addEventListener('click', function() {
+                    // 遷移先のURLを指定（必要に応じて変更してください）
+                     window.location.href = '/question_select'
+                });
+            }
+        });
 
         // 接続が確立した時点でルームに参加
         socket.on('connect',async function(){
                 const room_ID = '<%= name %>';
-                const role = 2
+                const role = 1
                 if (room_ID) {
                     socket.emit('join_room', { room_ID, role });
                     console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
@@ -134,6 +184,7 @@
             sidebar.classList.toggle('active');
             mainContent.classList.toggle('sidebar-active');
         });
+
         document.addEventListener('click', (event) => {
             if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
                 sidebar.classList.remove('active');
@@ -141,14 +192,118 @@
             }
         });
 
-        // 試験名のセレクトボックスが選択されたときに他のデータをリクエスト
-        document.getElementById('qualification-select').addEventListener('change', (event) => {
-            const selectedQualification = event.target.value;
+        // プレビューボタンがクリックされたときにモーダルを表示
+        if (previewButton) {
+            previewButton.addEventListener("click", function() {
+                // セレクトボックスの値を取得
+                const selectedQualification = $('#qualification-select').val();
+                const selectedYear = $('#year-select').val();
+                const selectedQuestion = $('#question-select').val();
+                const selectedGenre = $('#genre-select').val();
+
+                if (!selectedQualification || !selectedYear || !selectedQuestion || !selectedGenre) {
+                    alert("すべてのセレクトボックスを選択してください。");
+                    return;
+                }
+
+                // クライアントからサーバーへプレビューリクエストを送信
+                socket.emit('preview_request', {
+                    qualification: selectedQualification,
+                    year: selectedYear,
+                    question: selectedQuestion,
+                    genre: selectedGenre
+                });
+            });
+        }
+
+        // サーバーからのプレビュー応答を受信
+        socket.on('preview_response', (data) => {
+            if (data) {
+                console.log(data)
+                // モーダル内の画像を更新
+                const pictureDiv = modal.querySelector('.picture img');
+                if (data[0].pics_name != '') {
+                    pictureDiv.src = '/images/' + data[0].pics_name;
+                } else {
+                    pictureDiv.src = '/images/noImage.jpg'; // デフォルト画像
+                }
+
+                // モーダル内の問題文を更新
+                const questionTextDiv = modal.querySelector('.question-text');
+                questionTextDiv.textContent = data[0].question_text || '問題文がありません。';
+
+                // モーダル内の選択肢を更新
+                const optionsDiv = modal.querySelector('.select');
+                optionsDiv.innerHTML = ''; // 既存の選択肢をクリア
+                let optionsArray = [];
+
+                if (Array.isArray(data.options)) {
+                    console.log("array")
+                    optionsArray = data.options;
+                } else if (typeof data[0].options === 'string' && data[0].options.trim() !== '') {
+                    console.log("array2")
+                    optionsArray = data[0].options.split(', ');
+                }
+
+                if (optionsArray.length > 0) {
+                    const ul = document.createElement('ul');
+                    ul.classList.add('options-list');
+                    optionsArray.forEach(option => {
+                        const li = document.createElement('li');
+                        li.classList.add('option');
+                        li.textContent = option;
+                        ul.appendChild(li);
+                    });
+                    optionsDiv.appendChild(ul);
+                } else {
+                    optionsDiv.innerHTML = '<p>選択肢がありません。</p>';
+                }
+
+                // モーダルを表示
+                modal.style.display = "block";
+            } else {
+                alert('プレビューの取得に失敗しました: ' + data.message);
+            }
+        });
+
+        // 閉じるボタンがクリックされたときにモーダルを非表示
+        if (closeButton) {
+            closeButton.addEventListener("click", function() {
+                modal.style.display = "none";
+            });
+        }
+
+        // モーダルの外側をクリックしたときにモーダルを非表示
+        window.addEventListener("click", function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        });
+
+        $('#qualification-select').on('select2:select', function(e) {
+            const selectedQualification = e.params.data.id;
             console.log("選択された試験名:", selectedQualification);
 
             if (selectedQualification) {
-                // 選択された試験名をサーバーに送信してデータをリクエスト
                 socket.emit('request_data', { qualification_name: selectedQualification });
+            }
+        });
+
+        $('#year-select').on('select2:select', function(e) {
+            const selectedyear = e.params.data.id;
+            console.log("選択された年度:", selectedyear);
+
+            if (selectedyear) {
+                socket.emit('request_name', { qualification_name: selectedyear });
+            }
+        });
+
+        $('#question-select').on('select2:select', function(e) {
+            const selectedquestionname = e.params.data.id;
+            console.log("選択された問題:", selectedquestionname);
+
+            if (selectedquestionname) {
+                socket.emit('request_genre', { qualification_name: selectedquestionname });
             }
         });
 
@@ -192,7 +347,7 @@
         socket.on('timer_data', async function(data) {
             try{
                  const question_ID = data.question_ID;
-                 const room_ID = data.question_ID;
+                 const room_ID = data.room_ID;
                  const limit_time = data.limit_time;
                  const queryString = `?question_ID=${encodeURIComponent(question_ID)}&room_ID=${encodeURIComponent(room_ID)}&limit_time=${encodeURIComponent(limit_time)}`;
                  const newWin = window.open(`/question_view${queryString}`, '_blank');
@@ -202,13 +357,33 @@
             }
         });
        
-        //セレクトボックス更新処理
         function updateSelect(selectId, data, property) {
-            cosole.log("開始");
+            console.log("セレクトボックス更新開始:", selectId);
             const select = document.getElementById(selectId);
+            if (!select) {
+                console.error(`セレクトボックスが見つかりません: ${selectId}`);
+                return;
+            }
             select.innerHTML = '';
-            data.forEach(item => select.add(new Option(item[property])));
+            // デフォルトオプションを追加
+            select.add(new Option(`(選択してください)`, ""));
+            
+            // ユニークな値を抽出するためのSetを使用
+            const uniqueValues = new Set();
+            data.forEach(item => {
+                const value = item[property];
+                if (value && !uniqueValues.has(value)) { // 値が存在し、未登録の場合
+                    uniqueValues.add(value);
+                    const option = new Option(value, value);
+                    select.add(option);
+                }
+            });
+            
+            // select2の再初期化
+            $(`#${selectId}`).trigger('change.select2');
+            console.log("セレクトボックス更新完了:", selectId);
         }
+
 
         //ログアウト処理
         async function logout() {

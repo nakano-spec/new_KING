@@ -17,7 +17,7 @@
             </div>
         </section>
         <script>
-            var socket = io();
+            var socket = io({ transports: ['websocket'], upgrade: false });
             var f = document.forms.s1;
             
             //先生側からサーバーを経由して結果表示命令が来た場合'/hyou4'にセットされたパスのファイルに送る。

@@ -4,38 +4,104 @@ const mysql = require("mysql");
 var async = require("async");
 const { SQL_exec } = require('../db/SQL_module');
 
-router.get('/',async function(res,req){
+router.get('/',async function(req,res){
     try{
         var name = req.session.user.username;
-        var selectSQL ={
-            sql:'select room_ID from login_log where user_ID = ?',
-            value:[name]
-        }
+        const limit = 10; // 1ページあたりのレコード数
+        const page = parseInt(req.query.page) || 1; // 現在のページ番号
+        const offset = (page - 1) * limit;
         var selectSQL = {
-            sql: 'select room_ID from login_log where user_ID = ?',
+            sql: 'select room_ID from room_table where user_ID = ?',
             value: [name]
         };
         var roomResult = await SQL_exec(selectSQL);
         var room_ID = roomResult[0].room_ID;
+        console.log(room_ID);
 
-        selectSQL.sql = 'select question_ID from question_log where room_ID = ? and question_status = 1';
+        selectSQL.sql = 'select question_ID,q_log_ID from question_log where room_ID = ? and question_status = 1 ORDER BY log_time DESC LIMIT 1';
         selectSQL.value = [room_ID];
         var questionResult = await SQL_exec(selectSQL);
         var question_ID = questionResult[0].question_ID;
+        var q_log_ID = questionResult[0].q_log_ID;
 
+        // 総レコード数を取得するSQLクエリ
+        selectSQL.sql = `
+        SELECT COUNT(*) AS total_count
+        FROM 
+            answer_table AS a
+        JOIN 
+            question_log AS l 
+            ON l.q_log_ID = a.q_log_ID
+        JOIN 
+            question_table AS q 
+            ON l.question_ID = q.question_ID
+        WHERE 
+            a.q_log_ID = ? 
+            AND q.question_ID = ?;
+        `;
+        selectSQL.value = [q_log_ID,question_ID];
 
-        selectSQL.sql = 'select distinct q.question_name, a.user_ID, a.answer as userAnswer, a.result, c.answer as collectAnswer, g.qualification_name, g.question_genre, question_years from question_table q, answer_table a, correct_table c, genre_table g where a.question_ID = c.question_ID and a.question_ID = g.question_ID and a.question_ID = q.question_ID and a.question_ID = ?';
-        selectSQL.value = [question_ID];
+        // 総レコード数を取得
+        var data = await SQL_exec(selectSQL);
+        const totalItems = data[0].total_count;
+        const totalPages = Math.ceil(totalItems / limit);
+        console.log(limit,offset)
+
+        selectSQL.sql = `SELECT 
+            g.qualification_name,
+            g.question_years,
+            q.question_name,
+            q.question_text,
+            a.user_ID,
+            u.user_name,
+            a.answer AS user_answer,
+            CASE 
+                WHEN COUNT(DISTINCT c.answer) > 1 THEN GROUP_CONCAT(DISTINCT c.answer ORDER BY c.answer SEPARATOR ', ')
+                ELSE MAX(c.answer)
+            END AS correct_answers,
+            a.result,
+            COALESCE(GROUP_CONCAT(DISTINCT o.question_optional ORDER BY o.question_optional SEPARATOR ', '), '') AS options
+        FROM 
+            answer_table AS a
+        JOIN 
+            question_log AS l 
+            ON l.q_log_ID = a.q_log_ID
+        JOIN 
+            question_table AS q 
+            ON l.question_ID = q.question_ID
+        LEFT JOIN 
+            optional_table AS o 
+            ON q.question_ID = o.question_ID
+        LEFT JOIN 
+            correct_table AS c 
+            ON c.question_ID = q.question_ID
+        JOIN 
+            genre_table AS g 
+            ON q.question_ID = g.question_ID
+        JOIN 
+            user_table AS u 
+            ON a.user_ID = u.user_ID 
+        WHERE 
+            a.q_log_ID = ? 
+            AND q.question_ID = ?
+        GROUP BY 
+            a.q_log_ID, 
+            q.question_ID, 
+            g.qualification_name, 
+            g.question_years, 
+            q.question_name, 
+            q.question_text, 
+            a.user_ID,
+            u.user_name, 
+            a.answer, 
+            a.result
+            limit ? offset ?
+            `;
+        
+        selectSQL.value = [q_log_ID,question_ID,limit,offset];
         var questionData = await SQL_exec(selectSQL);
-
-
-        selectSQL.sql = 'select user_name from user_table where user_ID = ?';
-        for (let array of questionData) {
-            selectSQL.value = [array.user_ID];
-            let userResult = await SQL_exec(selectSQL);
-            array.user_name = userResult[0].user_name;
-        }
-        res.render('mondai6', { web: questionData });
+        console.log(page,totalItems);
+        res.render('mondai6', { name:name,web: questionData,currentPage:page,totalPages:totalPages });
     }catch(error){
         console.log(error)
     }

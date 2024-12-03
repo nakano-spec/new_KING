@@ -66,7 +66,7 @@
     </div>
 
     <script>
-        var socket = io();
+        var socket = io({ transports: ['websocket'], upgrade: false });
         const menuButton = document.getElementById('hambtn');
         const sidebar = document.getElementById('sidebar');
 

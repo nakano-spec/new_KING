@@ -9,7 +9,7 @@ router.get("/",async function(req,res){
     try{
         var name1 = req.session.user.username;
         const { room_ID, question_ID, limit_time } = req.query;
-        console.log(limit_time);
+        console.log(room_ID,question_ID,limit_time);
         const SQL_data = {
             sql:"select q.question_text,pics_name from question_table q,question_log l where q.question_ID = l.question_ID and l.question_ID =? and l.room_ID = ? and question_status = 1",
             value:[question_ID,room_ID]
@@ -19,6 +19,7 @@ router.get("/",async function(req,res){
     
         // EJSテンプレートにデータを渡してレンダリング
         res.render('index', { 
+            name:name1,
             room_ID:room_ID, 
             question_text:result_data.question_text, 
             pics_name:result_data.pics_name,

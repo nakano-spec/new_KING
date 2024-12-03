@@ -46,7 +46,6 @@
     <script>
       var socket = io();
       const limit_time = '<%= limit_time %>';
-      console.log(limit_time);
       var totalSeconds = parseInt(limit_time, 10);
         var minutes = Math.floor(totalSeconds / 60);
         var seconds = totalSeconds % 60;
@@ -70,57 +69,28 @@
           }
         }, 1000);
 
-        // 他のページへの遷移処理
-      socket.on('hyouji', function(de) {
-        window.location.href = '/hyou3?data=' + encodeURIComponent(de);
-      });
-
-      socket.on('result_display2', function(data) {
-        window.location.href = '/hyou4';
-      });
-      /*socket.on('problem_display_data', function(data) {
-        // 問題テキストを表示
-        document.getElementById('questionText').innerText = question_text;
-        // 画像がある場合の処理
-        if (pics_name) {
-          var imgElement = document.createElement('img');
-          imgElement.src = '/images/' + data.pics_name;
-          document.getElementById('picture').appendChild(imgElement);
+        const room_ID = 'teacher';
+        const role = 3
+        if (room_ID) {
+                socket.emit('join_room', { room_ID, role });
+                console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+        } else {
+            console.error('ルームIDが指定されていません。');
         }
 
-        // タイマーの設定と開始
-        var totalSeconds = parseInt(limit_time, 10);
-        var minutes = Math.floor(totalSeconds / 60);
-        var seconds = totalSeconds % 60;
+        // 他のページへの遷移処理
+        socket.on('hyouji', function(student_data) {
+          console.log(student_data);
+          window.location.href = `/hyou3?user_ID=${encodeURIComponent(student_data.user_ID)}&user_name=${encodeURIComponent(student_data.user_name)}&userAnswer=${encodeURIComponent(student_data.userAnswer)}`;
+        });
 
-        // タイマーの表示更新
-        document.getElementById('re').innerText = minutes;
-        document.getElementById('re3').innerText = seconds;
+       //先生側からサーバーを経由して結果表示命令が来た場合'/hyou4'にセットされたパスのファイルに送る。
+       socket.on('result_display2',function(username,data){
+            const encodedData = encodeURIComponent(JSON.stringify(data));
+            const nextURL = `/hyou4?username=${encodeURIComponent(username)}&tableData=${encodedData}`;
+            window.location.href=nextURL;
+        })
 
-        var countdownId = setInterval(function() {
-          if (minutes === 0 && seconds === 0) {
-            clearInterval(countdownId);
-          } else {
-            if (seconds === 0) {
-              minutes--;
-              seconds = 59;
-            } else {
-              seconds--;
-            }
-            document.getElementById('re').innerText = minutes;
-            document.getElementById('re3').innerText = seconds;
-          }
-        }, 1000);
-      });
-
-      // 他のページへの遷移処理
-      socket.on('hyouji', function(de) {
-        window.location.href = '/hyou3?data=' + encodeURIComponent(de);
-      });
-
-      socket.on('result_display2', function(data) {
-        window.location.href = '/hyou4';
-      });*/
     </script>
   </body>
 </html>

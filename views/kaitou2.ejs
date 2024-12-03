@@ -12,71 +12,127 @@
         </header>
         <script src ="/socket.io/socket.io.js"></script>
         <h1><%= question_text %></h1>
-        <select id="choices">
-            <!-- 動的にオプションを作成-->
-        </select>
         <div class="buttons">
             <!-- 動的にボタンを生成 -->
         </div>
+        <div class="textarea-container" style="display: none;">
+            <textarea id="freeTextAnswer" rows="6" cols="50" placeholder="あなたの回答を入力してください"></textarea><br>
+            <button id="submitTextAnswer">送信</button>
+        </div>
+        <!-- 確認モーダル-->
+        <div class="modal" id="confirmationModal">
+            <div class="modal-content">
+                回答はこれでよろしいでしょうか？
+                <div class="highlight" id="selectedAnswer"></div>
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmYes">はい</button>
+                <button id="confirmNo">いいえ</button>
+            </div>
+        </div>
+        <div class="overlay" id="overlay"></div>
         <script>
+            // サーバーに解答を送信
+            const socket = io({ transports: ['websocket'], upgrade: false });
+            const roomID = 'teacher';
+            const role = 2
+            if (roomID) {
+                    socket.emit('join_room', { roomID, role });
+                    console.log(`ルーム ${roomID} に参加しました (役割: ${role})`);
+            } else {
+                console.error('ルームIDが指定されていません。');
+            }
             const urlParams = new URLSearchParams(window.location.search);
             const room_ID = urlParams.get('name');
             const question_text = urlParams.get('question_text');
             const options = JSON.parse(urlParams.get('options'));
-
+            console.log(options)
             // HTML要素を取得
-            const selectBox = document.getElementById("choices");
             const buttonContainer = document.querySelector(".buttons");
 
-            options.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+            //モーダル関連要素取得
+            const modal = document.getElementById('confirmationModal');
+            const overlay = document.getElementById('overlay');
+            const selectedAnswer = document.getElementById('selectedAnswer');
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+            const textareaContainer = document.querySelector(".textarea-container");
+            if(options[0] != null){
+                options.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+                //選択肢処理
+                options.forEach(item => {
+                    // 確実にString型に変換
+                    const strItem = String(item);
 
-            options.forEach(item => {
-                // 確実にString型に変換
-                const strItem = String(item);
+                    // 「:」「：」「；」を「:」に正規化
+                    const normalizedItem = strItem.replace(/[：；]/g, ":");
 
-                 // 「:」「：」「；」を「:」に正規化
-                const normalizedItem = strItem.replace(/[：；]/g, ":");
+                    const [left,right] = normalizedItem.split(":")
+                
+                    // ボタンを追加
+                    const button = document.createElement("button");
+                    button.textContent = item.trim();
+                    button.value = left.trim(); // ボタンの値に左側を設定
+                    buttonContainer.appendChild(button);
 
-                const [left,right] = normalizedItem.split(":")
-            
-                // セレクトボックスのオプションを追加
-                const option = document.createElement("option");
-                option.value = left.trim();
-                option.textContent = left.trim();
-                selectBox.appendChild(option);
-
-                // ボタンを追加
+                    // ボタンクリック時の処理
+                    button.addEventListener("click", () => {
+                        currentAnswer = left;
+                        selectedAnswer.textContent = item.trim();
+                        modal.style.display = 'block';
+                        overlay.style.display = 'block';
+                    });
+                });   
+            }else{
                 const button = document.createElement("button");
-                button.textContent = right.trim();
-                button.value = left.trim(); // ボタンの値に左側を設定
-                buttonContainer.appendChild(button);
+                textareaContainer.style.display = 'block';
 
-                // ボタンクリック時の処理
-                button.addEventListener("click", () => {
-                    alert(`選択肢: ${right.trim()} (値: ${left.trim()})`);
+                // テキストエリアの送信ボタンのクリックイベントを設定
+                document.getElementById('submitTextAnswer').addEventListener('click', () => {
+                    const freeText = document.getElementById('freeTextAnswer').value.trim();
+                    if (freeText === '') {
+                        alert('回答を入力してください');
+                        return;
+                    }
+
+                    currentAnswer = freeText;
+                    selectedAnswer.textContent = freeText;
+                    modal.style.display = 'block';
+                    overlay.style.display = 'block';
                 });
+            }
+
+             // モーダルの「はい」ボタン処理
+             confirmYes.addEventListener('click', () => {
+                    alert(`回答を送信しました！`);
+                    console.log(currentAnswer);
+                    modal.style.display = 'none';
+                    overlay.style.display = 'none';
+                    socket.emit('answer', { answer: currentAnswer });
             });
 
-            console.log('name:', name);
-            console.log('question_text:', question_text);
-            console.log('options:', options);
-            /*var socket = io();
-            var f = document.forms.myform1;
-            var myname = document.getElementById("myid2");
-            var m1 = myname.innerText;
-            f.kaitou1.addEventListener('click',function(e){
-                e.preventDefault();
-                let checkvalue = f.elements['hoge'].value;
-                socket.emit('kiroku',m1,checkvalue);
-            })
-
-            socket.on('insert_error',function(){
-                alert("もうすでに回答しています。");
+            // モーダルの「いいえ」ボタン処理
+            confirmNo.addEventListener('click', () => {
+                modal.style.display = 'none';
+                overlay.style.display = 'none';
             });
 
-            socket.on('end',function(){
-                window.location.href ='/kaitou3?name=' + encodeURIComponent(myname.innerText);
-            })*/
+            // サーバーからの「insert_error」イベントを受け取る
+            socket.on('insert_error', (message) => {
+                console.log("エラー:", message);
+                alert(message); // 必要に応じてアラート表示
+            });
+
+            socket.on('end', () => {
+                window.confirm("制限時間になりました");
+                socket.emit('answer', { answer: "timeup" });
+            });
+
+            // サーバーからの「data_result」イベントを受け取る
+            socket.on('data_result', (message) => {
+                alert(message); // 必要に応じてアラート表示
+                window.location.href='kaitou3'
+            });
         </script>
     </body>
 </html>

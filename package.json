@@ -6,8 +6,10 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
     "async": "^3.2.4",
     "bcrypt": "^5.1.1",
+    "connect-redis": "^7.1.1",
     "cookie-parser": "~1.4.6",
     "cors": "^2.8.5",
     "crypt": "^0.0.2",
@@ -39,6 +41,7 @@
     "openssl": "^2.0.0",
     "pm2": "^5.4.2",
     "pug": "3.0.2",
+    "redis": "^4.7.0",
     "sanitize-html": "^2.11.0",
     "sendmail": "^1.6.1",
     "socket.io": "^4.7.2",

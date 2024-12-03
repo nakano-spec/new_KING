@@ -6,6 +6,7 @@ const async = require('async');
 
 /* GET home page. */
 router.get('/', function(req, res) {
+    console.log(req.session);
     res.render('main',{name:req.session.user.username});
 });
 

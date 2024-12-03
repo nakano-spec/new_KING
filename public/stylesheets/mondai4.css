@@ -1,29 +1,130 @@
-.scroll-container {
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+}
+header {
+  background-color: #F47B20;
+  color: white;
+  padding: 1rem;
   display: flex;
-  max-height: 400px; /* 望ましい最大高さ */
-  overflow-y: auto; /* 垂直方向のスクロールを有効にする */
-  padding: 10px;
+  justify-content: space-between;
+  align-items: center;
 }
-table{
-  border-color: collapse;
-  text-align: center;
-  width: 417px;
-  table-layout: fixed;
+.menu-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
-.example{
-width:1100px;
-table-layout: fixed;
+.menu-icon span {
+  width: 100%;
+  height: 2px;
+  background-color: white;
+}
+h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.user-info {
+  font-size: 0.875rem;
+}
+main {
+  padding: 1rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
 }
 th, td {
-padding: 5px;
-border: 1px solid #333;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: center;
 }
-th {
-  background-color: #2c88d9;
-  color: #FFF;
+thead {
+  background-color: #FFCCAA;
+}
+.checkbox, .radio {
+  width: 16px;
+  height: 16px;
+  margin: 0 auto;
+}
+.display-button {
+  background-color: #e0e0e0;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+.result-button {
+  background-color: #FFD700;
+  border: none;
+  color: black;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  float: right;
 }
 
-body{
-  background-color: #fffca9;
-  background-size: cover;
+.button-display {
+  background-color: #FFD700;
+  border: none;
+  color: black;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+}
+
+.add-button {
+  background-color: #FFD700;
+  border: none;
+  color: black;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  cursor: pointer;
+  border-radius: 0.75rem;
+}
+
+.delete-button {
+  background-color: #FFD700;
+  border: none;
+  color: black;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  cursor: pointer;
+  border-radius: 0.75rem;
+}
+
+/*ページネーション*/
+.pagination {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.pagination a, .pagination span {
+  display: inline-block;
+  padding: 8px 16px;
+  text-decoration: none;
+  margin: 0 2px;
+  border: 1px solid #ddd;
+  color: #007BFF;
+}
+
+.pagination .current-page {
+  background-color: #007BFF;
+  color: white;
+  border-color: #007BFF;
+}
+
+.pagination a:hover {
+  background-color: #ddd;
 }
