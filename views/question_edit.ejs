@@ -4,108 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ニコキタ教育委員会：問題編集</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: sans-serif;
-        }
-
-        .header {
-            background-color: #F47B20;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .menu-icon {
-            width: 30px;
-            height: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .menu-icon span {
-            height: 3px;
-            width: 100%;
-            background-color: white;
-        }
-
-        .main-content {
-            padding: 20px;
-        }
-
-        .title {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .subtitle {
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-
-        .form-label {
-            min-width: 100px;
-            padding-top: 8px;
-        }
-
-        .form-input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .question-text {
-            height: 200px;
-            resize: vertical;
-        }
-
-        .submit-btn {
-            background-color: #F47B20;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-        }
-
-        .submit-btn:hover {
-            background-color: #E56A00;
-        }
-
-        .add-option-btn {
-            background-color: #008CBA;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        .add-option-btn:hover {
-            background-color: #007B9A;
-        }
-
-        .error-message {
-            color: red;
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="/stylesheets/question_edit.css">
 </head>
 <body>
     <header class="header">
@@ -117,6 +16,20 @@
         <div>ニコキタ教育委員会：問題編集</div>
         <div>ユーザー：<%= name %></div>
     </header>
+
+    <!-- 右側から出てくる写真パネルボタン -->
+    <div class="image-panel-button" id="imagePanelButton">写真</div>
+
+    <!-- 右側からスライドするパネル -->
+    <div class="image-panel" id="imagePanel">
+        <h2>画像一覧</h2>
+        <div class="image-list" id="imageListContainer"></div>
+    </div>
+
+    <div id = "zoomback">
+        <img id = "zoomimg" src = "">
+    </div>
+
 
     <main class="main-content">
         <h1 class="title">問題の編集</h1>
@@ -167,12 +80,80 @@
         </form>
     </main>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io({transports: ['websocket'], upgrade: false});
         // 選択肢追加機能
         const optionsContainer = document.getElementById('options-container');
         const addOptionBtn = document.getElementById('add-option-btn');
         const errorMessage = document.getElementById('error-message');
+        const zoom = document.querySelectorAll(".zoom");
+        const zoomback = document.getElementById("zoomback");
+        const zoomimg = document.getElementById("zoomimg");
 
+
+        window.addEventListener('load', function(){			
+           socket.emit('image_List');		
+        });
+
+       // 画像リスト取得後、パネル内に表示
+       socket.on('imageList', function(files) {
+            console.log('Received image list:', files);
+            const imageListContainer = document.getElementById('imageListContainer');
+            imageListContainer.innerHTML = ''; // 初期化
+
+            files.forEach(file => {
+                const imageItem = document.createElement('div');
+                imageItem.classList.add('image-item');
+
+                const img = document.createElement('img');
+                img.src = '/images/' + file;
+                img.classList.add('zoom')
+
+                const fileName = document.createElement('p');
+                fileName.textContent = file; // ファイル名を表示
+
+                imageItem.appendChild(img);
+                imageItem.appendChild(fileName);
+                imageListContainer.appendChild(imageItem);
+            });
+
+            const zoomElements = document.querySelectorAll('.zoom');
+            zoomElements.forEach(function(value) {
+                value.addEventListener("click", kakudai);
+            });
+        });
+
+        // サイドパネルの表示非表示
+        const imagePanelButton = document.getElementById('imagePanelButton');
+        const imagePanel = document.getElementById('imagePanel');
+        let panelOpen = false;
+
+        imagePanelButton.addEventListener('click', function() {
+            panelOpen = !panelOpen;
+            if(panelOpen) {
+                imagePanel.classList.add('open');
+            } else {
+                imagePanel.classList.remove('open');
+            }
+        });
+
+        zoom.forEach(function(value) {
+            value.addEventListener("click",kakudai);
+        });
+
+        function kakudai(e) {
+            zoomback.style.display = "flex";
+            zoomimg.setAttribute("src",e.target.getAttribute("src"));
+        }
+
+        zoomback.addEventListener("click",modosu);
+
+        function modosu() {
+            zoomback.style.display = "none";
+        }
+
+        //選択肢追加処理
         addOptionBtn.addEventListener('click', () => {
             const currentOptions = optionsContainer.querySelectorAll('.option-group');
             if (currentOptions.length >= 10) {

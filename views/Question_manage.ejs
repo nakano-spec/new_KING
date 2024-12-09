@@ -14,7 +14,7 @@
                     <div class="menu-line"></div>
                     <div class="menu-line"></div>
                 </button>
-                <h1>ニコキタ教育委員会：アカウント一覧</h1>
+                <h1>ニコキタ教育委員会：問題一覧</h1>
             </div>
             <div class="user">
                 <% if (name) { %>
@@ -192,14 +192,14 @@
         }
 
         // ページリンクの動作
-        document.getElementById('question-link').addEventListener('click', function(event) {
+        /*document.getElementById('question-link').addEventListener('click', function(event) {
             event.preventDefault();
             socket.emit('pageupdate', 3);
         });
 
         socket.on('page_updatecomplete', function() {
             window.location.href = '/account';
-        });
+        });*/
 
         async function logout() {
             try {

@@ -85,6 +85,38 @@
             background-color: #1A237E;
             color: white;
         }
+
+       /* サイドメニューのスタイル */
+        .sidebar {
+            width: 500px;
+            background-color: #f9f9f9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            padding-top: 60px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            transform: translateX(-100%);
+            z-index: 2000; 
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 1.2rem 1.5rem; /* クリック範囲を広げるためにパディングを増やす */
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 20px; /* フォントサイズを大きくすることで視認性を向上 */
+            font-weight: bold;
+        }
+
+        .sidebar a:hover {
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body>
@@ -95,8 +127,15 @@
             <span></span>
         </div>
         <div class="header-title">ニコキタ教育委員会：問題追加</div>
-        <div class="user-info">ユーザー：sensei</div>
+        <div class="user-info">ユーザー：<%= username %></div>
     </header>
+
+    <nav class="sidebar" id="sidebar">
+        <a href="/main">メインページ</a>
+        <a href="/mondai">問題出題</a>
+        <a href="/Question_manage">問題管理</a>
+        <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+    </nav>
 
     <main class="main-content">
         <h1 class="title">追加方法を選択してください。</h1>
@@ -109,9 +148,35 @@
 
     <script>
         function toggleMenu() {
-            // メニューの開閉処理をここに追加できます。
-            alert("メニューアイコンがクリックされました。");
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active'); // activeクラスをトグル
         }
+
+        // サイドバー以外をクリックしたら閉じる処理
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.querySelector('.menu-icon');
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isClickOnMenuIcon = menuIcon.contains(event.target);
+
+            if (!isClickInsideSidebar && !isClickOnMenuIcon) {
+                sidebar.classList.remove('active'); // サイドバーを閉じる
+            }
+        });
+
+        async function logout() {
+            try {
+                await new Promise((resolve, reject) => {
+                    socket.emit('session_destroy', (response) => response.success ? resolve() : reject(response.error));
+                });
+                navigateTo('/login');
+            } catch (error) {
+                alert('ログアウトに失敗しました: ' + error);
+            }
+        }
+
+        socket.on('session_destroy_success', () => navigateTo('/login'));
+        socket.on('session_destroy_failed', (error) => alert('ログアウトに失敗しました: ' + error));
     </script>
 </body>
 </html>

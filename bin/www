@@ -24,6 +24,7 @@ const { SQL_exec } = require( '../db/SQL_module');
  const sanitizeHtml = require('sanitize-html');
  const csv = require('csv-parser');
  const { Readable } = require('stream');
+ const multer = require('multer');
  //ROOMを管理する場所
  const rooms = {}; // ルームデータを管理するオブジェクト
  
@@ -124,7 +125,7 @@ const { SQL_exec } = require( '../db/SQL_module');
   });
 
   const mysql_setting = {
-    host :'172.18.96.162',//172.18.96.186,192.168.0.23,192.168.0.15
+    host :'192.168.0.15',//172.18.96.186,192.168.0.23,,172.18.96.162
     user :'connect',
     password :'K1ng@Oyster',
     database :'mydb',
@@ -173,6 +174,17 @@ const { SQL_exec } = require( '../db/SQL_module');
     })
   }
 
+  socket.on('image_List',async function(){
+    var imagesDir = path.join(__dirname, '../public/images');
+    fs.readdir(imagesDir, function(err, files) {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        // クライアントへファイル名の配列を送信
+        socket.emit('imageList', files);
+    });
+  })
   
      //新規登録処理　今は使われていない
      /*socket.on('new_btnclick', (name,pass1,pass2) => {g
@@ -346,60 +358,119 @@ const { SQL_exec } = require( '../db/SQL_module');
       });
   
      //問題情報を手入力で追加する処理    
-     socket.on('question_add', async (array) => {   
+     socket.on('question_add', async (formData) => {   
       try {
-          const name = array[0];
-          const mondaibun = array[1];
-          let sen1 = array[2];
-          let sen2 = array[3];
-          let sen3 = array[4];
-          let sen4 = array[5];
-          const seikai = array[6];
-          let picture = array[7] !== "なし" ? array[7] : "";
-          let kaiID = 0;
-          
-          if (sen1 === "なし") {
-              sen1 = "";
-              sen2 = "";
-              sen3 = "";
-              sen4 = "";
-              kaiID = 1;
-          }
-  
-          const getMonIDQuery = { 
-              sql: "SELECT MIN(mon_ID + 1) AS mon_ID FROM mondai_LIST WHERE (mon_ID + 1) NOT IN (SELECT mon_ID FROM mondai_LIST);",
-          };
-          const getSeikaiIDQuery = {
-              sql: "SELECT MIN(seikai_ID + 1) AS seikai_ID FROM seikai_LIST WHERE (seikai_ID + 1) NOT IN (SELECT seikai_ID FROM seikai_LIST);",
-          };
+            const data = {};
+            for (const [key, value] of Object.entries(formData)) {
+                data[key] = value.trim() === "" ? null : value.trim(); // 空白はnullに変換
+            }
 
-          const monIDResult = await SQL_exec2(getMonIDQuery);
-          const monID = monIDResult[0].mon_ID;
+            console.log(data);
+
+            // 必須項目の確認
+            const name = data['question_name'] || null; // 問題名（必須）
+            const mondaibun = data['question_text'] || null; // 問題文（必須）
+            const seikai = data['correct'] || null; // 正解（必須）
+            const picture = data['pics_name'] && data['pics_name'] !== "なし" ? data['pics_name'] : ""; // 写真名
+            const exam_name = data['exam_name'];
+            const year = data['year'];
+            const genre = data['genre'];
+            let kaiID = 0; 
+
+            // 動的な選択肢を取得 (choice1, choice2, ..., choiceN)
+            const choices = [];
+            for (const key in data) {
+                if (/^choice\d+$/.test(key) && data[key]) { // "choice" で始まるフィールドを対象にする
+                    choices.push(data[key]);
+                }
+            }
+
+            // 選択肢が存在しない場合、kaiID を 1 に設定
+            if (choices.length === 0) {
+                kaiID = 1;
+            }
+            console.log(name,mondaibun,seikai,picture,choices,exam_name,genre,kaiID);
+            const data2 = {
+              name:name,
+              question_text:mondaibun,
+              exam_name:exam_name,
+              year:year,
+              genre:genre,
+              picture:picture,
+              choices:choices,
+              kaiID:kaiID
+            }
+
+            if (!name || !mondaibun || !seikai) {
+              throw new Error("必須データ（問題名・問題文・正解）が不足しています。");
+          }
+
   
-          const seikaiIDResult = await SQL_exec2(getSeikaiIDQuery);
-          const seikaiID = seikaiIDResult[0].seikai_ID;
+          // トランザクションの開始
+        await SQL_exec2({ sql: "START TRANSACTION;" });
+
+        // 外部キー制約を無効化
+        await SQL_exec2({ sql: "SET FOREIGN_KEY_CHECKS = 0;" });
+
+        // 1. 次の question_ID を取得
+        const getNextIDQuery = { 
+            sql: "SELECT IFNULL(MAX(question_ID), 0) + 1 AS nextID FROM question_table;"
+        };
+        const nextIDResult = await SQL_exec2(getNextIDQuery);
+        const question_ID = nextIDResult[0].nextID;
+        console.log('Next question_ID:', question_ID);
+
+        // 2. question_table への挿入
+        const insertQuestionQuery = {
+            sql: "INSERT INTO question_table (question_ID, question_name, question_text, pics_name) VALUES (?, ?, ?, ?);",
+            value: [question_ID, name, mondaibun, picture]
+        };
+        await SQL_exec(insertQuestionQuery);
+        console.log('Inserted into question_table:', insertQuestionQuery.value);
+
+        // 3. optional_table への挿入
+        // 各選択肢を挿入
+        if(kaiID == 0){
+            for (const choice of choices) {
+              const insertOptionalQuery = {
+                  sql: "INSERT INTO optional_table (question_ID, question_optional) VALUES (?, ?);",
+                  value: [question_ID, choice]
+              };
+              await SQL_exec(insertOptionalQuery);
+              console.log('Inserted into optional_table:', insertOptionalQuery.value);
+          }
+        }
+        
+
+        // 4. correct_table への挿入
+        const insertCorrectQuery = {
+            sql: "INSERT INTO correct_table (question_ID, answer) VALUES (?, ?);",
+            value: [question_ID, seikai]
+        };
+        await SQL_exec(insertCorrectQuery);
+        console.log('Inserted into correct_table:', insertCorrectQuery.value);
+
+        // 5. genre_table への挿入
+        const insertGenreQuery = {
+            sql: "INSERT INTO genre_table (question_ID, qualification_name, question_genre, question_years) VALUES (?, ?, ?, ?);",
+            value: [question_ID, exam_name, genre, year]
+        };
+        await SQL_exec(insertGenreQuery);
+        console.log('Inserted into genre_table:', insertGenreQuery.value);
+
+        // 外部キー制約を再有効化
+        await SQL_exec({ sql: "SET FOREIGN_KEY_CHECKS = 1;" });
+
+        // トランザクションをコミット
+        await SQL_exec({ sql: "COMMIT;" });
+        socket.emit('complete', '成功');
   
-          const insertMondaiQuery = {
-              sql: "INSERT INTO mondai_LIST VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-              value: [monID, name, mondaibun, sen1, sen2, sen3, sen4, picture, kaiID, seikai, da]
-          };
-          await SQL_exec(insertMondaiQuery);
-          console.log('Inserted into mondai_LIST successfully.');
-  
-          const insertSeikaiQuery = {
-              sql: "INSERT INTO seikai_LIST VALUES (?, ?, ?);",
-              value: [seikaiID, monID, seikai]
-          };
-          await SQL_exec(insertSeikaiQuery);
-          console.log('Inserted into seikai_LIST successfully.');
-  
-          socket.emit('complete');
+        socket.emit('complete',data2);
       } catch (error) {
           console.error('Error during montuika process:', error);
           socket.emit('error');
       }
     });
-  
 
     socket.on('clear', async () => {
       try {

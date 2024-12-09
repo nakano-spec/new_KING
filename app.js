@@ -72,7 +72,7 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'172.18.96.162',//172.18.96.186,192.168.0.15
+  host :'192.168.0.15',//172.18.96.186,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -102,6 +102,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static('public'));
 app.use(express.static('images'));
+app.use(cors());
 /*
 const sessionpool = mysql.createPool({
   host: '192.168.0.15',//172.18.96.186,192.168.0.23,172.18.96.162
@@ -228,14 +229,5 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-var storage = multer.diskStorage({
-  destination: function(req,file,cb){
-      cb(null,'./public/images')
-  },
-  filename: function(req,file,cb){
-      cb(null,file.originalname)
-  }
-})
 
-app.use(cors());
 module.exports = { app,sessionMiddleware };

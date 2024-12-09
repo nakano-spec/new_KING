@@ -1,0 +1,161 @@
+ /* 共通のスタイル */
+ * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+body {
+    background-color: #f9f9f9;
+}
+
+.header {
+    background-color: #F47B20;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-icon {
+    width: 30px;
+    height: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.menu-icon span {
+    height: 3px;
+    width: 100%;
+    background-color: white;
+}
+
+.main-content {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.title {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.upload-section {
+    margin: 30px 0;
+}
+
+.upload-label {
+    font-size: 18px;
+    margin-bottom: 10px;
+    display: block;
+    color: #333;
+}
+
+.dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    background-color: #fafafa;
+    cursor: pointer;
+}
+
+.file-list {
+    margin-top: 10px;
+}
+
+/* ここからサイドパネル関連のスタイル */
+.image-panel-button {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    background-color: #F47B20;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 4px 0 0 4px;
+    cursor: pointer;
+    z-index: 10000; /* パネルより前面に出す */
+}
+
+.image-panel {
+    position: fixed;
+    top: 0;
+    right: -1500px; /* 初期は画面外 */
+    width: 1500px;
+    height: 100%;
+    background-color: #eee;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+    overflow-y: auto;
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 9998;
+}
+
+.image-panel.open {
+    right: 0; /* ボタン押下で表示 */
+}
+
+.image-panel h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.image-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap; /* 折り返さない */
+    gap: 20px;
+}
+
+/* 各画像アイテムのコンテナ */
+.image-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.image-item img {
+    width: 30%; /* コンテナ幅いっぱいで統一幅 */
+    height: auto; 
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.image-item p {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #333;
+    text-align: center;
+}
+
+#zoomback {
+    position:absolute;
+    top:0;
+    width:100vw;
+    height:100vh;
+    
+    background-color:rgba(0,0,0,0.8);
+    
+    /* 中のimgを中央揃え */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    display:none;
+    z-index: 9999;
+}
+    
+    
+/* 拡大画像のサイズを調整 */
+#zoomimg {
+    width:50%;
+}
+
+.zoomback img {
+    width:50%;
+    border:solid 5px #fff;
+}

@@ -25,7 +25,10 @@
         <span class="header-title">ニコキタ教育委員会：問題表示</span>
     </div>
     <div class="user-info">ユーザー</div>
-</header>
+  </header>
+  <nav class="sidebar" id="sidebar">
+    <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+  </nav>
   <body>
     <script src='/socket.io/socket.io.js'></script>
 
@@ -35,8 +38,8 @@
       <div id="re" class="hun"></div>
       <div id="re2" class="ti">:</div>
       <div id="re3" class="byou"></div>
-    </div>
-    <h1 id="questionText"><%= question_text %></h1>
+    </div><br>
+    <h1 id="questionText"><%= question_text %></h1><br>
     <div id="picture" class="picture"> <% if (pics_name) { %>
       <p></p>
       <img src="/images/<%= pics_name %>" alt="問題画像" />
@@ -90,6 +93,22 @@
             const nextURL = `/hyou4?username=${encodeURIComponent(username)}&tableData=${encodedData}`;
             window.location.href=nextURL;
         })
+
+        const menuButton = document.querySelector('.menu-icon'); // 正しいハンバーガーメニューのクラス
+            const sidebar = document.getElementById('sidebar'); // サイドバー
+            const mainContent = document.querySelector('.main-content'); // メインコンテンツ
+
+            // メニューボタンのクリックイベント
+            menuButton.addEventListener('click', () => {
+                sidebar.classList.toggle('active'); // サイドバーの表示切り替え
+            });
+
+            // サイドバー以外の領域をクリックしたときに閉じる
+            document.addEventListener('click', (event) => {
+                if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
+                    sidebar.classList.remove('active'); // サイドバーを非表示にする
+                }
+            });        
 
     </script>
   </body>

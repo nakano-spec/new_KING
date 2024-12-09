@@ -4,75 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ニコキタ教育委員会：CSVアップロード</title>
-    <style>
-        /* 共通のスタイル */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: sans-serif;
-        }
-
-        body {
-            background-color: #f9f9f9;
-        }
-
-        .header {
-            background-color: #F47B20;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-title {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .main-content {
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .title {
-            font-size: 28px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-
-        .upload-section {
-            margin: 30px 0;
-        }
-
-        .upload-label {
-            font-size: 18px;
-            margin-bottom: 10px;
-            display: block;
-            color: #333;
-        }
-
-        .dropzone {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            background-color: #fafafa;
-            cursor: pointer;
-        }
-
-        .file-list {
-            margin-top: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="/stylesheets/question_additionCSV.css">
 </head>
 <body>
     <header class="header">
-        <div class="header-title">ニコキタ教育委員会：CSVアップロード</div>
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div>ニコキタ教育委員会：問題編集</div>
+        <div>ユーザー：<%= username %></div>
     </header>
+    <!--<header class="header">
+        <div class="header-left">
+            <div class="menu-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="header-title">ニコキタ教育委員会：CSVアップロード</div>
+        </div>
+    </header> -->
+    
+
+    <!-- 右側から出てくる写真パネルボタン -->
+    <div class="image-panel-button" id="imagePanelButton">写真</div>
+
+    <!-- 右側からスライドするパネル -->
+    <div class="image-panel" id="imagePanel">
+        <h2>画像一覧</h2>
+        <div class="image-list" id="imageListContainer"></div>
+    </div>
+
+    <div id = "zoomback">
+        <img id = "zoomimg" src = "">
+    </div>
 
     <main class="main-content">
         <h1 class="title">CSVファイルのアップロード</h1>
@@ -87,12 +54,91 @@
                 <ul></ul>
             </div>
         </div>
+
+        <div class="upload-section">
+            <label class="upload-label">アップロードする写真を選択してください。</label>
+            <div class="dropzone" id="photo-dropzone">
+                ドラッグ＆ドロップするか、ここをクリックしてファイルを選択
+                <input type="file" id="photo-input" accept="image/*" multiple style="display: none;">
+            </div>
+            <div class="file-list" id="photo-file-list">
+                <ul></ul>
+            </div>
+        </div>
+        
         <button id="send-csv-button" style="margin-top: 20px; padding: 10px 20px; background-color: #F47B20; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            CSVファイルを送信
+            ファイルを送信
         </button>
     </main>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+         const socket = io({transports: ['websocket'], upgrade: false});
+         const zoom = document.querySelectorAll(".zoom");
+        const zoomback = document.getElementById("zoomback");
+        const zoomimg = document.getElementById("zoomimg");
+
+
+        window.addEventListener('load', function(){			
+           socket.emit('image_List');		
+        });
+
+       // 画像リスト取得後、パネル内に表示
+       socket.on('imageList', function(files) {
+            console.log('Received image list:', files);
+            const imageListContainer = document.getElementById('imageListContainer');
+            imageListContainer.innerHTML = ''; // 初期化
+
+            files.forEach(file => {
+                const imageItem = document.createElement('div');
+                imageItem.classList.add('image-item');
+
+                const img = document.createElement('img');
+                img.src = '/images/' + file;
+                img.classList.add('zoom')
+
+                const fileName = document.createElement('p');
+                fileName.textContent = file; // ファイル名を表示
+
+                imageItem.appendChild(img);
+                imageItem.appendChild(fileName);
+                imageListContainer.appendChild(imageItem);
+            });
+
+            const zoomElements = document.querySelectorAll('.zoom');
+            zoomElements.forEach(function(value) {
+                value.addEventListener("click", kakudai);
+            });
+        });
+
+        // サイドパネルの表示非表示
+        const imagePanelButton = document.getElementById('imagePanelButton');
+        const imagePanel = document.getElementById('imagePanel');
+        let panelOpen = false;
+
+        imagePanelButton.addEventListener('click', function() {
+            panelOpen = !panelOpen;
+            if(panelOpen) {
+                imagePanel.classList.add('open');
+            } else {
+                imagePanel.classList.remove('open');
+            }
+        });
+
+        zoom.forEach(function(value) {
+            value.addEventListener("click",kakudai);
+        });
+
+        function kakudai(e) {
+            zoomback.style.display = "flex";
+            zoomimg.setAttribute("src",e.target.getAttribute("src"));
+        }
+
+        zoomback.addEventListener("click",modosu);
+
+        function modosu() {
+            zoomback.style.display = "none";
+        }
+
         //CSVファイルの処理を行うメイン処理
         function setupCSVUpload() {
             const dropzone = document.getElementById('csv-dropzone');

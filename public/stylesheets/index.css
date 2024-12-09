@@ -56,7 +56,10 @@ main {
   max-width: 100%;
   height: auto;
 }
-
+h1{
+  width: 90%;
+  margin: 0 auto;
+}
 /* タイマー*/
 .timer {
   display: flex;
@@ -79,4 +82,32 @@ main {
 .timer .ti {
   font-size: 128px; /* セパレーター ":" のサイズ */
   color: #666; /* セパレーターの色 */
+}
+
+/* サイドメニューのスタイル */
+.sidebar {
+  width: 500px;
+  background-color: #f9f9f9;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  padding-top: 60px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
+  z-index: 2000; 
+}
+
+.sidebar a {
+  display: block;
+  padding: 1.2rem 1.5rem; /* クリック範囲を広げるためにパディングを増やす */
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 20px; /* フォントサイズを大きくすることで視認性を向上 */
+  font-weight: bold;
+}
+
+.sidebar.active {
+  transform: translateX(0);
 }

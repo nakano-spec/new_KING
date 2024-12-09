@@ -385,6 +385,12 @@
         }
 
 
+       
+        
+        socket.on('qualificationData', data => updateSelect('year-select', data, 'question_years'));
+        socket.on('questionname', data => updateSelect('question-select', data, 'question_name'));
+        socket.on('questiongenre', data => updateSelect('genre-select', data, 'question_genre'));
+        
         //ログアウト処理
         async function logout() {
             try {
@@ -400,10 +406,6 @@
                 alert('ログアウトに失敗しました: ' + error);
             }
         }
-        
-        socket.on('qualificationData', data => updateSelect('year-select', data, 'question_years'));
-        socket.on('questionname', data => updateSelect('question-select', data, 'question_name'));
-        socket.on('questiongenre', data => updateSelect('genre-select', data, 'question_genre'));
         
         socket.on('session_destroy_success', () => {
             window.location.href = '/login';

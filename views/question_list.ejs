@@ -4,81 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ニコキタ教育委員会：問題管理</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #fff3e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        header {
-            background-color: #f4511e;
-            color: white;
-            padding: 1rem;
-        }
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-        main {
-            flex-grow: 1;
-            padding: 1rem;
-        }
-        .button-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        button {
-            padding: 0.5rem 1rem;
-            background-color: #e0e0e0;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .search-container {
-            position: relative;
-            margin-left: auto;
-        }
-        input[type="search"] {
-            padding: 0.5rem 0.5rem 0.5rem 2rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .search-icon {
-            position: absolute;
-            left: 0.5rem;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 0.5rem;
-            text-align: left;
-        }
-        th {
-            background-color: #f5f5f5;
-        }
-        .ellipsis {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="/stylesheets/question_list.css">
 </head>
 <body>
     <header>
@@ -153,7 +79,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const socket = io({transports: ['websocket'], upgrade: false});
 
         document.getElementById('add-button').addEventListener('click', function() {
             window.location.href = '/account_addition';
