@@ -56,8 +56,8 @@ router.get('/',async function(req,res){
             u.user_name,
             a.answer AS user_answer,
             CASE 
-                WHEN COUNT(DISTINCT c.answer) > 1 THEN GROUP_CONCAT(DISTINCT c.answer ORDER BY c.answer SEPARATOR ', ')
-                ELSE MAX(c.answer)
+                WHEN COUNT(DISTINCT c.correct) > 1 THEN GROUP_CONCAT(DISTINCT c.answer ORDER BY c.answer SEPARATOR ', ')
+                ELSE MAX(c.correct)
             END AS correct_answers,
             a.result,
             COALESCE(GROUP_CONCAT(DISTINCT o.question_optional ORDER BY o.question_optional SEPARATOR ', '), '') AS options

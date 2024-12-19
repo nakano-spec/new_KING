@@ -20,7 +20,7 @@ router.get('/', async function(req, res, next){
           q.question_text,
           COALESCE(q.pics_name, '') AS pics_name,
           GROUP_CONCAT(o.question_optional ORDER BY o.question_optional SEPARATOR ', ') AS options,
-          c.answer
+          c.correct
       FROM 
           question_table q
       LEFT JOIN 
@@ -33,12 +33,12 @@ router.get('/', async function(req, res, next){
                 q.question_ID = ?
       GROUP BY 
           q.question_ID, g.qualification_name, g.question_genre, g.question_years, 
-          q.question_name, q.question_text, q.pics_name, c.answer;
+          q.question_name, q.question_text, q.pics_name, c.correct;
       `,
       value:[questionID]
       }
       var results = await SQL_exec(SQL_data)
-      res.render('question_edit', { question:results[0],name:req.session.user.username });
+      res.render('question_edit', { question:results[0],name:req.session.user.username,question_ID:questionID });
     }catch(error){
       console.error(error);
       res.status(500).send("エラーが発生しました");

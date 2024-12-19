@@ -72,7 +72,7 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'192.168.0.15',//172.18.96.186,172.18.96.162
+  host :'192.168.0.15',//172.18.96.186,172.18.94.207
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -100,8 +100,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static('public'));
-app.use(express.static('images'));
+//app.use(express.static('public'));
+//app.use(express.static('images'));
 app.use(cors());
 /*
 const sessionpool = mysql.createPool({

@@ -162,7 +162,36 @@
 .image-panel h2 {
     font-size: 20px;
     margin-bottom: 20px;
+    text-align: center;
 }
+
+.search-container{
+    text-align: right;
+}
+
+.search-container {
+    position: relative;
+    margin-left: auto;
+  }
+  input[type="search"] {
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    background-color: #e0e0e0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
 
 .image-list {
     display: flex;
@@ -217,4 +246,36 @@
 .zoomback img {
     width:50%;
     border:solid 5px #fff;
+}
+
+/* サイドメニューのスタイル */
+.sidebar {
+    width: 500px;
+    background-color: #f9f9f9;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding-top: 60px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+    transform: translateX(-100%);
+    z-index: 2000; 
+}
+
+.sidebar.active {
+    transform: translateX(0);
+}
+
+.sidebar a {
+    display: block;
+    padding: 1.2rem 1.5rem; /* クリック範囲を広げるためにパディングを増やす */
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 20px; /* フォントサイズを大きくすることで視認性を向上 */
+    font-weight: bold;
+}
+
+.sidebar a:hover {
+    background-color: #ddd;
 }

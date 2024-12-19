@@ -125,7 +125,7 @@ const { SQL_exec } = require( '../db/SQL_module');
   });
 
   const mysql_setting = {
-    host :'192.168.0.15',//172.18.96.186,192.168.0.23,,172.18.96.162
+    host :'192.168.0.15',//172.18.96.186,192.168.0.23,172.18.94.207,,172.18.96.162
     user :'connect',
     password :'K1ng@Oyster',
     database :'mydb',
@@ -185,58 +185,123 @@ const { SQL_exec } = require( '../db/SQL_module');
         socket.emit('imageList', files);
     });
   })
-  
-     //新規登録処理　今は使われていない
-     /*socket.on('new_btnclick', (name,pass1,pass2) => {g
-      if(pass1 == pass2) {
 
-        socket.on('new_select1',async function () {
-          var new_select1 = { spl:'select username from users where username = ?',value:[1]
+  socket.on('requestFile', () => {
+    const filePath = path.join(__dirname, '../public/csv/templete.csv');
+
+    // ファイルを読み込んでクライアントに送信
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            console.error('File read error:', err);
+            socket.emit('fileError', 'ファイルの読み込みに失敗しました。');
+        } else {
+            socket.emit('fileData', { fileName: 'templete.csv', data: data });
+        }
+    });
+  });
+
+  socket.on('reqquestionFile', () => {
+    const filePath = path.join(__dirname, '../public/csv/question_templete.csv');
+
+    // ファイルを読み込んでクライアントに送信
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            console.error('File read error:', err);
+            socket.emit('fileError', 'ファイルの読み込みに失敗しました。');
+        } else {
+            socket.emit('question_Data', { fileName: 'question_templete.csv', data: data });
+        }
+    });
+  });
+
+
+  socket.on('search_img',async function(image){
+    var imagesDir = path.join(__dirname, '../public/images');
+    fs.readdir(imagesDir, function(err, files) {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        for(var i=0;i<files.length;i++){
+          if(image === files[i]){
+            socket.emit('image_result', files[i]);
           }
-          try{ const result = await new_select1(data);
-            socket.emit('select1_result'.result);
-          }
-          catch(error){
-            console.error(error)
-        socket.emit('select1_result,error');
-          }  
-        })
-        //var new_select1 = "select username from users where username = ?;"
-        socket.on('new_select2',async function () {
-          var new_select2 = { spl:'select password from users where password = ?;',value:[1]
-          }
-          try{ const result = await new_select2(data);
-            socket.emit('select2_result'.result);
-          }
-          catch(error){
-            console.error(error)
-        socket.emit('select2_result,error');
-          }  
-        })
-        var new_select2 = "select password from users where password = ?;"
-        var new_insert1 = "insert into users values (?,?,?,'2022{01>01','2022{01>01');"
-        var kensaku = "SELECT MIN(user_ID + 1100) AS user_ID FROM users WHERE (user_ID + 1100) NOT IN (SELECT user_ID FROM users);"
-        connection.query(new_select1,name,(err, new_result1, fields) => {
-          connection.query(new_select2,pass1,(err, new_result2, fields) => {
-            if(new_result1.length < 1 && pass1.length >= 8 && pass1.length <= 16 && pass1.length != 0 && name.length >= 2 && name.length <= 10) {
-              connection.query(kensaku,(err,kensaku1,fields)=>{
-                if(err){
-                  console.log(err);
-                }
-                var user = kensaku1[0].user_ID;
-                connection.query(new_insert1,[user,name,pass1],(err, new_result3, fields) => {
-                  if(err){
-                    console.log(err);
-                  }
-                  var new_flug = 1;
-                  io.emit('new_flug',new_flug);
-              })
-              })
+        } 
+        socket.emit('image_error', "見つかりませんでした。");     
+    });
+  })
+
+  const columnPrefix = '選択肢'; 
+  socket.on('upload_csv', async (fileData) => {
+    const fileContent = fileData.content; // CSVファイルの内容
+    const rows = fileContent.split(/\r?\n/); // 改行で分割
+    if (rows.length < 2) {
+        socket.emit('fileError', 'CSVデータが空です。');
+        return;
+    }
+
+    const headers = rows[0].split(','); // ヘッダー行を取得
+    const dataRows = rows.slice(1); // データ行のみ
+
+    const questions = []; // データを格納する配列
+
+    // 行ごとにデータをオブジェクト化
+    for (const row of dataRows) {
+        if (!row.trim()) continue; // 空行をスキップ
+        const values = row.split(','); // カンマで分割
+        const question = {}; // データをオブジェクトとして格納
+
+        headers.forEach((header, index) => {
+            question[header] = values[index] || null; // ヘッダーと値を対応付け
+        });
+
+        questions.push(question);
+    }
+
+    console.log('オブジェクト化されたデータ:', questions);
+
+    try {
+        // データベースへ登録
+        for (const q of questions) {
+            const insertQuestion = {
+                sql: `INSERT INTO question_table (question_name, question_text, pics_name) VALUES (?, ?, ?)`,
+                value: [q.question_name, q.question_text, q.pics_name || null]
+            };
+            const result = await SQL_exec(insertQuestion);
+            const question_ID = result.insertId;
+
+            // 選択肢データの挿入
+            const optionColumns = Object.keys(q).filter((key) => key.includes('選択肢'));
+            for (const column of optionColumns) {
+                const insertOption = {
+                    sql: `INSERT INTO optional_table (question_ID, question_optional) VALUES (?, ?)`,
+                    value: [question_ID, q[column]]
+                };
+                await SQL_exec(insertOption);
             }
-          })
-        })
-      }
-    })*/
+
+            // 正解データの挿入
+            const insertCorrect = {
+                sql: `INSERT INTO correct_table (question_ID, correct) VALUES (?, ?)`,
+                value: [question_ID, q.correct]
+            };
+            await SQL_exec(insertCorrect);
+
+            // ジャンルデータの挿入
+            const insertGenre = {
+                sql: `INSERT INTO genre_table (question_ID, qualification_name, question_genre, question_years) VALUES (?, ?, ?, ?)`,
+                value: [question_ID, q.qualification_name, q.question_genre, q.question_years]
+            };
+            await SQL_exec(insertGenre);
+        }
+
+        socket.emit('file_upload_Complete', { success: true });
+        console.log('CSVデータが正常にデータベースに登録されました。');
+    } catch (error) {
+        console.error('データベース登録エラー:', error);
+        socket.emit('fileError', 'データベース登録中にエラーが発生しました。');
+    }
+  });
 
      //csvファイルでの問題登録処理
      socket.on('filedata', async (data) =>{
@@ -308,7 +373,7 @@ const { SQL_exec } = require( '../db/SQL_module');
         value:[userID]
       }
       var update_SQL = {
-        sql:"UPDATE answer_table SET result = '○' WHERE question_ID = ? AND answer = ?",
+        sql:"UPDATE _table SET result = '○' WHERE question_ID = ? AND correct = ?",
         value:[]
       }
       var room_ID = await SQL_exec(SQL_data);
@@ -341,7 +406,7 @@ const { SQL_exec } = require( '../db/SQL_module');
       socket.on('kaitousakuzyo', (deletions) => {
         var userID = socket.request.session.user.username;
         var SQL_data = {
-          sql:"DELETE FROM correct_table WHERE answer = ?",
+          sql:"DELETE FROM correct_table WHERE correct = ?",
           value:[]
         }
         async.eachSeries(deletions, async function(deletion, callback) {
@@ -444,7 +509,7 @@ const { SQL_exec } = require( '../db/SQL_module');
 
         // 4. correct_table への挿入
         const insertCorrectQuery = {
-            sql: "INSERT INTO correct_table (question_ID, answer) VALUES (?, ?);",
+            sql: "INSERT INTO correct_table (question_ID, correct) VALUES (?, ?);",
             value: [question_ID, seikai]
         };
         await SQL_exec(insertCorrectQuery);
@@ -1065,6 +1130,7 @@ const { SQL_exec } = require( '../db/SQL_module');
           .on('data', (row) => users.push(row))
           .on('end', async () => {
               try {
+                  console.log(users.length);
                   // データベースに各ユーザーを挿入
                   for (const user of users) {
                       const hashedPassword = await hashPassword(user.password);
@@ -1203,7 +1269,7 @@ const { SQL_exec } = require( '../db/SQL_module');
           });
           const q_log_ID = qlog_result[0].q_log_ID;
           const correct_result = await SQL_exec({
-            sql: "SELECT answer FROM correct_table WHERE question_ID = ?;",
+            sql: "SELECT correct FROM  WHERE question_ID = ?;",
             value: [question]
           });
           const result = await evaluateAnswers(answer, correct_result);
@@ -1532,15 +1598,39 @@ const { SQL_exec } = require( '../db/SQL_module');
         var data = sanitizeHtml(data);
         const query = '%' + data + '%';
         var data={
-          //SQL書き直し必要あり
-          sql:"select g.qualification_name, g.question_genre, g.question_years, q.question_name, q.question_text, COALESCE(s.select_1, \'\') AS select_1, COALESCE(s.select_2, \'\') AS select_2, COALESCE(s.select_3, \'\') AS select_3, COALESCE(s.select_4, \'\') AS select_4, a.type_name, CASE WHEN q.picture_flag = 0 THEN \'\' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR a.type_name LIKE ?",
-          value:[query,query,query,query,query,query]
+          sql:`
+            SELECT 
+                g.qualification_name,
+                g.question_genre,
+                g.question_years,
+                q.question_name,
+                q.question_text,
+                q.question_ID,
+                COALESCE(q.pics_name, '') AS pics_name,
+                GROUP_CONCAT(o.question_optional ORDER BY o.question_optional SEPARATOR ', ') AS options,
+                c.correct
+            FROM 
+                question_table q
+            LEFT JOIN 
+                optional_table o ON q.question_ID = o.question_ID
+            LEFT JOIN 
+                correct_table c ON q.question_ID = c.question_ID
+            LEFT JOIN 
+                genre_table g ON q.question_ID = g.question_ID
+            WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR q.question_id LIKE ? OR pics_name LIKE ?
+                  OR c.correct LIKE ?
+            GROUP BY 
+                q.question_ID, g.qualification_name, g.question_genre, g.question_years, 
+                q.question_name, q.question_text, q.pics_name, c.correct
+             limit ? offset ?;
+          `,
+          value:[query,query,query,query,query,query,query,query,socket.request.session.limit,socket.request.session.offset]
         }
         try{
           var result=await SQL_exec(data);
           socket.emit('question',result);
         }
-        catch{
+        catch(error){
           console.error(error);
           socket.emit('question',error);
         }
@@ -1561,49 +1651,102 @@ const { SQL_exec } = require( '../db/SQL_module');
         })*/
       });
 
-      socket.on('question_delete', async function(question_name) {
-            async.waterfall([
-                async function(callback) {
-                    const data = {
-                        sql: "SELECT question_ID FROM question_table WHERE question_name = ?",
-                        value: [question_name]
-                    };
+      socket.on('question_delete', async function(question_id) {
+           try{
+              const sqldata = {
+                sql:`delete from optional_table where question_ID = ?`,
+                value:[question_id] 
+              }
+              await SQL_exec(sqldata);
+              sqldata.sql = "delete from correct_table where question_ID = ?";
+              await SQL_exec(sqldata);
+              sqldata.sql = "delete from genre_table where question_ID = ?";
+              await SQL_exec(sqldata);
+              sqldata.sql = `delete from answer_table where q_log_ID IN(
+                             select q_log_ID from question_log where question_ID = ?)`;
+              await SQL_exec(sqldata);
+              sqldata.sql = `delete from question_log where question_ID = ?`;
+              await SQL_exec(sqldata);
+              sqldata.sql = 'delete from question_table where question_ID = ?';
+              await SQL_exec(sqldata);
+              var data={
+                sql:`
+                  SELECT 
+                      g.qualification_name,
+                      g.question_genre,
+                      g.question_years,
+                      q.question_name,
+                      q.question_text,
+                      q.question_id,
+                      COALESCE(q.pics_name, '') AS pics_name,
+                      GROUP_CONCAT(o.question_optional ORDER BY o.question_optional SEPARATOR ', ') AS options,
+                      c.correct
+                  FROM 
+                      question_table q
+                  LEFT JOIN 
+                      optional_table o ON q.question_ID = o.question_ID
+                  LEFT JOIN 
+                      correct_table c ON q.question_ID = c.question_ID
+                  LEFT JOIN 
+                      genre_table g ON q.question_ID = g.question_ID
+                  GROUP BY 
+                      q.question_ID, g.qualification_name, g.question_genre, g.question_years, 
+                      q.question_name, q.question_text, q.pics_name, c.correct
+                   limit ? offset ?;
+                `,
+                value:[socket.request.session.limit,socket.request.session.offset]
+              }
+              const response = await SQL_exec(data);
+              socket.emit('delete_result',data);
+           }catch(error){
+            console.log(error);
+            socket.emit('delete_error',"問題を消去できませんでした。")
+           }
+      });
     
-                    try {
-                        const result = await SQL_exec(data);
-                        if (result.length === 0) {
-                            return callback(new Error("Question not found"));
-                        }
-                        const question_ID = result[0].question_ID;
-                        callback(null, question_ID);
-                    } catch (error) {
-                        console.error("Error fetching question_ID:", error);
-                        callback(error);
-                    }
-                },
-                async function(question_ID, callback) {
-                    const deleteData = {
-                        sql: "DELETE FROM question_table WHERE question_ID = ?",
-                        value: [question_ID]
-                    };
-    
-                    try {
-                        await SQL_exec(deleteData);
-                        callback(null);
-                    } catch (error) {
-                        console.error("Error deleting question:", error);
-                        callback(error);
-                    }
-                }
-            ], function(err) {
-                if (err) {
-                    socket.emit('error', err.message); 
-                } else {
-                    socket.emit('question_Complete'); 
-                }
-            });
-        });
-    
+      socket.on('question_update',async function(data){
+        const { id,quealification_name, question_years, question_genre, question_name, question_text, options, pics_name, correct } = data;
+        try {
+          // 1. question_tableの更新
+          const sqldata ={
+            sql:`
+              UPDATE question_table 
+              SET question_name = ?, question_text = ?, pics_name = ? 
+              WHERE question_ID = ?`,
+            value:[question_name, question_text, pics_name, id]
+          }
+          await SQL_exec(sqldata);
+          // 2. correct_tableの更新
+          sqldata.sql = `UPDATE correct_table SET correct = ?  WHERE question_ID = ?`;
+          sqldata.value = [correct,id]
+          await SQL_exec(sqldata);
+
+          // 3. genre_tableの更新
+          sqldata.sql = `UPDATE genre_table SET qualification_name = ?, question_genre = ?, question_years = ? WHERE question_ID = ?`;
+          sqldata.value =  [quealification_name, question_genre, question_years, id]
+
+          await SQL_exec(sqldata);
+
+          // 4. optional_tableの既存データを削除
+          sqldata.sql = `DELETE FROM optional_table WHERE question_ID = ?`;
+          sqldata.value =  [id]
+          await SQL_exec(sqldata);
+
+          // 5. optional_tableに新しい選択肢を挿入
+          for (let i = 0; i < options.length; i++) {
+              sqldata.sql = `INSERT INTO optional_table (question_ID, question_optional) VALUES (?, ?)`;
+              sqldata.value =  [id,options[i]]
+              await SQL_exec(sqldata);
+          }
+
+          socket.emit('update_result');
+        } catch (err) {
+            console.error('Error during update:', err);
+            // ロールバック
+            await SQL_exec('ROLLBACK');
+            socket.emit('update_error');
+        }
+      })
 
      //テスト用Socket.io
      socket.on('SQL_test',async function(){

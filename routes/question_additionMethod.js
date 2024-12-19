@@ -8,7 +8,7 @@ router.get("/", (req, res)=> {
     if(!req.session.user){
             res.render('login.ejs');
       }else{
-        res.render('question_additionMethod');
+        res.render('question_additionMethod',{username:req.session.user.username});
       }
 });
 

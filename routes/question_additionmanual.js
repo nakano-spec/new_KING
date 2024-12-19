@@ -20,7 +20,7 @@ router.get('/', async function(req, res, next){
           q.question_text,
           COALESCE(q.pics_name, '') AS pics_name,
           GROUP_CONCAT(o.question_optional ORDER BY o.question_optional SEPARATOR ', ') AS options,
-          c.answer
+          c.correct
       FROM 
           question_table q
       LEFT JOIN 
@@ -33,7 +33,7 @@ router.get('/', async function(req, res, next){
                 q.question_ID = ?
       GROUP BY 
           q.question_ID, g.qualification_name, g.question_genre, g.question_years, 
-          q.question_name, q.question_text, q.pics_name, c.answer;
+          q.question_name, q.question_text, q.pics_name, c.correct;
       `,
       value:[questionID]
       }

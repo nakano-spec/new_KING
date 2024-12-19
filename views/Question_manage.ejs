@@ -68,7 +68,7 @@
                             <td class="ellipsis" onclick="toggleText(this)"><%= question.question_text %></td>
                             <td class="ellipsis" onclick="toggleText(this)"><%= question.options %></td>
                             <td class="ellipsis" onclick="toggleText(this)"><%= question.pics_name %></td>
-                            <td class="ellipsis" onclick="toggleText(this)"><%= question.answer %></td>
+                            <td class="ellipsis" onclick="toggleText(this)"><%= question.correct %></td>
                         </tr>
                     <% }); %>
                 </tbody>
@@ -146,6 +146,7 @@
         document.getElementById('delete-button').addEventListener('click', function() {
             var selectedRadio = document.querySelector('input[name="select"]:checked');
             if (selectedRadio) {
+                console.log(selectedRadio.value);
                 socket.emit('question_delete', selectedRadio.value);
             } else {
                 alert('問題を選択してください。');
@@ -156,13 +157,18 @@
             window.location.reload();
         });
 
+        socket.on('delete_result',function(){
+            alert("削除が完了しました。");
+            updateTable(results);
+        })
+
         // 検索ボタン
         document.getElementById('search-button').addEventListener('click', function() {
             var searchTerm = document.getElementById('search-box').value;
             socket.emit('search_question', searchTerm);
         });
 
-        socket.on('questionsearchResult', function(results) {
+        socket.on('question', function(results) {
             updateTable(results);
         });
 
@@ -173,15 +179,15 @@
             data.forEach(function(question) {
                 var tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="radio" name="select" value="${question.question_name}"></td>
-                    <td class="ellipsis">${question.qualification_name}</td>
-                    <td class="ellipsis">${question.question_genre}</td>
-                    <td class="ellipsis">${question.question_years}</td>
-                    <td class="ellipsis">${question.question_name}</td>
-                    <td class="ellipsis">${question.question_text}</td>
-                    <td class="ellipsis">${question.options}</td>
-                    <td class="ellipsis">${question.pics_name}</td>
-                    <td class="ellipsis">${question.correct}</td>
+                    <td><input type="radio" name="select" value="${question.question_ID}"></td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.qualification_name}</td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.question_genre}</td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.question_years}</td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.question_name}</td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.question_text}</td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.options}</td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.pics_name}</td>
+                    <td class="ellipsis" onclick="toggleText(this)">${question.correct}</td>
                 `;
                 tbody.appendChild(tr);
             });

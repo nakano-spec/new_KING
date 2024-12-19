@@ -21,8 +21,8 @@
 
     <main class="main-content">
         <h2 class="page-title">CSVファイルでユーザーを追加</h2>
-        <a href="account_additionCSVExplanation" class="help-link">詳しい追加方法はこちら</a>
-        <a href="account_additionCSVExplanation" class="help-link">詳しい追加方法はこちら</a>
+        <!--<a href="account_additionCSVExplanation" class="help-link">詳しい追加方法はこちら</a> -->
+        <button id="downloadButton">テンプレートをダウンロード</button>
 
         <p class="upload-instructions">アップロードするCSVファイルを選択してください。</p>
 
@@ -54,6 +54,35 @@
         const fileInput = document.getElementById('fileInput');
         const fileName = document.getElementById('fileName');
         const uploadButton = document.getElementById('upload_button');
+
+        const downloadButton = document.getElementById('downloadButton');
+
+        downloadButton.addEventListener('click', () => {
+            // サーバーにファイル送信リクエストを送る
+            socket.emit('requestFile');
+        });
+
+        // サーバーからデータを受信
+        socket.on('fileData', (file) => {
+            const blob = new Blob([file.data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+
+            // ダウンロードリンクを生成してクリック
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.fileName; // ファイル名指定
+            document.body.appendChild(a);
+            a.click();
+
+            // 後片付け
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        });
+
+        // エラーハンドリング
+        socket.on('fileError', (message) => {
+            alert(message);
+        });
 
         // ドラッグ＆ドロップエリアのイベントハンドラ
         dropZone.addEventListener('dragover', (e) => {

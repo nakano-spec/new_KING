@@ -8,7 +8,7 @@ router.get("/", (req, res)=> {
     if(!req.session.user){
             res.render('login.ejs');
       }else{
-        res.render('question_additionCSV.ejs');
+        res.render('question_additionCSV.ejs',{username:req.session.user.username});
       }
 });
 
