@@ -1,17 +1,89 @@
-.but{
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: white;
+}
+
+header {
+  background-color: #F47B20;
+  color: white;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 0;
   text-align: center;
 }
-.box > .example{
-  color: #ffffff;
+
+.box {
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+  min-height: 70vh;
 }
-h1{
+
+.box.center {
+  align-items: center; /* データが少ない場合は中央寄せ */
+}
+
+table {
+  border-collapse: collapse;
+  margin: 0 auto;
+  width: fit-content; /* または width: auto; */
+}
+
+td {
+  width: 160px;
+  height: 160px;
   text-align: center;
+  vertical-align: middle;
+  border: 2px solid black;
+  color: white;
+  font-size: 1.5rem;
 }
-body{
-background-color: #fffca9;
-background-size: cover;
+
+.red {
+  background-color: #FF0000;
 }
-.example {
-  border-collapse: separate;
-  border-spacing: 10px 5px; /* 垂直方向と水平方向の間隔 */
+
+.blue {
+  background-color: #0000FF;
+}
+
+.dark-gray {
+  background-color: #555555; /* DarkSlateGray */
+}
+
+
+.button-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.button {
+  background-color: #F47B20;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #ff7f50;
+}
+
+.link {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  color: #F47B20;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
 }

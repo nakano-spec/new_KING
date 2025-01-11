@@ -1,50 +1,60 @@
-var socket = io();
-const rows = JSON.parse('<%- JSON.stringify(han1) %>');
-var rowlen = rows.length;
-console.log(rowlen);
-var rowlen2 = parseInt(rowlen/12) + 1;
-console.log(rowlen2);
-var a = 0;
-var b = 0;
-var c = 0;
-var myd = document.getElementById("box");
-var i = 0;
-var j = 0;
-var k = 0;
-var table1 = document.createElement("table");
-var tbody1 = document.createElement("tbody");
-var tr1 = document.createElement("tr");
-while(i < rowlen2){
-    tr1 = document.createElement("tr");
-    while(k < rowlen && j != 12){
-      var td1 = document.createElement("td");  
-      a = rows[k].username;
-      td1.textContent = a;
-      b = rows[k].han;
-      tr1.appendChild(td1);
-      if(b === "○"){
-        td1.setAttribute("bgcolor","#FF0000");
-      }else if(b === "✕"){
-        td1.setAttribute("bgcolor","#0000FF");
-      }
-      td1.setAttribute("width","160px");
-      td1.setAttribute("height","160px");
-      td1.setAttribute("align","center");
-      j = j+1; 
-      k = k + 1;
-    }
-    console.log(tr1);
-    tbody1.appendChild(tr1);
-    i = i + 1;
-    j = 0;
-   
-}
-table1.appendChild(tbody1);
-myd.appendChild(table1);
-table1.setAttribute("border","2px");
-table1.setAttribute("align","center");
-table1.setAttribute("class","example");
-//押されたらサーバーにsocket.ioを使ってイベントを起動する・
-function osareta(){
-  socket.emit('syokika');
-}
+var socket = io({ transports: ['websocket'], upgrade: false });
+        const rows = JSON.parse('<%- JSON.stringify(han1) %>');
+        console.log(rows);
+
+        const box = document.getElementById("box");
+
+        // テーブル作成
+        const table = document.createElement("table");
+        const tbody = document.createElement("tbody");
+        const rowLength = rows.length;
+        const columns = 12; // 1行に表示するデータの数
+        let k = 0;
+
+        // データが少ない場合は中央寄せに設定
+        if (rowLength <= columns) {
+            box.classList.add("center");
+        }
+        const tr = document.createElement("tr");
+        while (k < rowLength) {
+          const tr = document.createElement("tr");
+          const columnsInRow = Math.min(columns, rowLength - k);
+            for (let j = 0; j < columnsInRow; j++) {
+                const td = document.createElement("td");
+                if (k < rowLength) {
+                    const user_ID = rows[k].user_ID;
+                    const username = rows[k].user_name;
+                    const answer = rows[k].user_answer;
+                    const result = rows[k].result;
+
+                    td.innerHTML = `<h1>${answer}</h1><br>${user_ID}<br>${username}`;
+
+                    // 背景色設定
+                    if (result === 1) {
+                        td.classList.add("red");
+                    } else if (answer === "timeup") {
+                        td.classList.add("dark-gray");
+                    }else if(result === 0){
+                        td.classList.add("blue");
+                    }
+                    k++;
+                } else {
+                    td.style.border = "none"; // 余ったセルは空白に
+                }
+
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+
+        table.appendChild(tbody);
+        box.appendChild(table);
+
+        table.setAttribute("align", "center");
+
+
+        // 問題選択に戻る処理
+        function osareta() {
+            socket.emit('clear');
+            window.close();
+        }

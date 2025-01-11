@@ -1,71 +1,139 @@
-var socket = io();
-var f = document.forms.my;
-var col = table.rows.length;
-const div1 = document.getElementById("div1");
-const newDiv = document.createElement("div");
-var d ="a";
-var ds = 0;
-var ds2 = 0;
-var col = col;
-for(let i = 1;i<col;i++)
-{
-  const newBtn = document.createElement("button");
-  newBtn.innerHTML ="表示";
-  newBtn.value =i;
-  newBtn.style="width: 100px; height: 38px; display:flex; flex-flow: column; position: relative; top:55px;";
-  newBtn.onclick = () => {
-    var c = table.rows[i].cells[1].innerHTML;
-    socket.emit('hyou',c);
+const socket = io({ transports: ['websocket'], upgrade: false });
+const table = document.getElementById("table");
+const resultButton = document.getElementById("resultButton");
+
+const room_ID = '<%= name %>';
+        const role = 1
+        if (room_ID) {
+            socket.emit('join_room', { room_ID, role });
+            console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+        } else {
+            console.error('ルームIDが指定されていません。');
+        }
+
+ // 正解表示ボタン処理
+function displayCorrectAnswer(index) {
+  const row = table.rows[index + 1]; 
+  const user_ID = row.cells[4].textContent;
+  const user_name = row.cells[5].textContent;
+  const userAnswer = row.cells[6].textContent;
+  var student_data = {
+    user_ID:user_ID,
+    user_name:user_name,
+    userAnswer:userAnswer
   }
-  newDiv.appendChild(newBtn);
-  div1.appendChild(newDiv);
+  socket.emit('hyou',student_data);
 }
 
-f.kekka.addEventListener('click',function(e){
-  e.preventDefault();
-  socket.emit('kekkahyouji');
-})
 
-f.tuika.addEventListener('click',function(e){
-  e.preventDefault();
-  var array = new Array(2);
-  for(var i = 0;i<col -1;i++){
-    if(table.rows[i+1].cells[4].lastElementChild.checked == true){
-        array[ds] = table.rows[i + 1].cells[0].innerHTML;
-        array[ds + 1] = table.rows[i + 1].cells[2].innerHTML;
-        ds = ds + 2;
-        array.push("a","a");
+// 結果発表ボタン処理
+resultButton.addEventListener("click", function () {
+  // テーブルのデータを収集
+    const tableData = [];
+    for (let i = 1; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        const rowData = {
+            user_ID: row.cells[4].textContent,
+            user_name: row.cells[5].textContent,
+            user_answer: row.cells[6].textContent,
+            result: row.cells[8].textContent.trim() === "○" ? 1 : 0
+        };
+        tableData.push(rowData);
     }
-  }
-  var j = 0;
-  while(j < 2){
-    array.pop()
-    j = j + 1;
-  }
-  console.log(array);
-  socket.emit('kaitoutuika',array);
-  //socket.emit('kekkahyouji');
-})
+    socket.emit('result_display', tableData);
+});
 
-f.sakuzyo.addEventListener('click',function(e){
+// 正解追加ボタン処理
+/*document.forms.my.tuika.addEventListener('click', function (e) {
     e.preventDefault();
-    var array = new Array(1);
-    for(var i = 0;i<col-1;i++){
-      if(table.rows[i + 1].cells[5].lastElementChild.checked == true){
-        array[ds2] = table.rows[i + 1].cells[2].innerHTML
-        ds2 = ds2 + 1;
-        array.push("a");
-      }
+    const selections = [];
+    for (let i = 1; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        const isChecked = row.cells[9]?.firstChild?.checked;
+        if (isChecked) {
+            const questionGenre = row.cells[2].textContent;
+            const username = row.cells[4].textContent;
+            const answer = row.cells[6].textContent;
+            selections.push({
+                questionGenre,
+                username,
+                answer,
+                result: "○"
+            });
+        }
     }
-    array.pop();
-    console.log(array);
-    socket.emit('kaitousakuzyo',array);
-})
-        
-socket.on('yomikomi',function(){
-  window.location.href='/mondai3';
-})
+    if (selections.length > 0) {
+        socket.emit('kaitoutuika', selections);
+    }
+});
 
-socket.on('modoru',function(){
-  window.location.href='/mondai';
-})
+// 正解削除ボタン処理
+document.forms.my.sakuzyo.addEventListener('click', function (e) {
+    e.preventDefault();
+    const deletions = [];
+    for (let i = 1; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        const isChecked = row.cells[10]?.firstChild?.checked;
+        if (isChecked) {
+            const questionName = row.cells[2].textContent;
+            const answer = row.cells[6].textContent;
+            deletions.push({
+                questionName,
+                answer
+            });
+        }
+    }
+    if (deletions.length > 0) {
+        socket.emit('kaitousakuzyo', deletions);
+    }
+});*/
+
+const menuButton = document.querySelector('.menu-icon'); // 正しいハンバーガーメニューのクラス
+    const sidebar = document.getElementById('sidebar'); // サイドバー
+    const mainContent = document.querySelector('.main-content'); // メインコンテンツ
+
+    // メニューボタンのクリックイベント
+    menuButton.addEventListener('click', () => {
+        sidebar.classList.toggle('active'); // サイドバーの表示切り替え
+    });
+
+    // サイドバー以外の領域をクリックしたときに閉じる
+    document.addEventListener('click', (event) => {
+        if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
+            sidebar.classList.remove('active'); // サイドバーを非表示にする
+        }
+    });
+
+// 戻る処理
+function osareta() {
+    socket.emit('clear');
+}
+
+// サーバーからのリダイレクトイベント
+socket.on('modoru', function () {
+    window.location.href = '/mondai';
+});
+
+async function logout() {
+    try {
+        await new Promise((resolve, reject) => {
+            socket.emit('session_destroy', (response) => {
+                if (response.success) resolve();
+                else reject(response.error);
+            });
+        });
+        // 成功時はログインページにリダイレクト
+        window.location.href = '/login';
+    } catch (error) {
+        alert('ログアウトに失敗しました: ' + error);
+    }
+}
+
+socket.on('session_destroy_success', () => {
+    window.location.href = '/login';
+});
+
+//セッション削除失敗時エラー処理
+socket.on('session_destroy_failed', (error) => {
+    alert('ログアウトに失敗しました: ' + error);
+});

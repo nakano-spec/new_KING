@@ -72,7 +72,7 @@ var app = express();
 };*/
 
 const db_conf ={
-  host :'192.168.0.15',//172.18.96.186,172.18.94.207
+  host :'192.168.0.14',//172.18.96.186
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',

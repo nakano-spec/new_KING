@@ -28,34 +28,6 @@ router.get('/', async function(req, res, next) {
     }catch(error){
         console.log(error)
     }
-    
-   /*pool.getConnection(function(err,connection){
-   //
-    
-    //SQLを実行する。errorだった場合はerrに、SQL結果をresultに配列形式で入る。
-    connection.query(sql4,[question],(err,result,fields) =>{
-        //errorだった場合はエラーを表示する。
-        if(err){
-            console.log(err);
-        }
-        //
-
-        //データをまとめて１つのオブジェクト化
-        var dataset = {
-            qualification:qualificationdata,
-            Year:year,
-            question_name:question,
-            genre:genre,
-            results:result
-        }
-        //
-        console.log(dataset);
-        //res.renderで指定した画面を表示する。後ろにデータまたは変数を書くことでデータも遅れる。
-        res.render('kakunin.ejs',dataset);
-        connection.release();
-    })
-   //
-   })*/
 });
 
 module.exports = router;

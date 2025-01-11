@@ -125,7 +125,7 @@ const { SQL_exec } = require( '../db/SQL_module');
   });
 
   const mysql_setting = {
-    host :'192.168.0.15',//172.18.96.186,192.168.0.23,172.18.94.207,,172.18.96.162
+    host :'192.168.0.14',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
     user :'connect',
     password :'K1ng@Oyster',
     database :'mydb',
@@ -886,6 +886,7 @@ const { SQL_exec } = require( '../db/SQL_module');
           const result =  await SQL_exec(SQLdata)
           io.emit('preview_response',result); 
         }catch(error){
+          socket.emit('question_error');
           console.log(error)
         }
      })
@@ -999,6 +1000,7 @@ const { SQL_exec } = require( '../db/SQL_module');
                 const get_id_data = { sql: get_id_sql, value: [data.question, data.qualification, data.genre, data.year] };
                 const questionIDResult = await SQL_exec(get_id_data);
                 if (!questionIDResult || questionIDResult.length === 0) {
+                    socket.emit('question_error');
                     throw new Error("指定された問題が見つかりません。");
                 }
                 const q_ID = questionIDResult[0].question_ID;
@@ -1307,107 +1309,13 @@ const { SQL_exec } = require( '../db/SQL_module');
         }
           return result;
       }
-
-        /*
-        async.waterfall([
-            // room_ID を取得
-            async function(connection, callback) {
-                try {
-                    
-                    callback(null, connection, room);
-                } catch (error) {
-                    console.error("Error getting room_ID:", error);
-                    connection.release();
-                    callback(error);
-                }
-            },
-            // question_ID を取得
-            async function(connection, room, callback) {
-                try {
-                    const questionResult = await SQL_exec({
-                        sql: "SELECT question_ID FROM question_log WHERE room_ID = ? AND question_status = 1;",
-                        value: [room]
-                    });
-                    const question = questionResult[0].question_ID;
-                    callback(null, connection, question);
-                } catch (error) {
-                    console.error("Error getting question_ID:", error);
-                    connection.release();
-                    callback(error);
-                }
-            },
-            // 回答が既に存在するか確認
-            async function(connection, question, callback) {
-                try {
-                    const answerExistsResult = await SQL_exec({
-                        sql: "SELECT * FROM answer_table WHERE user_ID = ? AND question_ID = ?;",
-                        value: [m1, question]
-                    });
-    
-                    if (answerExistsResult.length > 0) {
-                        connection.release();
-                        socket.emit('insert_error');
-                        return callback(new Error('Answer already exists'));
-                    }
-                    callback(null, connection, question);
-                } catch (error) {
-                    console.error("Error checking answer existence:", error);
-                    connection.release();
-                    callback(error);
-                }
-            },
-            // 正解データを取得
-            async function(connection, question, callback) {
-                try {
-                    const correctAnswerResult = await SQL_exec({
-                        sql: "SELECT answer FROM correct_table WHERE question_ID = ?;",
-                        value: [question]
-                    });
-                    const correct_data = correctAnswerResult[0].answer;
-                    callback(null, connection, question, correct_data);
-                } catch (error) {
-                    console.error("Error getting correct answer:", error);
-                    connection.release();
-                    callback(error);
-                }
-            },
-            // 回答を判定
-            function(connection, question, correct_data, callback) {
-                const judgement = kaitou === correct_data ? "○" : "✕";
-                callback(null, connection, question, judgement);
-            },
-            // 回答を answer_table に挿入
-            async function(connection, question, judgement, callback) {
-                try {
-                    const insertResult = await SQL_exec({
-                        sql: "INSERT INTO answer_table(user_ID, question_ID, answer, ans_pics_flag, result) VALUES (?, ?, ?, 0, ?);",
-                        value: [m1, question, kaitou, judgement]
-                    });
-                    socket.emit('data_result', insertResult);
-                    callback(null, insertResult);
-                } catch (error) {
-                    console.error("Error inserting answer:", error);
-                    socket.emit('data_result', error);
-                    connection.release();
-                    callback(error);
-                } finally {
-                    connection.release();
-                }
-            }
-        ], function(err, result) {
-            if (err) {
-                console.error("Error in kiroku process:", err);
-            } else {
-                socket.emit('end');
-            }
-        });*/
       });
     
 
       socket.on('request_data',async function(qualificationName){
         var data={
-          sql:"select distinct question_name,question_genre,question_years from (select q.question_name,g.question_genre,g.question_years from question_table q JOIN genre_table g ON q.question_id = g.question_id) AS subquery;",
-          value:[qualificationName]
+          sql:"select g.qualification_name,q.question_name,g.question_genre,g.question_years from question_table q JOIN genre_table g ON q.question_id = g.question_id where g.qualification_name = ?",
+          value:[qualificationName.qualification_name]
         }
         try{
           var result=await SQL_exec(data);
@@ -1508,21 +1416,6 @@ const { SQL_exec } = require( '../db/SQL_module');
         }
       });
 
-      // Insert files handling for room_table insertion
-      /*socket.on('insert_files', async (data) => {
-        const insertRoomData = {
-            sql: "INSERT INTO room_table(room_ID, user_ID) VALUES (?, ?);",
-            value: [data.room_name, data.userID]
-        };
-
-        try {
-            const result = await SQL_exec(insertRoomData);
-            socket.emit('insert_result', result);
-        } catch (error) {
-            console.error('Insert files error:', error);
-            socket.emit('insert_result', error);
-        }
-      });*/
      
       function hashPassword(password) {
         const sha256 = crypto.createHash('sha512');
@@ -1634,21 +1527,6 @@ const { SQL_exec } = require( '../db/SQL_module');
           console.error(error);
           socket.emit('question',error);
         }
-        
-       /* pool.getConnection(async function(err,connection){
-          var data={
-            sql:"select g.qualification_name, g.question_genre, g.question_years, q.question_name, q.question_text, COALESCE(s.select_1, \'\') AS select_1, COALESCE(s.select_2, \'\') AS select_2, COALESCE(s.select_3, \'\') AS select_3, COALESCE(s.select_4, \'\') AS select_4, a.type_name, CASE WHEN q.picture_flag = 0 THEN \'\' ELSE p.pics_name END AS pics_name FROM question_table q LEFT JOIN select_table s ON q.question_ID = s.question_ID LEFT JOIN pics_table p ON q.question_ID = p.question_ID JOIN answer_type a ON q.type_ID = a.type_ID JOIN genre_table g ON q.question_ID = g.question_ID WHERE g.qualification_name LIKE ? OR g.question_genre LIKE ? OR g.question_years LIKE ? OR q.question_name LIKE ? OR q.question_text LIKE ? OR a.type_name LIKE ?",
-            value:[query,query,query,query,query,query]
-          }
-          try{
-            var resut=await SQL_exec(data);
-            socket.emit('select_qualo',result);
-          }
-          catch{
-            console.log(error);
-            socket.emit('select_quali',error);
-          }
-        })*/
       });
 
       socket.on('question_delete', async function(question_id) {

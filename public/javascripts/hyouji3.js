@@ -1,4 +1,4 @@
-var socket = io();
+var socket = io({ transports: ['websocket'], upgrade: false });
         //キーボードであるボタンが押されたら色を変える。ここではaまたはAボタンを押したら赤に、bまたはBボタンを押したら青になる。
         document.addEventListener('keydown', (event) => {
             var keyName = event.key;
@@ -11,12 +11,26 @@ var socket = io();
             document.fgColor = "#ffffff"
          }
        });
-        //サーバーから送られてきたデータをクエリパラメータにセットし、'/hyou3'にセットされたパスのファイルに送る。
-        socket.on('hyouji',function(de){
-              window.location.href ='/hyou3?data=' + encodeURIComponent(de);
-        })
+
+       const room_ID = 'teacher';
+        const role = 3
+        if (room_ID) {
+                socket.emit('join_room', { room_ID, role });
+                console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+        } else {
+            console.error('ルームIDが指定されていません。');
+        }
+        
+         // 他のページへの遷移処理
+         socket.on('hyouji', function(student_data) {
+          console.log(student_data);
+          window.location.href = `/hyou3?user_ID=${encodeURIComponent(student_data.user_ID)}&user_name=${encodeURIComponent(student_data.user_name)}&userAnswer=${encodeURIComponent(student_data.userAnswer)}`;
+        });
 
         //先生側からサーバーを経由して結果表示命令が来た場合'/hyou4'にセットされたパスのファイルに送る。
-        socket.on('kekkahyouji2',function(){
-            window.location.href='/hyou4';
-         })
+        socket.on('result_display2',function(username,data){
+            const encodedData = encodeURIComponent(JSON.stringify(data));
+            const nextURL = `/hyou4?username=${encodeURIComponent(username)}&tableData=${encodedData}`;
+            window.location.href=nextURL;
+        })
+         //先生側からサーバーを経由して結果表示命令が来た場合'/hyou4'にセットされたパスのファイルに送る。

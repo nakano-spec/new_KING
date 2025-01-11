@@ -21,25 +21,4 @@ router.get('/', async function(req, res, next) {
   }
 });
  
-  /*pool.getConnection(function(err,connection){
-    if(err != null){
-      console.log(err);
-      connection.release();
-      return;
-    }
-    pool.query(sql,(err,result1,field)=>{
-      if(err){
-        console.log(err);
-        connection.release();
-      }
-      var data = {
-        name:req.session.user.username,
-        web:result1
-      }
-        res.render('mondai2',data);
-        connection.release();
-      });
-    })*/
-
-
 module.exports = router;
