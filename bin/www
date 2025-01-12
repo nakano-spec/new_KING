@@ -125,7 +125,11 @@ const { SQL_exec } = require( '../db/SQL_module');
   });
 
   const mysql_setting = {
+<<<<<<< HEAD
     host :'192.168.0.14',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
+=======
+    host :'192.168.3.27',//172.18.96.186,192.168.0.23,192.168.0.15
+>>>>>>> 4697e281144b560788f581128f27b62b4e6ec5e1
     user :'connect',
     password :'K1ng@Oyster',
     database :'mydb',
@@ -1724,4 +1728,60 @@ const { SQL_exec } = require( '../db/SQL_module');
           });
       });
     }
+
+   socket.on('checksession',async function(current_page){//セッションチェック
+      try{
+        console.log("セッションチェック実行");
+        const req = socket.request;
+        if(!req.session){
+          //セッションがないとき
+          await destroySession(req);
+          socket.emit('session_error',"sessionがありませんでした");
+          
+        }else{
+            socket.emit('session_OK',"OK")
+            const result = await checkpage(req.session.user.username,current_page)//認証に失敗したらfalseを返す
+            if(result == false){
+              await destroySession(req);
+              socket.emit('session_error',"このページを開く権限がありません");
+              
+            }
+        }  
+      }catch(error){
+        console.log(error);
+      }
+    })
+
+    async function checkpage(username,current_page){//ページの権限チェック
+      try{
+        console.log("権限チェック開始");
+        console.log(username);
+        console.log(current_page);
+        var SQL = {//ログイン中のユーザーの権限を取得する
+          sql : "select user_type from user_table where user_ID = ?",
+          value : [username]
+        }
+        var user_type = await SQL_exec(SQL);//お前objectでMySQLから値取得しているのかよぉ！！時間返せよぉぉぉぉ！！！
+        console.log("ユーザー種別：",user_type);
+
+        var SQL = {//現在表示しているページのアクセス権限を取得する
+          sql : "select No from access_table where page = ?",
+          value : [current_page]
+        }
+        var page = await SQL_exec(SQL);
+        console.log("ページ種別：",page);
+
+        if(user_type[0].user_type == page[0].No){//オブジェクトから必要な値を取り出して比較（別途変数を用意するのめんどくさかった）
+          console.log("セッションチェック成功");
+          return true;
+        }
+        else{
+          console.log("セッションチェック失敗");
+          return false;
+        }
+      }
+      catch(error){
+        console.error('セッションチェックでエラー:',error);
+      }}
+
    })
