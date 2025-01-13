@@ -31,17 +31,10 @@ router.get('/', async function(req, res, next) {
     res.render('account_list',{data:result,name:req.session.user.username,currentPage:page,totalPages: totalPages});
   }catch(error){
     console.log(error);
+    const err = new Error('セッションが切れています。ログインしてください。');
+    err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+    return next(err); // 次のエラーハンドリングミドルウェアに渡す
   }
- 
-  /*pool.getConnection(function(err,connection){
-    connection.query(sql,(err,result,fields) =>{
-        if(err){
-            console.log(err);
-        }
-        res.render('account_list',{data:result});
-       })
-       connection.release();
-   })*/
 });
 
 module.exports = router;

@@ -111,3 +111,11 @@ h1{
 .sidebar.active {
   transform: translateX(0);
 }
+
+#picture {
+  text-align: center;
+}
+#picture img {
+  max-width: 100%;
+  height: auto;
+}

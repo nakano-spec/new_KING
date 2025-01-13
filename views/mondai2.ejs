@@ -133,6 +133,20 @@
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io({ transports: ['websocket'], upgrade: false });
+        // 接続が確立した時点でルームに参加
+        socket.on('connect',async function(){
+                const room_ID = '<%= name %>';
+                const role = 1
+                if (room_ID) {
+                    socket.emit('join_room', { room_ID, role });
+                    console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+                } else {
+                    console.error('ルームIDが指定されていません。');
+                }
+        });
+    </script>
     <script src="/javascripts/mondai2.js"></script>
 </body>
 </html>

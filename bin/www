@@ -598,6 +598,7 @@ const { SQL_exec } = require( '../db/SQL_module');
     socket.on('login', async (data) => {
         try {
             // 入力データのサニタイズ
+            console.log(data);
             const username = sanitizeHtml(data.username.trim());
             let password = sanitizeHtml(data.password.trim());
     
@@ -652,7 +653,6 @@ const { SQL_exec } = require( '../db/SQL_module');
     
             // ログイン成功をクライアントに通知
             io.to(socket.id).emit('login_flug', 1, username, loginType);
-    
         } catch (error) {
             console.error("Error in login process:", error);
     
@@ -1271,7 +1271,7 @@ const { SQL_exec } = require( '../db/SQL_module');
           });
           const q_log_ID = qlog_result[0].q_log_ID;
           const correct_result = await SQL_exec({
-            sql: "SELECT correct FROM  WHERE question_ID = ?;",
+            sql: "SELECT correct FROM correct_table WHERE question_ID = ?;",
             value: [question]
           });
           const result = await evaluateAnswers(answer, correct_result);
@@ -1297,8 +1297,10 @@ const { SQL_exec } = require( '../db/SQL_module');
         async function evaluateAnswers(answerList, correctResult) {
           let result = 0;
           if (Array.isArray(correctResult)) {
+            console.log(correctResult);
             for(var i=0;i<correctResult.length;i++) {
-              if(answerList === correctResult[i].answer)
+              console.log(answerList,correctResult[i].correct)
+              if(answerList === correctResult[i].correct)
                 result = 1; // 一つでも正解が見つかった場合
             }
         } else {
@@ -1779,5 +1781,53 @@ const { SQL_exec } = require( '../db/SQL_module');
       catch(error){
         console.error('セッションチェックでエラー:',error);
       }}
+
+      socket.on('add_correct_answer', async function(selections){
+        try{
+          var SQL = {
+            sql:"select question_ID from question_table where question_name = ?;",
+            value:[selections[0].question_ID]
+          }
+          var result = await SQL_exec(SQL);
+          var SQL2 ={
+            sql:`insert into correct_table values(?,?);`,
+            value:[result[0].question_ID,selections[0].answer]
+          }
+          var result2 = await SQL_exec(SQL2);
+          var SQL3 ={
+            sql:`update answer_table set result = 1 where answer = ?;`,
+            value:[selections[0].answer]
+          }
+          var result3 = await SQL_exec(SQL3);
+          socket.emit('corrected_answers');
+        }catch(err){
+          console.log(err);
+          socket.emit('corrected_answers_error');
+        }
+      })
+
+      socket.on('delete_correct_answer', async function(selections){
+        try{
+          var SQL = {
+            sql:"select question_ID from question_table where question_name = ?;",
+            value:[selections[0].question_ID]
+          }
+          var result = await SQL_exec(SQL);
+          var SQL2 ={
+            sql:`delete from  correct_table where correct COLLATE utf8mb4_bin = ?;`,
+            value:[selections[0].answer]
+          }
+          var result2 = await SQL_exec(SQL2);
+          var SQL3 ={
+            sql:`update answer_table set result = 0 where answer = ?;`,
+            value:[selections[0].answer]
+          }
+          var result3 = await SQL_exec(SQL3);
+          socket.emit('delete_answers');
+        }catch(err){
+          console.log(err);
+          socket.emit('delete_answers_error');
+        }
+      })
 
    })

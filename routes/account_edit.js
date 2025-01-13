@@ -7,7 +7,12 @@ const encoding = 'hex';
 //このページに来たら最初に行う処理
 /* GET users listing. */
 
-router.get('/', async (req,res) =>{
+router.get('/', async (req,res,next) =>{
+  if(!req.query.user_ID){
+    const err = new Error('セッションが切れています。ログインしてください。');
+    err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+    return next(err); // 次のエラーハンドリングミドルウェアに渡す
+  }
   var user_ID = req.query.userID;
   var data = {
     sql:'select user_ID,user_name,password,user_type from user_table where user_ID = ?',
@@ -37,30 +42,5 @@ function hashPassword(password) {
   sha256.update(password);
   return sha256.digest('hex');
 }
-/*router.get('/', function(req, res, next) {
-  var user_ID = req.query.userID;
-  var user_name = req.query.userName;
-  var password = req.query.password;
-  var app = req.app;
-  var poolCluster = app.get('pool');
-  var pool = poolCluster.of('MASTER');
-  var sql = 'select t.role_name from user_table u,User_Role t where u.user_type = t.user_type and u.user_ID = ?;';
-  pool.getConnection(function(err,connection){
-    connection.query(sql,user_ID,(err,result,fields) =>{
-        if(err){
-            console.log(err);
-        }
-        var data ={
-          user_ID:user_ID,
-          user_name:user_name,
-          pass_word:password,
-          role_name:result[0].role_name
-        }
-        res.render('account_edit.ejs',data);
-       })
-       connection.release();
-   })
-  
-});*/
 
 module.exports = router;

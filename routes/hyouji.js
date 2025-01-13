@@ -5,7 +5,7 @@ const { route } = require(".");
 const async = require('async');
 const { SQL_exec } = require('../db/SQL_module');
 
-router.get("/",async function(req,res){
+router.get("/",async function(req,res,next){
     try{
         var name1 = req.session.user.username;
         const { room_ID, question_ID, limit_time } = req.query;
@@ -27,6 +27,9 @@ router.get("/",async function(req,res){
         });
     }catch(error){
         console.error(error);
+        const err = new Error('セッションが切れています。ログインしてください。');
+        err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+        return next(err); // 次のエラーハンドリングミドルウェアに渡す
     }
 })
 /*

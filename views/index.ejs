@@ -5,15 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>表示２</title>
     <link type="text/css" rel="stylesheet" href="/stylesheets/index.css">
-    <style>
-      #picture {
-          text-align: center;
-      }
-      #picture img {
-          max-width: 100%;
-          height: auto;
-      }
-    </style>
   </head>
   <header>
     <div style="display: flex; align-items: center;">
@@ -46,6 +37,41 @@
   <% } else { %>
   <% } %></div>
 
-    <script src="/javascripts/index.js"></script>
+  <script>
+    var socket = io();
+      const limit_time = '<%= limit_time %>';
+      var totalSeconds = parseInt(limit_time, 10);
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+
+        // タイマーの表示更新
+        document.getElementById('re').innerText = minutes;
+        document.getElementById('re3').innerText = seconds;
+
+        var countdownId = setInterval(function() {
+          if (minutes === 0 && seconds === 0) {
+            clearInterval(countdownId);
+          } else {
+            if (seconds === 0) {
+              minutes--;
+              seconds = 59;
+            } else {
+              seconds--;
+            }
+            document.getElementById('re').innerText = minutes;
+            document.getElementById('re3').innerText = seconds;
+          }
+        }, 1000);
+
+        const room_ID = 'teacher';
+        const role = 3
+        if (room_ID) {
+                socket.emit('join_room', { room_ID, role });
+                console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+        } else {
+            console.error('ルームIDが指定されていません。');
+        }
+  </script>
+  <script src="/javascripts/index.js"></script>
   </body>
 </html>

@@ -4,7 +4,7 @@ const mysql = require("mysql");
 var async = require("async");
 const { SQL_exec } = require('../db/SQL_module');
 
-router.get('/',async function(req,res){
+router.get('/',async function(req,res,next){
     try{
         var name = req.session.user.username;
         const limit = 10; // 1ページあたりのレコード数
@@ -56,7 +56,7 @@ router.get('/',async function(req,res){
             u.user_name,
             a.answer AS user_answer,
             CASE 
-                WHEN COUNT(DISTINCT c.correct) > 1 THEN GROUP_CONCAT(DISTINCT c.answer ORDER BY c.answer SEPARATOR ', ')
+                WHEN COUNT(DISTINCT c.correct) > 1 THEN GROUP_CONCAT(DISTINCT c.correct ORDER BY c.correct SEPARATOR ', ')
                 ELSE MAX(c.correct)
             END AS correct_answers,
             a.result,
@@ -104,6 +104,9 @@ router.get('/',async function(req,res){
         res.render('mondai6', { name:name,web: questionData,currentPage:page,totalPages:totalPages });
     }catch(error){
         console.log(error)
+        const err = new Error('セッションが切れています。ログインしてください。');
+        err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+        return next(err); // 次のエラーハンドリングミドルウェアに渡す
     }
 })
 module.exports = router;

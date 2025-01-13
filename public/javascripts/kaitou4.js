@@ -9,6 +9,6 @@ f.kaitou1.addEventListener('click',function(e){
     socket.emit('kiroku',m1,checkvalue);
 })
 
-socket.on('owari',function(){
+socket.on('end',function(){
     window.location.href ='/kaitou3?name=' + encodeURIComponent(myname.innerText);
 })

@@ -7,7 +7,7 @@ const { SQL_exec } = require('../db/SQL_module');
 
 //このページに来たら最初に行う処理
 /* GET users listing. */
-router.get("/", async (req,res) =>{
+router.get("/", async (req,res,next) =>{
   try{
     var user_ID = req.query.userId;
     const sql_data = {
@@ -25,7 +25,9 @@ router.get("/", async (req,res) =>{
   }
   catch(error){
     console.log(error);
-    res.render('login.ejs');
+    const err = new Error('セッションが切れています。ログインしてください。');
+    err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+    return next(err); // 次のエラーハンドリングミドルウェアに渡す
   }
 })
 

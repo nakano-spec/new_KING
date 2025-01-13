@@ -7,6 +7,7 @@ const socket = io({ transports: ['websocket'], upgrade: false });
     } else {
         console.error('ルームIDが指定されていません。');
     }
+    
     socket.on('modoru',function(){
         window.location.href='/kaitou'
     })

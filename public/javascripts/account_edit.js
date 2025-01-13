@@ -1,8 +1,6 @@
 const socket = io();
 
         // 元の学籍番号を保持（ページロード時に取得）
-        const originalUserId = "<%= user_ID %>";
-        const originalrolename = "<%= role_name %>";
         console.log(originalUserId);
 
         document.getElementById('saveButton').addEventListener('click', (e) => {

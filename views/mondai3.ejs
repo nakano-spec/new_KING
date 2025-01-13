@@ -44,6 +44,46 @@
                 <input type="submit" class="button" name="kekka" value ="回答結果へ">
             </div>
         </form>
+        <script>
+            var f  = document.forms.myform2;
+            var socket = io({ transports: ['websocket'], upgrade: false });
+            const room_ID = '<%= name %>';
+                const role = 1
+                if (room_ID) {
+                    socket.emit('join_room', { room_ID, role });
+                    console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
+                } else {
+                    console.error('ルームIDが指定されていません。');
+                }
+            var inner2 = '<%= second %>'  //入力値を受け取る
+            var minites = parseInt(inner2/60,10); //分を取得
+            var seconds = Math.round(inner2%60); //秒を取得
+            seconds = Math.abs(seconds);
+
+            remain.innerText=minites;
+            remain2.innerText=seconds;
+
+            //カウンドダウン開始
+            if(minites == 0 && seconds == 0){
+                remain.innerText=minites;
+                remain2.innerText=seconds;
+            }else{
+                var countdownid = setInterval(function(){
+                if(minites != 0 && seconds == 0){
+                    minites --;
+                    seconds = 59;
+                }else{
+                   seconds --; 
+                }
+                remain.innerText=minites;
+                remain2.innerText = seconds;
+                if(minites == 0 && seconds == 0){
+                    clearInterval(countdownid);
+                    socket.emit('owa2');
+                }
+            }, 1000);
+            }
+        </script>
         <script src="/javascripts/mondai3.js"></script>
     </body>
 </html>

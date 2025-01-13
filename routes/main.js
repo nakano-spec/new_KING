@@ -6,8 +6,13 @@ const async = require('async');
 
 /* GET home page. */
 router.get('/', function(req, res) {
-    console.log(req.session);
+    if(!req.session.user){
+        const err = new Error('セッションが切れています。ログインしてください。');
+        err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+        return next(err); // 次のエラーハンドリングミドルウェアに渡す
+  }else{
     res.render('main',{name:req.session.user.username});
+  }
 });
 
 

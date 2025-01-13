@@ -41,7 +41,9 @@ router.get('/', async function(req, res, next){
       res.render('question_additionmanual', { question:results,name:req.session.user.username});
     }catch(error){
       console.error(error);
-      res.status(500).send("エラーが発生しました");
+      const err = new Error('セッションが切れています。ログインしてください。');
+      err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+      return next(err); // 次のエラーハンドリングミドルウェアに渡す
     }
 });
 

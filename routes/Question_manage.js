@@ -3,7 +3,7 @@ const router = express.Router();
 const { SQL_exec } = require('../db/SQL_module');
 const { SQL_exec2 } = require('../db/SQL_module');
 
-router.get('/',async function(req,res){
+router.get('/',async function(req,res,next){
     try{
         const limit = 10; // 1ページあたりのレコード数
         const page = parseInt(req.query.page) || 1; // 現在のページ番号
@@ -56,6 +56,9 @@ router.get('/',async function(req,res){
         res.render('Question_manage', { questions: results,name:req.session.user.username,currentPage:page,totalPages: totalPages });
     }catch(error){
         console.log(error);
+        const err = new Error('セッションが切れています。ログインしてください。');
+        err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+        return next(err); // 次のエラーハンドリングミドルウェアに渡す
     }
 })
 

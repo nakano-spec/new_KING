@@ -205,7 +205,6 @@ app.use('/question_list',question_listRouter);
 app.use('/question_addition',question_additionRouter);
 app.use('/question_edit',question_editRouter);
 app.use('/question_additionCSV',question_additionCSVRouter);
-//app.use('/api', emailRoutes);
 app.use('/question_select', question_additionMethodRouter);
 app.use('/question_additionmanual', question_additionmanualRouter);
 app.use('/SQL_test', testRouter);
@@ -226,7 +225,8 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  console.error(err.message); // エラー内容をログ出力
+  res.redirect('/');
 });
 
 

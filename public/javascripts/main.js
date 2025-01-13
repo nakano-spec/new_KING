@@ -2,6 +2,21 @@ var socket = io({ transports: ['websocket'], upgrade: false });
         const menuButton = document.getElementById('hambtn');
         const sidebar = document.getElementById('sidebar');
 
+         //セッションチェック三銃士を連れてきたよ。
+         window.addEventListener('load',function(){//socket.on呼び出しの専門家　load。「うっす、よろしく」
+            socket.emit('checksession',"main.ejs");//現在いるページを引数として送る
+        })
+
+        socket.on('session_OK',function(data){//セッションチェック成功の専門家　session_OK。「がんばります、よろしく」
+            console.log(data);
+        })
+
+        socket.on('session_error',function(data){//セッションチェック失敗の専門家　session_NG。「よっす、どうも」
+            console.log(data);
+            window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+        })
+        //三銃士ここまで
+        
         menuButton.addEventListener('click', () => {
             sidebar.classList.toggle('active');
             mainContent.classList.toggle('sidebar-active');

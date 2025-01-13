@@ -1,6 +1,5 @@
 $(document).ready(() => $('.select2').select2());
 
-const socket = io({ transports: ['websocket'], upgrade: false });
 const form = document.forms.f1;
 const menuButton = document.getElementById('hambtn');
 const menu = document.getElementById('menu');
@@ -24,18 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
              window.location.href = '/question_select'
         });
     }
-});
-
-// 接続が確立した時点でルームに参加
-socket.on('connect',async function(){
-        const room_ID = '<%= name %>';
-        const role = 1
-        if (room_ID) {
-            socket.emit('join_room', { room_ID, role });
-            console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
-        } else {
-            console.error('ルームIDが指定されていません。');
-        }
 });
 
 //ルームの部屋

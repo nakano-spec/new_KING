@@ -48,10 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const handleLoginSuccess = (type, name) => {
       switch(type) {
           case 'teacher':
-              window.location.href = `main?name=${encodeURIComponent(name)}`;
+              window.location.href = `main`;
               break;
           case 'student':
-              window.location.href = `/kaitou?name=${encodeURIComponent(name)}`;
+              window.location.href = `/kaitou`;
               break;
           case 'admin':
               window.location.href = '/admin_main';
