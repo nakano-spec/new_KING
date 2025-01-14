@@ -1,4 +1,19 @@
-   // 他のページへの遷移処理
+//セッションチェック三銃士
+window.addEventListener('load',function(){
+    socket.emit('checksession',"index.ejs");//現在いるページを引数として送る
+})
+
+socket.on('session_OK',function(data){
+    console.log(data);
+})
+
+socket.on('session_error',function(data){
+    console.log(data);
+    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+})
+//三銃士ここまで
+
+// 他のページへの遷移処理
    socket.on('hyouji', function(student_data) {
     console.log(student_data);
     window.location.href = `/hyou3?user_ID=${encodeURIComponent(student_data.user_ID)}&user_name=${encodeURIComponent(student_data.user_name)}&userAnswer=${encodeURIComponent(student_data.userAnswer)}`;

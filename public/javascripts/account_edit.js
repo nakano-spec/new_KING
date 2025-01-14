@@ -1,4 +1,20 @@
 const socket = io();
+//セッションチェック三銃士
+window.addEventListener('load',function(){
+    socket.emit('checksession',"account_edit.ejs");//現在いるページを引数として送る
+})
+
+socket.on('session_OK',function(data){
+    console.log(data);
+})
+
+socket.on('session_error',function(data){
+    console.log(data);
+    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+})
+//三銃士ここまで
+
+
 
         // 元の学籍番号を保持（ページロード時に取得）
         console.log(originalUserId);

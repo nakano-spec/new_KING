@@ -1,4 +1,19 @@
 const socket = io({transports: ['websocket'], upgrade: false});
+//セッションチェック三銃士
+window.addEventListener('load',function(){
+    socket.emit('checksession',"question_additionCSV.ejs");//現在いるページを引数として送る
+})
+
+socket.on('session_OK',function(data){
+    console.log(data);
+})
+
+socket.on('session_error',function(data){
+    console.log(data);
+    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+})
+//三銃士ここまで
+
 const zoom = document.querySelectorAll(".zoom");
 const zoomback = document.getElementById("zoomback");
 const zoomimg = document.getElementById("zoomimg");
