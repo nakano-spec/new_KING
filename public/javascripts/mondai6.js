@@ -1,3 +1,18 @@
+//セッションチェック三銃士
+window.addEventListener('load',function(){
+    socket.emit('checksession',"main.ejs");//現在いるページを引数として送る
+})
+
+socket.on('session_OK',function(data){
+    console.log(data);
+})
+
+socket.on('session_error',function(data){
+    console.log(data);
+    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+})
+//三銃士ここまで
+
 const table = document.getElementById("table");
 const resultButton = document.getElementById("resultButton");
 const addButtons = document.querySelectorAll('.checkbox-add'); // 正解追加のチェックボックス

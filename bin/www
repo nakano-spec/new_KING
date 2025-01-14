@@ -125,7 +125,7 @@ const { SQL_exec } = require( '../db/SQL_module');
   });
 
   const mysql_setting = {
-    host :'192.168.0.14',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
+    host :'192.168.3.27',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
     user :'connect',
     password :'K1ng@Oyster',
     database :'mydb',
@@ -1727,7 +1727,7 @@ const { SQL_exec } = require( '../db/SQL_module');
       });
     }
 
-   socket.on('checksession',async function(current_page){//セッションチェック
+   socket.on('checksession',async function(current_page){//セッションチェックの関数。各ejsページから呼び出される。
       try{
         console.log("セッションチェック実行");
         const req = socket.request;
@@ -1742,7 +1742,6 @@ const { SQL_exec } = require( '../db/SQL_module');
             if(result == false){
               await destroySession(req);
               socket.emit('session_error',"このページを開く権限がありません");
-              
             }
         }  
       }catch(error){
@@ -1750,7 +1749,7 @@ const { SQL_exec } = require( '../db/SQL_module');
       }
     })
 
-    async function checkpage(username,current_page){//ページの権限チェック
+    async function checkpage(username,current_page){//ページの権限チェックの関数。checksessionから呼び出される。
       try{
         console.log("権限チェック開始");
         console.log(username);
