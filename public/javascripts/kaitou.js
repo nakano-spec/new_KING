@@ -1,6 +1,6 @@
 //セッションチェック三銃士
  window.addEventListener('load',function(){
-    socket.emit('checksession',"main.ejs");//現在いるページを引数として送る
+    socket.emit('checksession',"kaitou.ejs");//現在いるページを引数として送る
 })
 
 socket.on('session_OK',function(data){
