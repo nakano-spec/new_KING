@@ -1,3 +1,4 @@
+const socket = io({transports: ['websocket'], upgrade: false});
 //セッションチェック三銃士
 window.addEventListener('load',function(){
     socket.emit('checksession',"question_additionMethod.ejs");//現在いるページを引数として送る

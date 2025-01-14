@@ -1,3 +1,4 @@
+const socket = io();
 //セッションチェック三銃士
 window.addEventListener('load',function(){
     socket.emit('checksession',"account_list.ejs");//現在いるページを引数として送る
@@ -13,7 +14,6 @@ socket.on('session_error',function(data){
 })
 //三銃士ここまで
 
-const socket = io();
         const menuButton = document.getElementById('hambtn');
         const sidebar = document.getElementById('sidebar');
         let sortDirection = 1;  // 1: 昇順、-1: 降順

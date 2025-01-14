@@ -1,3 +1,4 @@
+var socket = io();
 //セッションチェック三銃士
  window.addEventListener('load',function(){
     socket.emit('checksession',"account_addition.ejs");//現在いるページを引数として送る
@@ -13,7 +14,6 @@ socket.on('session_error',function(data){
 })
 //三銃士ここまで
         
-        var socket = io();
         const menuButton = document.getElementById('hambtn');
         const sidebar = document.getElementById('sidebar');
 

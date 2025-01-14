@@ -1,3 +1,4 @@
+const socket = io({transports: ['websocket'], upgrade: false});
 //セッションチェック三銃士
 window.addEventListener('load',function(){
     socket.emit('checksession',"question_additionCSV.ejs");//現在いるページを引数として送る
@@ -13,7 +14,6 @@ socket.on('session_error',function(data){
 })
 //三銃士ここまで
 
-const socket = io({transports: ['websocket'], upgrade: false});
 const zoom = document.querySelectorAll(".zoom");
 const zoomback = document.getElementById("zoomback");
 const zoomimg = document.getElementById("zoomimg");

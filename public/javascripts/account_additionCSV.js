@@ -6,6 +6,21 @@ const uploadButton = document.getElementById('upload_button');
 
 const downloadButton = document.getElementById('downloadButton');
 
+//セッションチェック三銃士
+window.addEventListener('load',function(){
+    socket.emit('checksession',"account_edit.ejs");//現在いるページを引数として送る
+})
+
+socket.on('session_OK',function(data){
+    console.log(data);
+})
+
+socket.on('session_error',function(data){
+    console.log(data);
+    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+})
+//三銃士ここまで
+
 downloadButton.addEventListener('click', () => {
     // サーバーにファイル送信リクエストを送る
     socket.emit('requestFile');

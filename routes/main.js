@@ -5,7 +5,7 @@ const mysql = require("mysql");
 const async = require('async');
 
 /* GET home page. */
-router.get('/', function(req, res) {
+router.get('/', function(req, res,next) {
     if(!req.session.user){
         const err = new Error('セッションが切れています。ログインしてください。');
         err.status = 401; // HTTPステータスコード 401 (Unauthorized)

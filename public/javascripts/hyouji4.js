@@ -1,3 +1,4 @@
+var socket = io({ transports: ['websocket'], upgrade: false });
 //セッションチェック三銃士
 window.addEventListener('load',function(){
     socket.emit('checksession',"hyouji4.ejs");//現在いるページを引数として送る
@@ -13,7 +14,7 @@ socket.on('session_error',function(data){
 })
 //三銃士ここまで
 
-var socket = io({ transports: ['websocket'], upgrade: false });
+
         const rows = JSON.parse('<%- JSON.stringify(han1) %>');
         console.log(rows);
 

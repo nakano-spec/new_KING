@@ -1,3 +1,4 @@
+const socket = io();
 //セッションチェック三銃士
 window.addEventListener('load',function(){
     socket.emit('checksession',"admin_main.ejs");//現在いるページを引数として送る

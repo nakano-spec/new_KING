@@ -1,3 +1,4 @@
+const socket = io({ transports: ['websocket'], upgrade: false });
 //セッションチェック三銃士
 window.addEventListener('load',function(){
     socket.emit('checksession',"kaitou2.ejs");//現在いるページを引数として送る
@@ -13,8 +14,6 @@ socket.on('session_error',function(data){
 })
 //三銃士ここまで
 
-// サーバーに解答を送信
-const socket = io({ transports: ['websocket'], upgrade: false });
 const roomID = 'teacher';
 const role = 2
 if (roomID) {
