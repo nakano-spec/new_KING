@@ -100,16 +100,6 @@ function toggleText(element) {
     element.classList.toggle('ellipsis');
 }
 
-// ページリンクの動作
-/*document.getElementById('question-link').addEventListener('click', function(event) {
-    event.preventDefault();
-    socket.emit('pageupdate', 3);
-});
-
-socket.on('page_updatecomplete', function() {
-    window.location.href = '/account';
-});*/
-
 async function logout() {
     try {
         await new Promise((resolve, reject) => {

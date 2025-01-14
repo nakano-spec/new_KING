@@ -16,7 +16,7 @@ var socket = io({ transports: ['websocket'], upgrade: false });
             window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
         })
         //三銃士ここまで
-        
+
         menuButton.addEventListener('click', () => {
             sidebar.classList.toggle('active');
             mainContent.classList.toggle('sidebar-active');
@@ -36,6 +36,10 @@ var socket = io({ transports: ['websocket'], upgrade: false });
 
         document.getElementById('question-list-button').addEventListener('click', function() {
             socket.emit('pageupdate', 6);
+        });
+
+        document.getElementById('history-button').addEventListener('click', function() {
+           window.location.href="/history"
         });
 
         document.getElementById('logout-button').addEventListener('click', function() {

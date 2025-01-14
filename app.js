@@ -59,6 +59,8 @@ const adminmainRouter = require('./routes/admin_main');
 var question_additionMethodRouter = require('./routes/question_additionMethod');
 var question_additionmanualRouter = require('./routes/question_additionmanual');
 var testRouter = require('./routes/SQL_test');
+var historyRouter = require('./routes/history.js');
+
 
 const router = require('./routes/index');
 //読み込んだexpressをapp変数に格納
@@ -208,6 +210,7 @@ app.use('/question_additionCSV',question_additionCSVRouter);
 app.use('/question_select', question_additionMethodRouter);
 app.use('/question_additionmanual', question_additionmanualRouter);
 app.use('/SQL_test', testRouter);
+app.use('/history', historyRouter);
 
 const helmet = require('helmet');
 app.use(helmet());

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>解答履歴</title>
+    <link rel="stylesheet" href="/stylesheets/answer_history.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-button" id="hambtn" aria-label="メニュー">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </button>
+            <h1>ニコキタ教育委員会：問題一覧</h1>
+        </div>
+        <div class="user">
+            <% if (name) { %>
+                ユーザー：<%= name %>
+            <% } else { %>
+                ユーザー：guest
+            <% } %>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <a href="/main">メインページ</a>
+        <a href="/mondai">問題出題</a>
+        <a href="/Question_manage">問題管理</a>
+        <a href="/history">解答履歴</a>
+        <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+    </nav>
+    <main>
+        <div class="search-container">
+            <input type="search" id="search-box" placeholder="問題を検索">
+            <span class="search-icon">🔍</span>
+            <button id="search-button">検索</button>
+        </div><br>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>学生ID</th>
+                    <th>問題名</th>
+                    <th>解答</th>
+                    <th>結果</th>
+                    <th>ログ時間</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% answers.forEach(answer => { %>
+                    <tr>
+                        <td><%= answer.student %></td>
+                        <td><%= answer.question_name %></td>
+                        <td><%= answer.student_answer %></td>
+                        <td><%= answer.result === 1 ? '○' : '✕' %></td> 
+                        <td class="log-time"><%= answer.log_time %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <!-- ページングナビゲーション -->
+        <div class="pagination">
+            <% if (currentPage > 1) { %>
+                <a href="/history?page=<%= currentPage - 1 %>">前のページ</a>
+            <% } %>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="/history?page=<%= i %>" <%= currentPage === i ? 'class="active"' : '' %>>
+                    <%= i %>
+                </a>
+            <% } %>
+            <% if (currentPage < totalPages) { %>
+                <a href="/history?page=<%= currentPage + 1 %>">次のページ</a>
+            <% } %>
+        </div>
+        <button class="result-button" onclick="window.location.href='/main';">戻る</button>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/answer_history.js"></script>
+</body>
+</html>
