@@ -225,6 +225,7 @@ img{
   width: 1200px;
   height: 250px;
   border: 2px solid black;
+  overflow-y: auto;
 }
 .options-list{
   font-size: 2rem;

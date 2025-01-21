@@ -62,13 +62,12 @@ socket.on('question_Complete', function() {
 
 socket.on('delete_result',function(){
     alert("削除が完了しました。");
-    updateTable(results);
+    window.location.href='/Question_manage';
 })
 
 // 検索ボタン
-document.getElementById('search-button').addEventListener('click', function() {
-    var searchTerm = document.getElementById('search-box').value;
-    socket.emit('search_question', searchTerm);
+document.getElementById('reset-button').addEventListener('click', function() {
+    window.location.href = '/Question_manage?page=1';
 });
 
 socket.on('question', function(results) {
@@ -105,7 +104,7 @@ async function logout() {
         await new Promise((resolve, reject) => {
             socket.emit('session_destroy', (response) => response.success ? resolve() : reject(response.error));
         });
-        navigateTo('/login');
+        window.location.href = '/login';
     } catch (error) {
         alert('ログアウトに失敗しました: ' + error);
     }

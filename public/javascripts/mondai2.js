@@ -1,18 +1,3 @@
-//セッションチェック三銃士
-window.addEventListener('load',function(){
-    socket.emit('checksession',"mondai2.ejs");//現在いるページを引数として送る
-})
-
-socket.on('session_OK',function(data){
-    console.log(data);
-})
-
-socket.on('session_error',function(data){
-    console.log(data);
-    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
-})
-//三銃士ここまで
-
 $(document).ready(() => $('.select2').select2());
 
 const form = document.forms.f1;
@@ -88,7 +73,15 @@ socket.on('preview_response', (data) => {
         console.log(data)
         // モーダル内の画像を更新
         const pictureDiv = modal.querySelector('.picture img');
+        const pictureMessage = modal.querySelector('.picture .message');
         if (data[0].pics_name != '') {
+            pictureDiv.onerror = () => {
+                pictureDiv.style.display = 'none'; // 画像を非表示
+                if (pictureMessage) {
+                    pictureMessage.style.display = 'block'; // エラーメッセージを表示
+                    pictureMessage.textContent = data[0].pics_name + 'が見つかりませんでした。サーバーに登録してください。';
+                }
+            };
             pictureDiv.src = '/images/' + data[0].pics_name;
         } else {
             pictureDiv.src = '/images/noImage.jpg'; // デフォルト画像
@@ -145,6 +138,11 @@ window.addEventListener("click", function(event) {
         modal.style.display = "none";
     }
 });
+
+socket.on('preview_error',async function(participants){
+    console.log('参加者リストを受信:', participants);
+})
+
 
 $('#qualification-select').on('select2:select', function(e) {
     const selectedQualification = e.params.data.id;
@@ -287,10 +285,24 @@ socket.on('question_error', () => {
   alert('問題が見つかりませんでした。');
 });
 
-
 //サニタイズ処理
 function sanitize(str) {
     return String(str)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g, '&#x2F;');
 }
+
+//セッションチェック三銃士
+window.addEventListener('load',function(){
+    socket.emit('checksession',"mondai2.ejs");//現在いるページを引数として送る
+})
+
+socket.on('session_OK',function(data){
+    console.log(data);
+})
+
+socket.on('session_error',function(data){
+    console.log(data);
+    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+})
+//三銃士ここまで

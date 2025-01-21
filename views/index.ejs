@@ -33,7 +33,7 @@
     <h1 id="questionText"><%= question_text %></h1><br>
     <div id="picture" class="picture"> <% if (pics_name) { %>
       <p></p>
-      <img src="/images/<%= pics_name %>" alt="問題画像" />
+      <img src="/images/<%= pics_name %>" onerror="this.onerror=null; this.src='/images/noImage.jpg'" alt="問題画像" />
   <% } else { %>
   <% } %></div>
 

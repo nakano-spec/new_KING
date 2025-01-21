@@ -1,4 +1,4 @@
-const socket = io({transports: ['websocket'], upgrade: false});
+const socket = io({ transports: ['websocket'], upgrade: false });
 const optionsContainer = document.getElementById('options-container');
 const addOptionBtn = document.getElementById('add-option-btn');
 const errorMessage = document.getElementById('error-message');
@@ -7,13 +7,13 @@ const zoomback = document.getElementById("zoomback");
 const zoomimg = document.getElementById("zoomimg");
 const photoInput = document.getElementById('photo-input');
 
-window.addEventListener('load', function(){			
-   socket.emit('image_List');		
+// 初期ロード時に画像リストを取得
+window.addEventListener('load', function () {
+    socket.emit('image_List');
 });
 
-// 画像リスト取得後、パネル内に表示
-socket.on('imageList', function(files) {
-    console.log('Received image list:', files);
+// 画像リストを受信して表示
+socket.on('imageList', function (files) {
     const imageListContainer = document.getElementById('imageListContainer');
     imageListContainer.innerHTML = ''; // 初期化
 
@@ -23,7 +23,7 @@ socket.on('imageList', function(files) {
 
         const img = document.createElement('img');
         img.src = '/images/' + file;
-        img.classList.add('zoom')
+        img.classList.add('zoom');
 
         const fileName = document.createElement('p');
         fileName.textContent = file; // ファイル名を表示
@@ -34,13 +34,13 @@ socket.on('imageList', function(files) {
     });
 
     const zoomElements = document.querySelectorAll('.zoom');
-    zoomElements.forEach(function(value) {
+    zoomElements.forEach(value => {
         value.addEventListener("click", kakudai);
     });
 });
 
-socket.on('image_result', function(file) {
-    console.log('Received image list:', file);
+// 画像検索結果を受信
+socket.on('image_result', function (file) {
     const imageListContainer = document.getElementById('imageListContainer');
     imageListContainer.innerHTML = ''; // 初期化
     const imageItem = document.createElement('div');
@@ -48,7 +48,7 @@ socket.on('image_result', function(file) {
 
     const img = document.createElement('img');
     img.src = '/images/' + file;
-    img.classList.add('zoom')
+    img.classList.add('zoom');
 
     const fileName = document.createElement('p');
     fileName.textContent = file; // ファイル名を表示
@@ -58,12 +58,13 @@ socket.on('image_result', function(file) {
     imageListContainer.appendChild(imageItem);
 
     const zoomElements = document.querySelectorAll('.zoom');
-    zoomElements.forEach(function(value) {
+    zoomElements.forEach(value => {
         value.addEventListener("click", kakudai);
     });
 });
 
-socket.on('image_error', function(error) {
+// エラー処理
+socket.on('image_error', function (error) {
     console.log(error);
 });
 
@@ -72,41 +73,35 @@ const imagePanelButton = document.getElementById('imagePanelButton');
 const imagePanel = document.getElementById('imagePanel');
 let panelOpen = false;
 
-imagePanelButton.addEventListener('click', function() {
+imagePanelButton.addEventListener('click', function () {
     panelOpen = !panelOpen;
-    if(panelOpen) {
-        imagePanel.classList.add('open');
-    } else {
-        imagePanel.classList.remove('open');
-    }
+    panelOpen ? imagePanel.classList.add('open') : imagePanel.classList.remove('open');
 });
 
-zoom.forEach(function(value) {
-    value.addEventListener("click",kakudai);
+// 拡大表示処理
+zoom.forEach(value => {
+    value.addEventListener("click", kakudai);
 });
 
 function kakudai(e) {
     zoomback.style.display = "flex";
-    zoomimg.setAttribute("src",e.target.getAttribute("src"));
+    zoomimg.setAttribute("src", e.target.getAttribute("src"));
 }
 
-zoomback.addEventListener("click",modosu);
+zoomback.addEventListener("click", modosu);
 
 function modosu() {
     zoomback.style.display = "none";
 }
 
 // 検索ボタン
-document.getElementById('search-button').addEventListener('click', function() {
-    var searchTerm = document.getElementById('search-box').value;
-    if(searchTerm == ''){
-        socket.emit('image_List')
-    }else{
-        socket.emit('search_img', searchTerm);
-    }
+document.getElementById('search-button').addEventListener('click', function () {
+    const searchTerm = document.getElementById('search-box').value;
+    searchTerm === '' ? socket.emit('image_List') : socket.emit('search_img', searchTerm);
 });
 
-document.getElementById('addChoiceBtn').addEventListener('click', function() {
+// 選択肢の追加と削除
+document.getElementById('addChoiceBtn').addEventListener('click', function () {
     const container = document.getElementById('choicesContainer');
     const errorMessage = document.getElementById('error-message');
     if (container.children.length >= 10) {
@@ -114,18 +109,18 @@ document.getElementById('addChoiceBtn').addEventListener('click', function() {
         return;
     }
     const choiceCount = container.children.length + 1;
-    
+
     const newChoice = document.createElement('div');
     newChoice.className = 'form-group';
     newChoice.innerHTML = `
         <label class="form-label">選択肢${choiceCount}：</label>
         <input type="text" class="form-input" name="choice${choiceCount}" placeholder="例: ア:ネットワーク層">
     `;
-    
+
     container.appendChild(newChoice);
 });
 
-document.getElementById('deleteChoiceBtn').addEventListener('click', function() {
+document.getElementById('deleteChoiceBtn').addEventListener('click', function () {
     const container = document.getElementById('choicesContainer');
     const errorMessage = document.getElementById('error-message');
     if (container.children.length < 1) {
@@ -135,6 +130,7 @@ document.getElementById('deleteChoiceBtn').addEventListener('click', function() 
     container.removeChild(container.lastElementChild);
 });
 
+// 写真のアップロード設定
 function setupPhotoUpload() {
     const dropzone = document.getElementById('photo-dropzone');
     const input = document.getElementById('photo-input');
@@ -152,8 +148,7 @@ function setupPhotoUpload() {
     dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropzone.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        displayFiles(files);
+        displayFiles(e.dataTransfer.files);
     });
 
     dropzone.addEventListener('click', () => {
@@ -161,15 +156,14 @@ function setupPhotoUpload() {
     });
 
     input.addEventListener('change', () => {
-        const files = input.files;
-        displayFiles(files);
+        displayFiles(input.files);
     });
 
     function displayFiles(files) {
         fileList.innerHTML = '';
-        for (let i = 0; i < files.length; i++) {
+        for (let file of files) {
             const li = document.createElement('li');
-            li.textContent = files[i].name;
+            li.textContent = file.name;
             fileList.appendChild(li);
         }
     }
@@ -177,8 +171,9 @@ function setupPhotoUpload() {
 
 setupPhotoUpload();
 
-document.getElementById('questionForm').addEventListener('submit', function(event) {
-    event.preventDefault(); 
+// フォームの送信処理
+document.getElementById('questionForm').addEventListener('submit', function (event) {
+    event.preventDefault();
 
     const form = document.getElementById('questionForm');
     const requiredElements = form.querySelectorAll('[required]');
@@ -195,132 +190,49 @@ document.getElementById('questionForm').addEventListener('submit', function(even
         }
     });
 
-    // 選択肢の形式チェック（「:」が含まれていることだけを確認）
     if (!hasError) {
         choiceInputs.forEach(input => {
             const value = input.value.trim();
-            if (value !== '' && !/.+[:：].+/.test(value)) { // 空でなければ形式チェック
+            if (value !== '' && !/.+[:：].+/.test(value)) {
                 hasError = true;
-                errorMessage = '選択肢は「内容:内容」の形式で入力してください。';
+                errorMessage = '選択肢は「選択肢:内容」の形式で入力してください。';
             }
         });
     }
 
-    // エラーチェック
+    if (!hasError && choiceInputs.length > 0) {
+        const correctAnswer = form.querySelector('input[name="correct"]').value.trim();
+        const choiceValues = Array.from(choiceInputs).map(input => input.value.split(/[:：]/)[0].trim());
+        if (!choiceValues.includes(correctAnswer)) {
+            hasError = true;
+            errorMessage = '正解が選択肢内に存在しません。';
+        }
+    }
+
     if (hasError) {
         window.alert(`入力エラー: ${errorMessage}`);
         return;
     }
 
-    const file2 = photoInput.files[0];
-
-    if (!file2) {
-    }else{
-        console.log(file2);
-    }
-
-
-    // 全て入力済みの場合、入力内容を取得して表示する
     const formData = new FormData(form);
-    let resultText = "以下の内容で問題を追加しますか？\n\n";
-
-    // テキスト項目の表示
-    for (let [key, value] of formData.entries()) {
-        resultText += `${key}: ${value}\n`;
-    }
-
-    // 写真ファイルリストを取得
-    const fileListUl = document.querySelector('#photo-file-list ul');
-    if (fileListUl && fileListUl.children.length > 0) {
-        resultText += "\nアップロードされた写真ファイル:\n";
-        for (let li of fileListUl.children) {
-            resultText += `- ${li.textContent}\n`;
-        }
-    }
-
-    // 全部表示して確認
-    const confirmResult = window.confirm(resultText);
-
-    if(confirmResult) {
-        // ここでサーバーに送信する処理などを行う
-        const formObject = Object.fromEntries(formData.entries());
-        socket.emit('question_add', formObject);
-        alert('問題を登録しました。');
-        console.log("フォームデータの内容:", formObject);
-    } else {
-        // キャンセルした場合何もしない
-    }
+    socket.emit('question_add', Object.fromEntries(formData.entries()));
 });
 
-socket.on('complete',async function(complete){
-    const file = photoInput.files[0];
-
-    if (file) {
-        const formData2 = new FormData();
-        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-        const newFile = new File([file], sanitizedFileName, { type: file.type });
-        formData2.append('images', newFile);
-        for (let [key, value] of formData2.entries()) {
-            console.log(`${key}:`, value);
-        }
-        try {
-            $.ajax({
-                url: '/upload', // 相対パスを使用
-                method: 'POST',
-                data: formData2,
-                processData: false,
-                contentType: false
-            }).done(function(res){
-                console.log(res);
-                alert(`アップロード成功!`);
-                window.location.href = '/Question_manage';
-            }).fail(function(err){
-                console.log(err);
-                alert(`アップロードエラー: ${err.responseJSON.message || '不明なエラーが発生しました。'}`);
+// ログアウト処理
+async function logout() {
+    try {
+        await new Promise((resolve, reject) => {
+            socket.emit('session_destroy', (response) => {
+                if (response.success) resolve();
+                else reject(response.error);
             });
-        } catch (error) {
-            console.error('アップロードエラー:', error);
-        }
-    } else {
-        //alert('アップロードする写真がありません。');
-        window.location.href = '/Question_manage';
-    }
-})
-
-const menuButton = document.querySelector('.menu-icon'); // メニューボタンを取得
-    const sidebar = document.getElementById('sidebar'); // サイドバーを取得
-    const mainContent = document.querySelector('.main-content'); // メインコンテンツを取得
-
-    // メニューボタンのクリックイベント
-    menuButton.addEventListener('click', () => {
-        sidebar.classList.toggle('active'); // サイドバーの表示切り替え
-        mainContent.classList.toggle('sidebar-active'); // メインコンテンツの余白調整
-    });
-
-    // ドキュメント全体でクリックされたときの処理
-    document.addEventListener('click', (event) => {
-        if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
-            sidebar.classList.remove('active'); // サイドバーを非表示にする
-            mainContent.classList.remove('sidebar-active'); // 余白調整を解除
-        }
-    });
-
-    //ログアウト処理
-    async function logout() {
-        try {
-            await new Promise((resolve, reject) => {
-                socket.emit('session_destroy', (response) => {
-                    if (response.success) resolve();
-                    else reject(response.error);
-                });
-            });
-            // 成功時はログインページにリダイレクト
-            window.location.href = '/login';
-        } catch (error) {
-            alert('ログアウトに失敗しました: ' + error);
-        }
-    }
-    
-    socket.on('session_destroy_success', () => {
+        });
         window.location.href = '/login';
-    });
+    } catch (error) {
+        alert('ログアウトに失敗しました: ' + error);
+    }
+}
+
+socket.on('session_destroy_success', () => {
+    window.location.href = '/login';
+});

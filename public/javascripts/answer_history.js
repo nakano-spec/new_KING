@@ -42,7 +42,7 @@ async function logout() {
         await new Promise((resolve, reject) => {
             socket.emit('session_destroy', (response) => response.success ? resolve() : reject(response.error));
         });
-        navigateTo('/login');
+        window.location.href='/'
     } catch (error) {
         alert('ログアウトに失敗しました: ' + error);
     }
@@ -52,10 +52,8 @@ socket.on('session_destroy_success', () => navigateTo('/login'));
 socket.on('session_destroy_failed', (error) => alert('ログアウトに失敗しました: ' + error));
 
 // 検索ボタン
-document.getElementById('search-button').addEventListener('click', function() {
-    const searchTerm = document.getElementById('search-box').value.trim(); // 空白をトリム
-    console.log(searchTerm)
-    socket.emit('search_history', searchTerm);
+document.getElementById('reset-button').addEventListener('click', function() {
+    window.location.href='/history'
 });
 
 socket.on('history', function(results) {

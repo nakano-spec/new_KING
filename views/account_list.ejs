@@ -37,9 +37,12 @@
             <button id="edit-button" class="action-button">選択したユーザーを編集</button>
             <button id="delete-button" class="action-button">選択したユーザーを削除</button>
             <div class="search-bname:req.session.user.usernameox">
-                <input type="text" id="search-box" class="search-input" placeholder="ユーザーを検索" aria-label="ユーザー検索">
-                <button id="search-button" class="search-button" aria-label="検索">検索</button>
+                <form action="/account_list" method="get">
+                    <input type="search" id="search-box" class="search-input" name="search" placeholder="ユーザーを検索" value="<%= search %>">
+                    <button id="search-button" class="search-button" aria-label="検索">検索</button>
+                </form>
             </div>
+            <button id="reset-button" class="search-button">検索をリセット</button>
         </div>
 
         <form id="select-form">
@@ -48,15 +51,10 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>学籍番号
-                                <span class="sort-icon" onclick="sortTable('user_ID')">▲▼</span>
-                            </th>
-                            <th>名前
-                                <span class="sort-icon" onclick="sortTable('user_name')">▲▼</span>
-                            </th>
-                            <th>最終ログイン日時
-                                <span class="sort-icon" onclick="sortTable('log_time')">▲▼</span>
-                            </th>
+                            <th>学籍番号</th>
+                            <th>名前</th>
+                            <th>ロール</th>
+                            <th>最終ログイン日時</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -70,6 +68,15 @@
                                 </td>
                                 <td data-column="user_ID"><%= row.user_ID %></td>
                                 <td data-column="user_name"><%= row.user_name %></td>
+                                <td>
+                                    <% if (row.user_type === 1) { %>
+                                        教師
+                                    <% } else if(row.user_type === 2){ %>
+                                        学生
+                                    <% } else { %>
+                                        管理者
+                                    <% } %>
+                                </td>
                                 <td data-column="log_time"><%= new Date(row.log_time).toLocaleString('ja-JP') %></td>
                             </tr>
                         <% }); %>
@@ -77,23 +84,22 @@
                 </table>
             </div>
             <br>
-            <button type="submit" class="action-button">選択</button>
         </form>
         <div class="pagination">
             <% if (currentPage > 1) { %>
-                <a href="?page=<%= currentPage - 1 %>">&laquo; 前へ</a>
+                <a href="?page=<%= currentPage - 1 %>&search=<%= search %>">&laquo; 前へ</a>
             <% } %>
     
                 <% for (let i = 1; i <= totalPages; i++) { %>
                     <% if (i === currentPage) { %>
                         <span class="current-page"><%= i %></span>
                     <% } else { %>
-                        <a href="?page=<%= i %>"><%= i %></a>
+                        <a href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
                     <% } %>
                 <% } %>
     
                 <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %>">次へ &raquo;</a>
+                    <a href="?page=<%= currentPage + 1 %>&search=<%= search %>">次へ &raquo;</a>
                 <% } %>
             </div>
     </main>

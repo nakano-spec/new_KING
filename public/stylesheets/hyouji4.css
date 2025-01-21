@@ -4,65 +4,55 @@ body {
   font-family: Arial, sans-serif;
   background-color: white;
 }
-
 header {
   background-color: #F47B20;
   color: white;
   padding: 1rem;
   margin-bottom: 2rem;
 }
-
 h1 {
   font-size: 2rem;
   margin: 0;
   text-align: center;
 }
-
-.box {
-  display: flex;
+.box-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3列 */
+  gap: 0px; /* ボックス間のスペース */
   justify-content: center;
-  align-items: center; 
-  min-height: 70vh;
+  align-items: center;
+  padding: 20px;
+  margin: 0 auto; /* 左右の余白を自動調整 */
+  width: fit-content; /* コンテンツに基づいた幅に調整 */
 }
-
-.box.center {
-  align-items: center; /* データが少ない場合は中央寄せ */
-}
-
-table {
-  border-collapse: collapse;
-  margin: 0 auto;
-  width: fit-content; /* または width: auto; */
-}
-
-td {
-  width: 160px;
-  height: 160px;
+.result-box {
+  width: 400px;
+  height: 200px;
   text-align: center;
   vertical-align: middle;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   border: 2px solid black;
   color: white;
   font-size: 1.5rem;
 }
 
-.red {
-  background-color: #FF0000;
+.result-box div {
+  word-wrap: break-word; /* テキストを折り返す */
+  word-break: break-word; /* 必要に応じて単語内で改行 */
+  text-align: center; /* テキストを中央揃え */
+  overflow-wrap: break-word; /* 互換性のために追加 */
 }
 
-.blue {
-  background-color: #0000FF;
-}
-
-.dark-gray {
-  background-color: #555555; /* DarkSlateGray */
-}
-
-
+.result-box.red { background-color: #FF0000; }
+.result-box.blue { background-color: #0000FF; }
+.result-box.dark-gray { background-color: #555555; }
 .button-container {
   text-align: center;
   margin-top: 2rem;
 }
-
 .button {
   background-color: #F47B20;
   color: white;
@@ -71,19 +61,20 @@ td {
   font-size: 1rem;
   cursor: pointer;
 }
-
-.button:hover {
-  background-color: #ff7f50;
-}
-
-.link {
-  display: block;
+.pagination {
   text-align: center;
-  margin-top: 1rem;
-  color: #F47B20;
+  margin-top: 20px;
+}
+.pagination a {
+  margin: 0 5px;
+  padding: 10px 20px;
   text-decoration: none;
+  background-color: #F47B20;
+  color: white;
+  border-radius: 4px;
 }
 
-.link:hover {
-  text-decoration: underline;
+.pagination a.active {
+  background-color: #555555;
+  pointer-events: none;
 }

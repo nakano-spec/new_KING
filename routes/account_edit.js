@@ -8,25 +8,28 @@ const encoding = 'hex';
 /* GET users listing. */
 
 router.get('/', async (req,res,next) =>{
-  if(!req.query.user_ID){
-    const err = new Error('セッションが切れています。ログインしてください。');
-    err.status = 401; // HTTPステータスコード 401 (Unauthorized)
-    return next(err); // 次のエラーハンドリングミドルウェアに渡す
-  }
-  var user_ID = req.query.userID;
-  var data = {
-    sql:'select user_ID,user_name,password,user_type from user_table where user_ID = ?',
-    value:[user_ID]
-  }
-  var result =  await SQL_exec(data);
-  var role = await role_sort(result[0].user_type);
-  var data ={
-    user_ID:result[0].user_ID,
-    user_name:result[0].user_name,
-    role_name:role
-  }
-  console.log(data);
-  res.render('account_edit.ejs',data)
+    const userID = req.query.userID;
+    const userName = req.query.userName;
+    const logTime = req.query.logTime;
+
+    if (!userID || !userName || !logTime) {
+      const err = new Error('必要な情報が不足しています。URLパラメータを確認してください。');
+      err.status = 400; // HTTPステータスコード 400 (Bad Request)
+      return next(err);
+    }
+    var data = {
+      sql:'select user_ID,user_name,password,user_type from user_table where user_ID = ?',
+      value:[userID]
+    }
+    var result =  await SQL_exec(data);
+    var role = await role_sort(result[0].user_type);
+    var data ={
+      user_ID:result[0].user_ID,
+      user_name:result[0].user_name,
+      role_name:role
+    }
+    console.log(data);
+    res.render('account_edit.ejs',data)
 })
 
 async function role_sort(data){

@@ -38,10 +38,13 @@
             <button id="edit-button">選択した問題の編集</button>
             <button id="delete-button">選択した問題の削除</button>
             <div class="search-container">
-                <input type="search" id="search-box" placeholder="問題を検索">
-                <span class="search-icon">🔍</span>
-                <button id="search-button">検索</button>
+                <form action="/Question_manage" method="get">
+                    <input type="search" id="search-box" name="search" placeholder="問題を検索" value="<%= search %>">
+                    <span class="search-icon">🔍</span>
+                    <button id="search-button">検索</button>
+                </form>
             </div>
+            <button id="reset-button">検索をリセット</button>
         </div>
         <form id="select-form">
             <table>
@@ -76,21 +79,21 @@
             </table>
             <div class="pagination">
                 <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %>">&laquo; 前へ</a>
+                    <a href="?page=<%= currentPage - 1 %>&search=<%= search %>">&laquo; 前へ</a>
                 <% } %>
-        
-                    <% for (let i = 1; i <= totalPages; i++) { %>
-                        <% if (i === currentPage) { %>
-                            <span class="current-page"><%= i %></span>
-                        <% } else { %>
-                            <a href="?page=<%= i %>"><%= i %></a>
-                        <% } %>
+            
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <% if (i === currentPage) { %>
+                        <span class="current-page"><%= i %></span>
+                    <% } else { %>
+                        <a href="?page=<%= i %>&search=<%= search %>"><%= i %></a>
                     <% } %>
-        
-                    <% if (currentPage < totalPages) { %>
-                        <a href="?page=<%= currentPage + 1 %>">次へ &raquo;</a>
-                    <% } %>
-                </div>
+                <% } %>
+            
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %>&search=<%= search %>">次へ &raquo;</a>
+                <% } %>
+            </div>
         </form>
     </main>
 

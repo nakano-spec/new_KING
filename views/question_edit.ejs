@@ -104,12 +104,35 @@
 
             <div class="form-group">
                 <button type="submit" class="submit-btn">編集完了</button>
-                <button class="submit-btn" onclick="window.history.back();">戻る</button>
+                <button class="submit-btn" onclick="window.location.href='/Question_manage'">戻る</button>
             </div>
         </form>
     </main>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/javascripts/question_edit.js"></script>
+    <script>
+         // フォーム送信時のアラート
+         document.getElementById('questionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // フォームデータを取得
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = {};
+            // FormDataからオブジェクトに変換
+            formData.forEach((value, key) => {
+                // 選択肢（options[]）を配列にまとめる
+                if (key === 'options[]') {
+                    if (!data.options) data.options = [];
+                    data.options.push(value);
+                } else {
+                    data[key] = value;
+                }
+            });
+            data.id = "<%= question_ID %>"; // 編集対象のIDを追加
+            console.log("処理を開始");
+            socket.emit('question_update', data);
+        });
+    </script>
 </body>
 </html>

@@ -9,6 +9,7 @@ router.get('/', async (req, res, next) => {
         const limit = 10; // 1ページあたりのレコード数
         const page = parseInt(req.query.page) || 1; // 現在のページ番号
         const offset = (page - 1) * limit;
+        const search = req.query.search || '';
 
         // 合計レコード数を取得
         const countQuery = {
@@ -16,33 +17,42 @@ router.get('/', async (req, res, next) => {
             SELECT COUNT(*) AS total
             FROM answer_table AS a
             INNER JOIN question_log AS qlog ON a.q_log_ID = qlog.q_log_ID
-            INNER JOIN question_table AS q ON qlog.question_ID = q.question_ID;
-            `
+            INNER JOIN question_table AS q ON qlog.question_ID = q.question_ID
+            WHERE
+                    (a.user_ID LIKE ? OR
+                     q.question_name LIKE ? OR
+                     a.answer LIKE ?)
+            ;`,
+            value:[`%${search}%`,`%${search}%`,`%${search}%`]
         };
-        const countRows = await SQL_exec2(countQuery);
+        const countRows = await SQL_exec(countQuery);
         const totalItems = countRows[0].total;
         const totalPages = Math.ceil(totalItems / limit);
 
         // ページングされたデータを取得
         const query = {
             sql: `
-            SELECT
-                a.user_ID AS student,
-                q.question_name AS question_name,
-                a.answer AS student_answer,
-                a.result AS result,
-                qlog.log_time
-            FROM
-                answer_table AS a
-            INNER JOIN
-                question_log AS qlog ON a.q_log_ID = qlog.q_log_ID
-            INNER JOIN
-                question_table AS q ON qlog.question_ID = q.question_ID
-            ORDER BY
-              qlog.log_time DESC
-            LIMIT ? OFFSET ?;
-            `,
-            value: [limit, offset]
+                SELECT
+                        a.user_ID AS student,
+                        q.question_name AS question_name,
+                        a.answer AS student_answer,
+                        a.result AS result,
+                        qlog.log_time
+                    FROM
+                        answer_table AS a
+                    INNER JOIN
+                        question_log AS qlog ON a.q_log_ID = qlog.q_log_ID
+                    INNER JOIN
+                        question_table AS q ON qlog.question_ID = q.question_ID
+                    WHERE
+                        (a.user_ID LIKE ? OR
+                        q.question_name LIKE ? OR
+                        a.answer LIKE ?)
+                    ORDER BY
+                        qlog.log_time DESC
+                    LIMIT ? OFFSET ?;`
+            ,
+            value: [`%${search}%`,`%${search}%`,`%${search}%`,limit, offset]
         };
 
         const result = await SQL_exec(query);
@@ -56,11 +66,14 @@ router.get('/', async (req, res, next) => {
             answers: result,
             currentPage: page,
             totalPages: totalPages,
-            name:req.session.user.username
+            name:req.session.user.username,
+            search: search
         });
     } catch (error) {
         console.error('エラー:', error.message);
-        res.status(500).json({ error: 'データの取得中にエラーが発生しました' });
+        const err = new Error('セッションが切れています。ログインしてください。');
+        err.status = 401; // HTTPステータスコード 401 (Unauthorized)
+        return next(err); // 次のエラーハンドリングミドルウェアに渡す
     }
 });
 

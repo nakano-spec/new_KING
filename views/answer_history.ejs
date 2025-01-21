@@ -14,7 +14,7 @@
                 <div class="menu-line"></div>
                 <div class="menu-line"></div>
             </button>
-            <h1>ニコキタ教育委員会：問題一覧</h1>
+            <h1>ニコキタ教育委員会：解答履歴</h1>
         </div>
         <div class="user">
             <% if (name) { %>
@@ -34,10 +34,14 @@
     </nav>
     <main>
         <div class="search-container">
-            <input type="search" id="search-box" placeholder="問題を検索">
-            <span class="search-icon">🔍</span>
-            <button id="search-button">検索</button>
-        </div><br>
+            <form action="/history" method="get">
+                <input type="search" id="search-box" name="search" placeholder="解答を検索" value="<%= search %>">
+                <span class="search-icon">🔍</span>
+                <button id="search-button" class="search-button">検索</button>
+            </form>
+            <button id="reset-button" class="search-button">検索をリセット</button>
+        </div>
+        <br>
         <table border="1">
             <thead>
                 <tr>
@@ -64,15 +68,15 @@
         <!-- ページングナビゲーション -->
         <div class="pagination">
             <% if (currentPage > 1) { %>
-                <a href="/history?page=<%= currentPage - 1 %>">前のページ</a>
+                <a href="/history?page=<%= currentPage - 1 %>&search=<%= search %>">前のページ</a>
             <% } %>
             <% for (let i = 1; i <= totalPages; i++) { %>
-                <a href="/history?page=<%= i %>" <%= currentPage === i ? 'class="active"' : '' %>>
+                <a href="/history?page=<%= i %>&search=<%= search %>" <%= currentPage === i ? 'class="active"' : '' %>>
                     <%= i %>
                 </a>
             <% } %>
             <% if (currentPage < totalPages) { %>
-                <a href="/history?page=<%= currentPage + 1 %>">次のページ</a>
+                <a href="/history?page=<%= currentPage + 1 %>&search=<%= search %>">次のページ</a>
             <% } %>
         </div>
         <button class="result-button" onclick="window.location.href='/main';">戻る</button>

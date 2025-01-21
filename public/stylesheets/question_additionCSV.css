@@ -108,8 +108,12 @@ body {
 .image-list {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap; /* 折り返さない */
+    flex-wrap: wrap;
     gap: 20px;
+    justify-content: flex-start; 
+    padding: 10px; 
+    justify-content: flex-start; 
+    padding: 10px;
 }
 
 /* 各画像アイテムのコンテナ */
@@ -117,10 +121,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 150px; 
+    text-align: center;
 }
 
 .image-item img {
-    width: 30%; /* コンテナ幅いっぱいで統一幅 */
+    width: 100%; /* コンテナ幅いっぱいで統一幅 */
     height: auto; 
     border: 1px solid #ccc;
     border-radius: 4px;

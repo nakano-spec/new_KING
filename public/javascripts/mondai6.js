@@ -1,18 +1,3 @@
-//セッションチェック三銃士
-window.addEventListener('load',function(){
-    socket.emit('checksession',"mondai6.ejs");//現在いるページを引数として送る
-})
-
-socket.on('session_OK',function(data){
-    console.log(data);
-})
-
-socket.on('session_error',function(data){
-    console.log(data);
-    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
-})
-//三銃士ここまで
-
 const table = document.getElementById("table");
 const resultButton = document.getElementById("resultButton");
 const addButtons = document.querySelectorAll('.checkbox-add'); // 正解追加のチェックボックス
@@ -35,19 +20,7 @@ function displayCorrectAnswer(index) {
 
 // 結果発表ボタン処理
 resultButton.addEventListener("click", function () {
-  // テーブルのデータを収集
-    const tableData = [];
-    for (let i = 1; i < table.rows.length; i++) {
-        const row = table.rows[i];
-        const rowData = {
-            user_ID: row.cells[4].textContent,
-            user_name: row.cells[5].textContent,
-            user_answer: row.cells[6].textContent,
-            result: row.cells[8].textContent.trim() === "○" ? 1 : 0
-        };
-        tableData.push(rowData);
-    }
-    socket.emit('result_display', tableData);
+    socket.emit('result_display');
 });
 
 const menuButton = document.querySelector('.menu-icon'); // 正しいハンバーガーメニューのクラス
@@ -153,3 +126,18 @@ socket.on('delete_answers', () => {
 socket.on('delete_answers_error', () => {
   alert("失敗しました。");
 });
+
+//セッションチェック三銃士
+window.addEventListener('load',function(){
+    socket.emit('checksession',"mondai6.ejs");//現在いるページを引数として送る
+})
+
+socket.on('session_OK',function(data){
+    console.log(data);
+})
+
+socket.on('session_error',function(data){
+    console.log(data);
+    window.location.href = '/login';//失敗時はログインページに遷移（セッション破棄済み）
+})
+//三銃士ここまで

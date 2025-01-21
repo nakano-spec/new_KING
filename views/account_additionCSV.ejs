@@ -19,6 +19,12 @@
         <div class="header-user">ユーザー：Admin</div>
     </header>
 
+    <nav class="sidebar" id="sidebar">
+        <a href="/admin_main">メインページ</a>
+        <a href="/account_list">ユーザー管理</a>
+        <a href="javascript:void(0);" onclick="logout()">ログアウト</a>
+    </nav>
+
     <main class="main-content">
         <h2 class="page-title">CSVファイルでユーザーを追加</h2>
         <!--<a href="account_additionCSVExplanation" class="help-link">詳しい追加方法はこちら</a> -->
@@ -46,8 +52,7 @@
             <button class="btn btn-back" onclick="history.back()">戻る</button>
         </div>
     </main>
-
     <script src="/socket.io/socket.io.js"></script>
-    <script></script>
+    <script src="/javascripts/account_additionCSV.js"></script>
 </body>
 </html>

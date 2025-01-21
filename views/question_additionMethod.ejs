@@ -30,10 +30,10 @@
         <div class="button-container">
             <button class="button" onclick="location.href='/question_additionCSV'">CSVファイルで追加</button>
             <button class="button" onclick="location.href='/question_additionmanual'">手入力で追加</button>
-            <button class="button" onclick="location.href='/Question_manage'">戻る</button>
+            <button class="button" onclick="window.history.back()">戻る</button>
         </div>
     </main>
-
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/javascripts/question_additionMethod.js"></script>
 </body>
 </html>
