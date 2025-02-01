@@ -64,7 +64,7 @@
                 <tbody>
                     <% questions.forEach(function(question) { %>
                         <tr>
-                            <td><input type="radio" name="select" value="<%= question.question_id %>"></td>
+                            <td><input type="radio" name="select" value="<%= question.question_ID %>"></td>
                             <td class="ellipsis" onclick="toggleText(this)"><%= question.qualification_name %></td>
                             <td class="ellipsis" onclick="toggleText(this)"><%= question.question_genre %></td>
                             <td class="ellipsis" onclick="toggleText(this)"><%= question.question_years %></td>

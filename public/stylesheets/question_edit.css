@@ -141,7 +141,7 @@
 .image-list {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap; /* 折り返さない */
+    flex-wrap: wrap;
     gap: 20px;
 }
 
@@ -153,8 +153,8 @@
 }
 
 .image-item img {
-    width: 30%; /* コンテナ幅いっぱいで統一幅 */
-    height: auto; 
+    width: 150px; /* 画像の幅を統一 */
+    height: 150px; /* 画像の高さを統一 */
     border: 1px solid #ccc;
     border-radius: 4px;
 }
@@ -187,7 +187,7 @@
   }
   .search-icon {
     position: absolute;
-    left: 0.5rem;
+    right: 14rem;
     top: 50%;
     transform: translateY(-50%);
   }

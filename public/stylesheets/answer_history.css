@@ -54,6 +54,8 @@ main {
 .pagination {
     text-align: center;
     margin-top: 20px;
+    flex-wrap: wrap; 
+    gap: 5px; 
 }
 
 .pagination a, .pagination span {

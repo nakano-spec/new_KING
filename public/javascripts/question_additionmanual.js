@@ -6,6 +6,23 @@ const zoom = document.querySelectorAll(".zoom");
 const zoomback = document.getElementById("zoomback");
 const zoomimg = document.getElementById("zoomimg");
 const photoInput = document.getElementById('photo-input');
+// メニューボタンとサイドバー操作
+const menuButton = document.querySelector('.menu-icon');
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.querySelector('.main-content');
+let selectedPhotos = [];
+
+menuButton.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
+    mainContent.classList.toggle('sidebar-active');
+});
+
+document.addEventListener('click', (event) => {
+    if (!menuButton.contains(event.target) && !sidebar.contains(event.target)) {
+        sidebar.classList.remove('active');
+        mainContent.classList.remove('sidebar-active');
+    }
+});
 
 // 初期ロード時に画像リストを取得
 window.addEventListener('load', function () {
@@ -65,7 +82,7 @@ socket.on('image_result', function (file) {
 
 // エラー処理
 socket.on('image_error', function (error) {
-    console.log(error);
+    alert(error);
 });
 
 // サイドパネルの表示非表示
@@ -97,6 +114,7 @@ function modosu() {
 // 検索ボタン
 document.getElementById('search-button').addEventListener('click', function () {
     const searchTerm = document.getElementById('search-box').value;
+    console.log('開始しました。')
     searchTerm === '' ? socket.emit('image_List') : socket.emit('search_img', searchTerm);
 });
 
@@ -163,9 +181,11 @@ function setupPhotoUpload() {
         fileList.innerHTML = '';
         for (let file of files) {
             const li = document.createElement('li');
+            selectedPhotos = Array.from(files);
             li.textContent = file.name;
             fileList.appendChild(li);
         }
+        console.log(selectedPhotos);
     }
 }
 
@@ -202,8 +222,12 @@ document.getElementById('questionForm').addEventListener('submit', function (eve
 
     if (!hasError && choiceInputs.length > 0) {
         const correctAnswer = form.querySelector('input[name="correct"]').value.trim();
-        const choiceValues = Array.from(choiceInputs).map(input => input.value.split(/[:：]/)[0].trim());
-        if (!choiceValues.includes(correctAnswer)) {
+        const choiceValues = Array.from(choiceInputs)
+        .map(input => input.value.trim())
+        .filter(value => value !== ''); // 空の選択肢を除外
+
+        if (choiceValues.length === 0) {
+        }else if (!choiceValues.includes(correctAnswer)) {
             hasError = true;
             errorMessage = '正解が選択肢内に存在しません。';
         }
@@ -216,6 +240,44 @@ document.getElementById('questionForm').addEventListener('submit', function (eve
 
     const formData = new FormData(form);
     socket.emit('question_add', Object.fromEntries(formData.entries()));
+});
+
+socket.on('complete', () => {
+    alert('問題追加が完了しました。');
+    if (selectedPhotos.length > 0) {
+        const formData = new FormData();
+       // 写真ファイルを1つずつFormDataに追加
+        selectedPhotos.forEach((file) => {
+            const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_'); // ファイル名のサニタイズ
+            const newFile = new File([file], sanitizedFileName, { type: file.type });
+            formData.append('images', newFile);
+        });
+
+        try {
+            $.ajax({
+                url: '/upload', // 相対パスを使用
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false
+            }).done(function(res){
+                alert('写真がアップロードされました！');
+                window.location.href = "/Question_manage";
+            }).fail(function(err){
+                console.log(err);
+                alert(`アップロードエラー: ${err.responseJSON.message || '不明なエラーが発生しました。'}`);
+            });
+        } catch (error) {
+            console.error('アップロードエラー:', error);
+        }
+    } else {
+        //alert('アップロードする写真がありません。');
+        window.location.href = '/Question_manage';
+    }
+});
+
+socket.on('error', () => {
+  alert('問題追加に失敗しました。');
 });
 
 // ログアウト処理

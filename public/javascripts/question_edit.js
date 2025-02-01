@@ -44,6 +44,7 @@ socket.on('imageList', function (files) {
 
 // 更新結果
 socket.on('update_result', function () {
+    alert('更新に成功しました！')
     window.location.href = "/Question_manage";
 });
 
@@ -126,7 +127,7 @@ addOptionBtn.addEventListener('click', () => {
     newOption.className = 'form-group option-group';
     newOption.innerHTML = `
         <label class="form-label">選択肢${newOptionIndex}：</label>
-        <input type="text" class="form-input" name="options[]" required>
+        <input type="text" class="form-input" name="options[]">
     `;
     optionsContainer.appendChild(newOption);
 });

@@ -1,9 +1,12 @@
 const socket = io({ transports: ['websocket'], upgrade: false });
-
+const sendButton = document.getElementById('send-csv-button');
 // サイドパネル関連
 const zoom = document.querySelectorAll(".zoom");
 const zoomback = document.getElementById("zoomback");
 const zoomimg = document.getElementById("zoomimg");
+let selectedPhotos = []; 
+let selectedFile = null;
+
 
 // 初期ロード時に画像リストを取得
 window.addEventListener('load', function () {
@@ -90,8 +93,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const dropzone = document.getElementById('csv-dropzone');
     const csvInput = document.getElementById('csv-input');
     const fileList = document.getElementById('csv-file-list').querySelector('ul');
-    const sendButton = document.getElementById('send-csv-button');
-    let selectedFile = null;
+
+    // ドラッグ＆ドロップ処理のセットアップ（写真）
+    const photoDropzone = document.getElementById('photo-dropzone');
+    const photoInput = document.getElementById('photo-input');
+    const photoFileList = document.getElementById('photo-file-list').querySelector('ul');
+
+    setupDragAndDrop(photoDropzone, photoInput, handlePhotoSelection);
+
+    function handlePhotoSelection(files) {
+        photoFileList.innerHTML = '';
+        selectedPhotos = Array.from(files); // ファイルリストを配列に変換して保存
+        selectedPhotos.forEach(file => {
+            const li = document.createElement('li');
+            li.textContent = file.name;
+            photoFileList.appendChild(li);
+        });
+    }
+
 
     setupDragAndDrop(dropzone, csvInput, handleFileSelection);
 
@@ -129,21 +148,49 @@ document.addEventListener("DOMContentLoaded", () => {
             fileList.appendChild(li);
         }
     }
+});
 
-    sendButton.addEventListener('click', () => {
-        if (!selectedFile) {
-            alert('CSVファイルを選択してください！');
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            socket.emit('upload_csv', {
-                fileName: selectedFile.name,
-                content: e.target.result,
+sendButton.addEventListener('click',async function(){
+    if (!selectedFile) {
+        if (selectedPhotos.length > 0) {
+            const formData = new FormData();
+           // 写真ファイルを1つずつFormDataに追加
+            selectedPhotos.forEach((file) => {
+                const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_'); // ファイル名のサニタイズ
+                const newFile = new File([file], sanitizedFileName, { type: file.type });
+                formData.append('images', newFile);
             });
-        };
-        reader.readAsText(selectedFile);
-    });
+    
+            console.log('アップロードする写真:', selectedPhotos);
+            try {
+                $.ajax({
+                    url: '/upload', // 相対パスを使用
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                }).done(function(res){
+                    alert('写真がアップロードされました！');
+                    window.location.href = "/Question_manage";
+                }).fail(function(err){
+                    console.log(err);
+                    alert(`アップロードエラー: ${err.responseJSON.message || '不明なエラーが発生しました。'}`);
+                });
+            } catch (error) {
+                console.error('アップロードエラー:', error);
+            }
+        } else {
+            alert('CSVファイルまたは写真を選択してください。');
+        }
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        socket.emit('upload_csv', {
+            fileName: selectedFile.name,
+            content: e.target.result,
+        });
+    };
+    reader.readAsText(selectedFile);
 });
 
 // メニューボタンとサイドバー操作
@@ -163,6 +210,47 @@ document.addEventListener('click', (event) => {
     }
 });
 
+// 検索ボタン
+document.getElementById('search-button').addEventListener('click', function () {
+    const searchTerm = document.getElementById('search-box').value;
+    console.log('開始しました。')
+    searchTerm === '' ? socket.emit('image_List') : socket.emit('search_img', searchTerm);
+});
+
+// 画像検索結果を受信
+socket.on('image_result', function (file) {
+    const imageListContainer = document.getElementById('imageListContainer');
+    imageListContainer.innerHTML = ''; // 初期化
+    const imageItem = document.createElement('div');
+    imageItem.classList.add('image-item');
+
+    const img = document.createElement('img');
+    img.src = '/images/' + file;
+    img.classList.add('zoom');
+
+    const fileName = document.createElement('p');
+    fileName.textContent = file; // ファイル名を表示
+
+    imageItem.appendChild(img);
+    imageItem.appendChild(fileName);
+    imageListContainer.appendChild(imageItem);
+
+    const zoomElements = document.querySelectorAll('.zoom');
+    zoomElements.forEach(value => {
+        value.addEventListener("click", kakudai);
+    });
+});
+
+// エラー処理
+socket.on('image_error', function (error) {
+    alert(error);
+});
+
+// エラー処理
+socket.on('error', function (error) {
+    alert(error);
+});
+
 // ログアウト処理
 async function logout() {
     try {
@@ -177,6 +265,42 @@ async function logout() {
         alert('ログアウトに失敗しました: ' + error);
     }
 }
+
+// サーバーからのレスポンス処理
+socket.on('file_upload_Complete',async function(){
+    alert('問題登録が完了しました！');
+    if (selectedPhotos.length > 0) {
+        const formData = new FormData();
+       // 写真ファイルを1つずつFormDataに追加
+        selectedPhotos.forEach((file) => {
+            const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_'); // ファイル名のサニタイズ
+            const newFile = new File([file], sanitizedFileName, { type: file.type });
+            formData.append('images', newFile);
+        });
+
+        console.log('アップロードする写真:', selectedPhotos);
+        try {
+            $.ajax({
+                url: '/upload', // 相対パスを使用
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false
+            }).done(function(res){
+                alert('写真がアップロードされました！');
+                window.location.href = "/Question_manage";
+            }).fail(function(err){
+                console.log(err);
+                alert(`アップロードエラー: ${err.responseJSON.message || '不明なエラーが発生しました。'}`);
+            });
+        } catch (error) {
+            console.error('アップロードエラー:', error);
+        }
+    } else {
+        //alert('アップロードする写真がありません。');
+        window.location.href = '/Question_manage';
+    }
+})
 
 socket.on('session_destroy_success', () => {
     window.location.href = '/login';

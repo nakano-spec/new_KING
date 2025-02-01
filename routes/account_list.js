@@ -36,7 +36,7 @@ router.get('/', async function(req, res, next) {
       value:[`%${search}%`,`%${search}%`,`%${search}%`,limit,offset]
     }
     var result = await SQL_exec(SQL_data)
-    res.render('account_list',{data:result,name:req.session.user.username,currentPage:page,totalPages: totalPages,search: search});
+    res.render('account_list',{data:result,name:req.session.adminuser.username,currentPage:page,totalPages: totalPages,search: search});
   }catch(error){
     console.log(error);
     const err = new Error('セッションが切れています。ログインしてください。');

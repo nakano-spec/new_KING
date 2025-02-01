@@ -82,7 +82,7 @@
                     <% options.forEach((option, index) => { %>
                         <div class="form-group option-group">
                             <label class="form-label">選択肢<%= index + 1 %>：</label>
-                            <input type="text" class="form-input" name="options[]" value="<%= option %>" required>
+                            <input type="text" class="form-input" name="options[]" value="<%= option %>">
                         </div>
                     <% }); %>
                 <% } %>
@@ -122,7 +122,7 @@
             // FormDataからオブジェクトに変換
             formData.forEach((value, key) => {
                 // 選択肢（options[]）を配列にまとめる
-                if (key === 'options[]') {
+                if (key === 'options[]' && value.trim() !== '') {
                     if (!data.options) data.options = [];
                     data.options.push(value);
                 } else {
@@ -130,6 +130,18 @@
                 }
             });
             data.id = "<%= question_ID %>"; // 編集対象のIDを追加
+            if(!data.options){
+               console.log("選択肢はありません。");
+            }else if (data.options.length > 0) {
+                const correct = data.correct.trim(); // 正解を取得
+                const optionKeys = data.options.map(opt => opt.split(/[:：]/)[0].trim()); // 選択肢のキーを抽出
+
+                if (!optionKeys.includes(correct)) {
+                    alert('正解が選択肢内に存在しません。確認してください。');
+                    return; // フォーム送信を停止
+                }
+            }
+
             console.log("処理を開始");
             socket.emit('question_update', data);
         });

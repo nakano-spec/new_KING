@@ -9,6 +9,7 @@ const { SQL_exec } = require('../db/SQL_module');
 // 編集ページのルート
 router.get('/', async function(req, res, next){
   const questionID = req.query.question_ID;
+  console.log(questionID)
   try{
     var SQL_data ={
       sql: `

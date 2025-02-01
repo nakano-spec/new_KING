@@ -126,8 +126,9 @@ body {
 }
 
 .image-item img {
-    width: 100%; /* コンテナ幅いっぱいで統一幅 */
-    height: auto; 
+    width: 150px; /* 画像の幅を統一 */
+    height: 150px; /* 画像の高さを統一 */
+    object-fit: cover; /* 画像をトリミングして枠に収める */
     border: 1px solid #ccc;
     border-radius: 4px;
 }
@@ -211,15 +212,17 @@ body {
 .search-container {
     position: relative;
     margin-left: auto;
-  }
-  input[type="search"] {
+}
+
+input[type="search"] {
     padding: 0.5rem 0.5rem 0.5rem 2rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-  }
-  .search-icon {
+}
+
+.search-icon {
     position: absolute;
-    left: 0.5rem;
+    right: 14rem;
     top: 50%;
     transform: translateY(-50%);
-  }
+}

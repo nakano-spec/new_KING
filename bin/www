@@ -125,7 +125,7 @@ io.use((socket, next) => {
 });
 
 const mysql_setting = {
-  host :'172.18.100.163',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
+  host :'192.168.0.16',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -225,6 +225,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
         for(var i=0;i<files.length;i++){
           if(image === files[i]){
             socket.emit('image_result', files[i]);
+            return
           }
         } 
         socket.emit('image_error', "見つかりませんでした。");     
@@ -319,7 +320,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
             await SQL_exec(insertGenre);
         }
 
-        socket.emit('file_upload_Complete', { success: true });
+        socket.emit('file_upload_Complete');
         console.log('CSVデータが正常にデータベースに登録されました。');
     } catch (error) {
         console.error('データベース登録エラー:', error);
@@ -578,9 +579,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
 
       // トランザクションをコミット
       await SQL_exec({ sql: "COMMIT;" });
-      socket.emit('complete', '成功');
-
-      socket.emit('complete',data2);
+      socket.emit('complete',"問題追加に成功しました");
     } catch (error) {
         console.error('Error during montuika process:', error);
         socket.emit('error');
@@ -771,7 +770,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
               roomID = roomIDAdminResult[0].room_ID;
 
               await insertLoginLog(username, roomID);
-              socket.request.session.user = { username };
+              socket.request.session.adminuser = { username };
               break;
 
           default:
@@ -783,7 +782,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
 
       try {
           await saveSession();
-          console.log('セッションが正常に保存されました');
+          console.log('セッションが正常に保存されました',socket.request.session);
       } catch (err) {
           console.error('セッションの保存に失敗しました:', err);
           throw err;
@@ -934,12 +933,12 @@ io.on('connection', (socket) => {//ページが繋がったとき
       }
       const result =  await SQL_exec(SQLdata)
       if(result.length == 0){
-        io.emit('question_error');
+        socket.emit('question_error');
       }else{
-        io.emit('preview_response',result); 
+        socket.emit('preview_response',result); 
       }
     }catch(error){
-      io.emit('question_error');
+      socket.emit('question_error');
       console.log(error)
     }
   })
@@ -1240,6 +1239,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
                 }
 
                 // 成功通知をクライアントに送信
+                console.log("成功しました。")
                 socket.emit('file_upload_Complete');
             } catch (error) {
                 console.error('データベースへの挿入エラー:', error);
@@ -1695,14 +1695,16 @@ io.on('connection', (socket) => {//ページが繋がったとき
       sqldata.sql = `DELETE FROM optional_table WHERE question_ID = ?`;
       sqldata.value =  [id]
       await SQL_exec(sqldata);
-
-      // 5. optional_tableに新しい選択肢を挿入
-      for (let i = 0; i < options.length; i++) {
-          sqldata.sql = `INSERT INTO optional_table (question_ID, question_optional) VALUES (?, ?)`;
-          sqldata.value =  [id,options[i]]
-          await SQL_exec(sqldata);
+      if(!options){
+        console.log("入力問題に更新します。");
+      }else{
+         // 5. optional_tableに新しい選択肢を挿入
+        for (let i = 0; i < options.length; i++) {
+            sqldata.sql = `INSERT INTO optional_table (question_ID, question_optional) VALUES (?, ?)`;
+            sqldata.value =  [id,options[i]]
+            await SQL_exec(sqldata);
+        }
       }
-
       socket.emit('update_result');
     } catch (err) {
         console.error('Error during update:', err);
@@ -1854,23 +1856,39 @@ function destroySession(req) {
 socket.on('checksession',async function(current_page){//セッションチェック
   try{
       console.log("セッションチェック実行");
-      const req = socket.request;
-      if(!req.session){
+      if(!socket.request){
         //セッションがないとき
-        await destroySession(req);
+        await destroySession(socket.request);
         socket.emit('session_error',"sessionがありませんでした");
-        
       }else{
-          socket.emit('session_OK',"OK")
-          const result = await checkpage(req.session.user.username,current_page)//認証に失敗したらfalseを返す
-          if(result == false){
-            await destroySession(req);
-            socket.emit('session_error',"このページを開く権限がありません");
-            
+          if(socket.request.session.user && socket.request.session.user.username){
+            const result = await checkpage(socket.request.session.user.username,current_page)//認証に失敗したらfalseを返す
+            if(result == false){
+              await destroySession(socket.request);
+              socket.emit('session_error',"このページを開く権限がありません");
+            }
+            socket.emit('session_OK',"OK")
+          }else if(socket.request.session.student && socket.request.session.student.username){
+            const result = await checkpage(socket.request.session.student.username,current_page)//認証に失敗したらfalseを返す
+            if(result == false){
+              await destroySession(socket.request);
+              socket.emit('session_error',"このページを開く権限がありません");
+            }
+            socket.emit('session_OK',"OK")
+          }else if(socket.request.session.adminuser && socket.request.session.adminuser.username){
+            console.log("管理者確認");
+            const result = await checkpage(socket.request.session.adminuser.username,current_page)//認証に失敗したらfalseを返す
+            if(result == false){
+              await destroySession(socket.request);
+              socket.emit('session_error',"このページを開く権限がありません");
+            }
+            socket.emit('session_OK',"OK")
           }
+          
       }  
     }catch(error){
       console.log(error);
+      socket.emit('session_error',"セッションがありません");
     }
   })
 

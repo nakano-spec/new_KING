@@ -14,7 +14,7 @@
                 <div class="menu-line"></div>
                 <div class="menu-line"></div>
             </button>
-            <h1>ニコキタ教育委員会：アカウント一覧</h1>
+            <h1>ニコキタ教育委員会：アカウント管理</h1>
         </div>
         <div class="user">
             <% if (name) { %>
@@ -70,9 +70,9 @@
                                 <td data-column="user_name"><%= row.user_name %></td>
                                 <td>
                                     <% if (row.user_type === 1) { %>
-                                        教師
-                                    <% } else if(row.user_type === 2){ %>
                                         学生
+                                    <% } else if(row.user_type === 2){ %>
+                                        教師
                                     <% } else { %>
                                         管理者
                                     <% } %>

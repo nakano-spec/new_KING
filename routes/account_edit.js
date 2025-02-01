@@ -12,7 +12,7 @@ router.get('/', async (req,res,next) =>{
     const userName = req.query.userName;
     const logTime = req.query.logTime;
 
-    if (!userID || !userName || !logTime) {
+    if (!userID || !userName || !logTime || !req.session.adminuser) {
       const err = new Error('必要な情報が不足しています。URLパラメータを確認してください。');
       err.status = 400; // HTTPステータスコード 400 (Bad Request)
       return next(err);

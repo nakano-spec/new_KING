@@ -191,6 +191,11 @@ socket.on('room_IDget', room_ID => {
     const minute = document.getElementById('time').value;
     const second = document.getElementById('time2').value;
 
+    if(minute == 0 && second == 0){
+        alert('入力した値は不正です。正しい時間を入力してください。');
+        return
+    }
+    
     // データをまとめる
     const data = {
         room_ID: room_ID,
