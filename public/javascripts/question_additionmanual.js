@@ -223,9 +223,12 @@ document.getElementById('questionForm').addEventListener('submit', function (eve
     if (!hasError && choiceInputs.length > 0) {
         const correctAnswer = form.querySelector('input[name="correct"]').value.trim();
         const choiceValues = Array.from(choiceInputs)
-        .map(input => input.value.trim())
-        .filter(value => value !== ''); // 空の選択肢を除外
-
+        .map(input => {
+            const parts = input.value.split(':'); // ':'で分割
+            return parts[0].trim(); // 左側を取得してtrim
+        })
+        .filter(value => value !== '');
+        console.log(choiceValues)
         if (choiceValues.length === 0) {
         }else if (!choiceValues.includes(correctAnswer)) {
             hasError = true;

@@ -125,7 +125,7 @@ io.use((socket, next) => {
 });
 
 const mysql_setting = {
-  host :'192.168.0.16',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
+  host :'172.18.100.163',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -745,13 +745,14 @@ io.on('connection', (socket) => {//ページが繋がったとき
               await insertLoginLog(username, roomID);
               socket.request.session.student = { username };
               socket.request.session.studentroom_ID = selectedOption;
+              console.log(socket.request.session);
               break;
           case USER_TYPE.TEACHER:
               roomID = await getRoomID(selectedOption);
               await insertLoginLog(username, roomID);
               socket.request.session.user = { username };
+              console.log(socket.request.session)
               break;
-
           case USER_TYPE.ADMIN:
               const userIDQuery = {
                   sql: "SELECT user_ID FROM user_table WHERE user_name = ?",
@@ -914,8 +915,8 @@ io.on('connection', (socket) => {//ページが繋がったとき
   })
 
   socket.on('preview_request',async (data) =>{
+    const { qualification, year, question, genre,teacher_ID} = data;
     try{
-      const { qualification, year, question, genre } = data;
       console.log(qualification,year,question,genre);
       const SQLdata = {
         sql:`select 
@@ -933,12 +934,12 @@ io.on('connection', (socket) => {//ページが繋がったとき
       }
       const result =  await SQL_exec(SQLdata)
       if(result.length == 0){
-        socket.emit('question_error');
+        io.to(teacher_ID).emit('question_error');
       }else{
-        socket.emit('preview_response',result); 
+        io.to(teacher_ID).emit('preview_response',result); 
       }
     }catch(error){
-      socket.emit('question_error');
+      io.to(teacher_ID).emit('question_error');
       console.log(error)
     }
   })
@@ -1088,10 +1089,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
               options: mondaiResult2.map(opt => opt.question_optional) 
             });
             // 教師ページにタイマー情報を送信
-            socket.emit('timer_data', { room_ID: data.room_ID,question_ID: questionData.question_ID,limit_time: totalSeconds });
-            // 完了フラグを全員に送信
-            const flag = 1;
-            io.emit('mondai_kekka', flag);
+            io.to(room_ID).emit('timer_data', { room_ID: data.room_ID,question_ID: questionData.question_ID,limit_time: totalSeconds });
         } catch (error) {
             console.error('Error during mondai_btnclick process:', error);
             socket.emit('error', { message: 'Error in mondai_btnclick process', error });
@@ -1284,7 +1282,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
     }
   });
   
-  socket.on('search_room',async function(){
+  socket.on('search_room',async function(teacher){
     username = socket.request.session.user.username;
     var data={
       sql:"select room_ID from room_table where user_ID =?", 
@@ -1292,11 +1290,11 @@ io.on('connection', (socket) => {//ページが繋がったとき
     }
     try{
       var result=await SQL_exec(data);
-      io.emit('room_IDget',result[0].room_ID);
+      io.to(teacher.teacher_ID).emit('room_IDget',result[0].room_ID);
     }
     catch(error){
       console.error(error);
-      socket.emit('room_ID_result',error);
+      io.to(teacher.teacher_ID).emit('room_ID_result',error);
     }
   })
 

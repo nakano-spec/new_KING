@@ -21,7 +21,6 @@ const role = 2;
 
 if (room_ID) {
     socket.emit('join_room', { room_ID, role });
-    console.log(`ルーム ${room_ID} に参加しました (役割: ${role})`);
 } else {
     console.error('ルームIDが指定されていません。');
 }

@@ -62,7 +62,8 @@ if (previewButton) {
             qualification: selectedQualification,
             year: selectedYear,
             question: selectedQuestion,
-            genre: selectedGenre
+            genre: selectedGenre,
+            teacher_ID: socket.id // 自分のSocket IDを送る
         });
     });
 }
@@ -177,7 +178,7 @@ form.addEventListener('submit', (e) => {
     const timeLimit = form.time2.value;
     if (!timeLimit || isNaN(timeLimit)) return alert("制限時間が入力されていません。");
 
-    socket.emit('search_room');
+    socket.emit('search_room',{teacher_ID: socket.id});
 });
 
 socket.on('room_IDget', room_ID => {

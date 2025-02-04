@@ -119,3 +119,9 @@ h1{
   max-width: 100%;
   height: auto;
 }
+
+#questionText{
+  font-size: 300%;
+  text-align: center;
+  text-wrap: wrap;
+}
