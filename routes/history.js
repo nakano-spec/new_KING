@@ -10,6 +10,13 @@ router.get('/', async (req, res, next) => {
         const page = parseInt(req.query.page) || 1; // 現在のページ番号
         const offset = (page - 1) * limit;
         const search = req.query.search || '';
+        const username = req.session.user.username
+        const room = {
+            sql:`select room_ID from room_table where user_ID = ?;`,
+            value:[username]
+        }
+        const room_search = await SQL_exec(room);
+        const room_ID = room_search[0].room_ID;
 
         // 合計レコード数を取得
         const countQuery = {
@@ -18,16 +25,19 @@ router.get('/', async (req, res, next) => {
             FROM answer_table AS a
             INNER JOIN question_log AS qlog ON a.q_log_ID = qlog.q_log_ID
             INNER JOIN question_table AS q ON qlog.question_ID = q.question_ID
+            INNER JOIN room_table AS r ON qlog.room_ID = r.room_ID
             WHERE
+                    r.room_ID = ? and
                     (a.user_ID LIKE ? OR
                      q.question_name LIKE ? OR
                      a.answer LIKE ?)
             ;`,
-            value:[`%${search}%`,`%${search}%`,`%${search}%`]
+            value:[room_ID,`%${search}%`,`%${search}%`,`%${search}%`]
         };
         const countRows = await SQL_exec(countQuery);
         const totalItems = countRows[0].total;
         const totalPages = Math.ceil(totalItems / limit);
+        
 
         // ページングされたデータを取得
         const query = {
@@ -44,7 +54,10 @@ router.get('/', async (req, res, next) => {
                         question_log AS qlog ON a.q_log_ID = qlog.q_log_ID
                     INNER JOIN
                         question_table AS q ON qlog.question_ID = q.question_ID
+                    INNER JOIN
+                        room_table AS r ON qlog.room_ID = r.room_ID
                     WHERE
+                        r.room_ID = ? and
                         (a.user_ID LIKE ? OR
                         q.question_name LIKE ? OR
                         a.answer LIKE ?)
@@ -52,7 +65,7 @@ router.get('/', async (req, res, next) => {
                         qlog.log_time DESC
                     LIMIT ? OFFSET ?;`
             ,
-            value: [`%${search}%`,`%${search}%`,`%${search}%`,limit, offset]
+            value: [room_ID,`%${search}%`,`%${search}%`,`%${search}%`,limit, offset]
         };
 
         const result = await SQL_exec(query);

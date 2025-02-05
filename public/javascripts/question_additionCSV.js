@@ -297,7 +297,6 @@ socket.on('file_upload_Complete',async function(){
             console.error('アップロードエラー:', error);
         }
     } else {
-        //alert('アップロードする写真がありません。');
         window.location.href = '/Question_manage';
     }
 })

@@ -179,18 +179,20 @@
 .search-container {
     position: relative;
     margin-left: auto;
-  }
-  input[type="search"] {
+}
+
+input[type="search"] {
     padding: 0.5rem 0.5rem 0.5rem 2rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-  }
-  .search-icon {
+}
+
+.search-icon {
     position: absolute;
     right: 14rem;
     top: 50%;
     transform: translateY(-50%);
-  }
+}
 
 #zoomback {
     position:absolute;
@@ -232,21 +234,21 @@
     transition: transform 0.3s ease;
     transform: translateX(-100%);
     z-index: 2000; 
-  }
+}
   
-  .sidebar.active {
+.sidebar.active {
     transform: translateX(0);
-  }
+}
   
-  .sidebar a {
+.sidebar a {
     display: block;
     padding: 1.2rem 1.5rem; /* クリック範囲を広げるためにパディングを増やす */
     color: #0066cc;
     text-decoration: none;
     font-size: 20px; /* フォントサイズを大きくすることで視認性を向上 */
     font-weight: bold;
-  }
+}
   
-  .sidebar a:hover {
+.sidebar a:hover {
     background-color: #ddd;
-  }
+}
