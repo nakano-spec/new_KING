@@ -75,6 +75,11 @@ socket.on('preview_response', (data) => {
         // モーダル内の画像を更新
         const pictureDiv = modal.querySelector('.picture img');
         const pictureMessage = modal.querySelector('.picture .message');
+        if (pictureMessage) {
+            pictureMessage.style.display = 'none'; // エラーメッセージを非表示にする
+            pictureMessage.textContent = ''; // メッセージをリセット
+        }
+        pictureDiv.style.display = 'block'; // 画像を表示状態にする
         if (data[0].pics_name != '') {
             pictureDiv.onerror = () => {
                 pictureDiv.style.display = 'none'; // 画像を非表示
