@@ -125,7 +125,7 @@ io.use((socket, next) => {
 });
 
 const mysql_setting = {
-  host :'192.168.0.15',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
+  host :'172.18.100.163',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -1936,7 +1936,7 @@ socket.on('checksession',async function(current_page){//セッションチェッ
       }
       var result2 = await SQL_exec(SQL2);
       var SQL3 ={
-        sql:`update answer_table set result = 1 where answer = ?;`,
+        sql:`update answer_table set result = 1 where binary answer = ?;`,
         value:[selections[0].answer]
       }
       var result3 = await SQL_exec(SQL3);
@@ -1960,7 +1960,7 @@ socket.on('checksession',async function(current_page){//セッションチェッ
       }
       var result2 = await SQL_exec(SQL2);
       var SQL3 ={
-        sql:`update answer_table set result = 0 where answer = ?;`,
+        sql:`update answer_table set result = 0 where binary answer = ?;`,
         value:[selections[0].answer]
       }
       var result3 = await SQL_exec(SQL3);
