@@ -869,8 +869,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
       try{
       await SQL_exec({ sql: 'START TRANSACTION' });
 
-      // 外部キー制約を一時的に無効化
-      await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 0' });
+    
       var SQL_result = await SQL_exec(user_typeSQL);
       await SQL_exec(delete_data);
 
@@ -887,10 +886,6 @@ io.on('connection', (socket) => {//ページが繋がったとき
         }
         await SQL_exec(login_delete)
       
-
-        // 外部キー制約を再度有効化
-      await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 1' });
-
       // トランザクションをコミット
       await SQL_exec({ sql: 'COMMIT' });
 
@@ -1104,10 +1099,7 @@ io.on('connection', (socket) => {//ページが繋がったとき
       // トランザクションの開始
       await SQL_exec({ sql: 'START TRANSACTION' });
 
-      // 外部キー制約を一時的に無効化
-      await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 0' });
-
-        // データベースの更新クエリ
+      // データベースの更新クエリ
       const updateUserQuery = {
           sql: 'UPDATE user_table SET user_ID = ?, user_name = ?, password = ?, user_type = ? WHERE user_ID = ?',
           value: [user_ID,user_name, hashedPassword, role_name === 'student' ? 1 : role_name === 'teacher' ? 2 : 3, original_user_ID]
@@ -1150,9 +1142,6 @@ io.on('connection', (socket) => {//ページが繋がったとき
         };
         await SQL_exec(insertRoomQuery);
       }
-
-      // 外部キー制約を再度有効化
-      await SQL_exec({ sql: 'SET FOREIGN_KEY_CHECKS = 1' });
 
       // トランザクションをコミット
       await SQL_exec({ sql: 'COMMIT' });
