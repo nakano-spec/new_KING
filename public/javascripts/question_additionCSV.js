@@ -151,6 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 sendButton.addEventListener('click',async function(){
+    console.log(selectedFile);
     if (!selectedFile) {
         if (selectedPhotos.length > 0) {
             const formData = new FormData();

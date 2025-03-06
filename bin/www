@@ -125,7 +125,7 @@ io.use((socket, next) => {
 });
 
 const mysql_setting = {
-  host :'172.18.100.163',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
+  host :'192.168.1.13',//172.18.96.186,192.168.0.23,,192.168.0.15,172.18.96.162
   user :'connect',
   password :'K1ng@Oyster',
   database :'mydb',
@@ -499,9 +499,6 @@ io.on('connection', (socket) => {//ページが繋がったとき
         // トランザクションの開始
       await SQL_exec2({ sql: "START TRANSACTION;" });
 
-      // 外部キー制約を無効化
-      await SQL_exec2({ sql: "SET FOREIGN_KEY_CHECKS = 0;" });
-
       // **重複確認クエリ**
       const duplicateCheckQuery = {
         sql: `
@@ -573,9 +570,6 @@ io.on('connection', (socket) => {//ページが繋がったとき
       };
       await SQL_exec(insertGenreQuery);
       console.log('Inserted into genre_table:', insertGenreQuery.value);
-
-      // 外部キー制約を再有効化
-      await SQL_exec({ sql: "SET FOREIGN_KEY_CHECKS = 1;" });
 
       // トランザクションをコミット
       await SQL_exec({ sql: "COMMIT;" });

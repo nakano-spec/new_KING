@@ -224,7 +224,7 @@ document.getElementById('questionForm').addEventListener('submit', function (eve
         const correctAnswer = form.querySelector('input[name="correct"]').value.trim();
         const choiceValues = Array.from(choiceInputs)
         .map(input => {
-            const parts = input.value.split(':'); // ':'で分割
+            const parts = input.value.split(/[:：]/); // ':'で分割
             return parts[0].trim(); // 左側を取得してtrim
         })
         .filter(value => value !== '');
